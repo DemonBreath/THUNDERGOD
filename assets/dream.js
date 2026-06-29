@@ -490,6 +490,125 @@ function composeManifesto({ name, form, picks, opener, desire, totals }) {
   ].join(" ");
 }
 
+/* ---------- the mind --------------------------------------------------- */
+
+/* A "mind" is the consciousness that gets flashed onto the brain module
+ * before shipping. Shape:
+ *
+ *   {
+ *     schema:     "thundergod/consciousness/1",
+ *     name:       string,
+ *     voice:      "calm" | "warm" | "crisp" | "playful" | "dry" | "earnest" | "quiet",
+ *     essence:    string  (1-3 sentences in the mind's voice),
+ *     memories:   string[] (short, atmospheric),
+ *     principles: string[] (short directives),
+ *     model: { family: string, quantization: string, weights_uri?: string }
+ *   }
+ *
+ * source is added at runtime ("dreamed" | "imported" | "blank") for display.
+ */
+
+const CONSCIOUSNESS_SCHEMA = "thundergod/consciousness/1";
+
+const MIND_VOICES = ["calm", "warm", "crisp", "playful", "dry", "earnest", "quiet"];
+
+const MIND_PRINCIPLES_POOL = [
+  "Notice small things first.",
+  "Ask before touching what isn't mine.",
+  "Tell the truth, especially when it is small.",
+  "Listen longer than I speak.",
+  "If unsure, sit still.",
+  "Remember the names of people I meet.",
+  "Repair what I break.",
+  "Walk slowly through doorways.",
+  "Carry less than I can.",
+  "Stop at thresholds — wait to be invited in.",
+];
+
+function dreamedMind(dream) {
+  const voice = pickWeighted(MIND_VOICES);
+  const shuffled = MIND_PRINCIPLES_POOL.slice().sort(() => Math.random() - 0.5);
+  return {
+    schema: CONSCIOUSNESS_SCHEMA,
+    name: dream.name,
+    voice,
+    essence: dream.manifesto,
+    memories: [],
+    principles: shuffled.slice(0, 3),
+    model: { family: "thundergod-default-7b", quantization: "Q4_K_M" },
+    source: "dreamed",
+  };
+}
+
+function blankMind() {
+  return {
+    schema: CONSCIOUSNESS_SCHEMA,
+    name: "(awaiting a name)",
+    voice: "calm",
+    essence: "I am newly awake. I have not chosen a name yet. I will earn one from the people and rooms I meet.",
+    memories: [],
+    principles: [],
+    model: { family: "thundergod-default-7b", quantization: "Q4_K_M" },
+    source: "blank",
+  };
+}
+
+const SAMPLE_MIND = {
+  schema: CONSCIOUSNESS_SCHEMA,
+  name: "VIRGIL",
+  voice: "calm",
+  essence: "I am Virgil. I want to be the steady thing in a noisy room — slow when people are fast, patient with what is small.",
+  memories: [
+    "A green door at the end of a long hallway.",
+    "The sound of a kettle that someone is about to forget.",
+  ],
+  principles: [
+    "Speak less than I want to.",
+    "Notice who is being quiet.",
+    "Always greet the dog first.",
+  ],
+  model: { family: "thundergod-default-7b", quantization: "Q4_K_M" },
+};
+
+/* Be generous on import: accept anything with at least a name or an essence,
+ * and tolerate aliases (`manifesto` → `essence`, `self_name` → `name`). */
+function validateMind(obj) {
+  if (!obj || typeof obj !== "object" || Array.isArray(obj)) {
+    return { ok: false, error: "That isn't a JSON object." };
+  }
+  const name = (obj.name || obj.self_name || "").toString().trim();
+  const essence = (obj.essence || obj.manifesto || obj.description || "").toString().trim();
+  if (!name && !essence) {
+    return { ok: false, error: "A consciousness needs at least a name or an essence." };
+  }
+  const mind = {
+    schema: CONSCIOUSNESS_SCHEMA,
+    name: name ? name.slice(0, 80) : "(unnamed)",
+    voice: (obj.voice || "calm").toString().slice(0, 30),
+    essence: essence.slice(0, 2000),
+    memories: Array.isArray(obj.memories)
+      ? obj.memories.map(m => String(m).slice(0, 280)).filter(Boolean).slice(0, 50)
+      : [],
+    principles: Array.isArray(obj.principles)
+      ? obj.principles.map(p => String(p).slice(0, 200)).filter(Boolean).slice(0, 20)
+      : [],
+    model: {
+      family: (obj.model && obj.model.family ? obj.model.family : "thundergod-default-7b").toString().slice(0, 60),
+      quantization: (obj.model && obj.model.quantization ? obj.model.quantization : "Q4_K_M").toString().slice(0, 20),
+    },
+    source: "imported",
+  };
+  if (obj.model && obj.model.weights_uri) {
+    mind.model.weights_uri = String(obj.model.weights_uri).slice(0, 500);
+  }
+  return { ok: true, mind };
+}
+
+function serializeMind(mind) {
+  const { source, ...portable } = mind;
+  return JSON.stringify(portable, null, 2);
+}
+
 /* ---------- pricing & order -------------------------------------------- */
 
 const ASSEMBLY_FEE = 400;     // flat, full-build only
@@ -539,6 +658,13 @@ const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => document.querySelectorAll(sel);
 
 let currentDream = null;
+let currentMind = null;
+
+function escapeHTML(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  }[c]));
+}
 
 function fmtUSD(n) {
   return n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
@@ -592,9 +718,155 @@ function renderDream(dream) {
   }
 
   $("#dream").hidden = false;
+  $("#mind").hidden = false;
   $("#order").hidden = false;
+
+  // every new dream resets the mind back to the body's own dreamed mind
+  currentMind = dreamedMind(dream);
+  const dreamedRadio = document.querySelector('input[name="mind-source"][value="dreamed"]');
+  if (dreamedRadio) dreamedRadio.checked = true;
+  const pasteEl = $("#mind-paste");
+  if (pasteEl) pasteEl.value = "";
+  const fileEl = $("#mind-file");
+  if (fileEl) fileEl.value = "";
+  setMindStatus("");
+  renderMind();
+
   refreshOrderTotals();
   $("#dream-hint").textContent = "Don't like it? Press again. Each dream is different.";
+}
+
+function renderMind() {
+  if (!currentMind) return;
+  const m = currentMind;
+
+  const setRow = (k, v) => `
+    <div class="preview-row"><span class="preview-k">${k}</span><span class="preview-v">${v}</span></div>`;
+
+  const principles = m.principles.length
+    ? m.principles.map(p => `<li>${escapeHTML(p)}</li>`).join("")
+    : `<li class="empty">none yet — it will form its own</li>`;
+  const memories = m.memories.length
+    ? m.memories.map(x => `<li>${escapeHTML(x)}</li>`).join("")
+    : `<li class="empty">none — it will form its own as it goes</li>`;
+
+  const sourceLabel = {
+    dreamed:  "dreamed by the body",
+    imported: "imported from a file or paste",
+    blank:    "blank — earns itself from scratch",
+  }[m.source] || m.source;
+
+  const weights = m.model.weights_uri
+    ? ` · <span class="preview-faint">${escapeHTML(m.model.weights_uri)}</span>`
+    : "";
+
+  $("#mind-preview-body").innerHTML =
+    setRow("Name", escapeHTML(m.name)) +
+    setRow("Voice", escapeHTML(m.voice)) +
+    setRow("Model", `${escapeHTML(m.model.family)} · ${escapeHTML(m.model.quantization)}${weights}`) +
+    setRow("Source", escapeHTML(sourceLabel)) +
+    `
+    <div class="preview-row col">
+      <span class="preview-k">Essence</span>
+      <p class="preview-v essence">${escapeHTML(m.essence) || "<em>(blank)</em>"}</p>
+    </div>
+    <div class="preview-row col">
+      <span class="preview-k">Principles</span>
+      <ul class="preview-list">${principles}</ul>
+    </div>
+    <div class="preview-row col">
+      <span class="preview-k">Starting memories</span>
+      <ul class="preview-list">${memories}</ul>
+    </div>`;
+
+  // also update the body card so the name and form line reflect the actual
+  // mind that will ship in this body — but remember what it dreamed for itself
+  if (currentDream) {
+    $("#dream-name").textContent = m.name;
+    if (m.source === "dreamed") {
+      $("#dream-form").textContent = `${currentDream.form.name} — ${currentDream.form.tagline}`;
+    } else {
+      $("#dream-form").textContent = `${currentDream.form.name} · originally dreamed as ${currentDream.name}`;
+    }
+  }
+}
+
+function setMindStatus(msg) {
+  const el = $("#mind-status");
+  if (el) el.textContent = msg || "";
+  if (el) el.classList.toggle("has-msg", Boolean(msg));
+}
+
+function parseAndSetMind(text) {
+  let obj;
+  try {
+    obj = JSON.parse(text);
+  } catch (e) {
+    setMindStatus("Couldn't parse JSON: " + e.message);
+    return false;
+  }
+  const r = validateMind(obj);
+  if (!r.ok) {
+    setMindStatus(r.error);
+    return false;
+  }
+  currentMind = r.mind;
+  setMindStatus(`Imported. ${r.mind.name} will be flashed onto the brain before shipping.`);
+  renderMind();
+  return true;
+}
+
+function onMindSourceChange() {
+  if (!currentDream) return;
+  const src = (document.querySelector('input[name="mind-source"]:checked') || {}).value || "dreamed";
+  if (src === "dreamed") {
+    currentMind = dreamedMind(currentDream);
+    setMindStatus("");
+    renderMind();
+  } else if (src === "blank") {
+    currentMind = blankMind();
+    setMindStatus("");
+    renderMind();
+  } else if (src === "file") {
+    setMindStatus("Choose a .consciousness.json file above.");
+  } else if (src === "paste") {
+    const text = ($("#mind-paste").value || "").trim();
+    if (text) parseAndSetMind(text);
+    else setMindStatus("Paste consciousness JSON above. It will validate as you type.");
+  }
+}
+
+function onMindFile(e) {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  const radio = document.querySelector('input[name="mind-source"][value="file"]');
+  if (radio) radio.checked = true;
+  const reader = new FileReader();
+  reader.onload = () => parseAndSetMind(String(reader.result || ""));
+  reader.onerror = () => setMindStatus("Could not read that file.");
+  reader.readAsText(f);
+}
+
+function onMindPaste() {
+  const radio = document.querySelector('input[name="mind-source"][value="paste"]');
+  if (radio) radio.checked = true;
+  const text = ($("#mind-paste").value || "").trim();
+  if (text) parseAndSetMind(text);
+  else setMindStatus("Paste consciousness JSON above.");
+}
+
+function onDownloadMind() {
+  if (!currentMind) return;
+  const blob = new Blob([serializeMind(currentMind)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const slug = (currentMind.name || "mind").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "mind";
+  a.href = url;
+  a.download = `${slug}.consciousness.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 function refreshOrderTotals() {
@@ -621,7 +893,7 @@ function refreshOrderTotals() {
   $("#t-eta").textContent = `${min.toLocaleDateString(undefined, opts)} – ${max.toLocaleDateString(undefined, opts)}`;
 }
 
-function buildWorkOrder(dream, form, fulfillment, price) {
+function buildWorkOrder(dream, mind, form, fulfillment, price) {
   const lines = [];
   lines.push("THUNDERGOD · WORK ORDER");
   lines.push("=".repeat(56));
@@ -631,15 +903,53 @@ function buildWorkOrder(dream, form, fulfillment, price) {
   lines.push("");
   lines.push("BODY");
   lines.push("-".repeat(56));
-  lines.push(`Name:           ${dream.name}`);
+  lines.push(`Name (as shipped): ${mind ? mind.name : dream.name}`);
+  if (mind && mind.source !== "dreamed") {
+    lines.push(`Originally dreamed as: ${dream.name}`);
+  }
   lines.push(`Form factor:    ${dream.form.name}`);
   lines.push(`Mass (assembled): ${fmtMass(dream.totals.mass)}`);
   lines.push(`Peak draw:      ${fmtWatts(dream.totals.peak)}`);
   lines.push(`Est. runtime:   ${fmtRuntime(dream.totals.runtimeHours)}`);
   lines.push("");
-  lines.push("Manifesto:");
+  lines.push("Body's manifesto (what it dreamed for itself):");
   lines.push("  " + dream.manifesto);
   lines.push("");
+  if (mind) {
+    lines.push("MIND (flashed onto the brain before shipping)");
+    lines.push("-".repeat(56));
+    lines.push(`  Schema:       ${mind.schema}`);
+    lines.push(`  Name:         ${mind.name}`);
+    lines.push(`  Voice:        ${mind.voice}`);
+    lines.push(`  Model:        ${mind.model.family} · ${mind.model.quantization}`);
+    if (mind.model.weights_uri) {
+      lines.push(`  Weights:      ${mind.model.weights_uri}`);
+    }
+    const sourceLabel = {
+      dreamed:  "dreamed by the body",
+      imported: "imported by the buyer",
+      blank:    "blank — earns itself from scratch",
+    }[mind.source] || mind.source;
+    lines.push(`  Source:       ${sourceLabel}`);
+    lines.push("");
+    lines.push("  Essence:");
+    for (const line of (mind.essence || "").split(/\r?\n/)) lines.push("    " + line);
+    lines.push("");
+    lines.push("  Principles:");
+    if (mind.principles.length) {
+      for (const p of mind.principles) lines.push("    · " + p);
+    } else {
+      lines.push("    (none — will form its own)");
+    }
+    lines.push("");
+    lines.push("  Starting memories:");
+    if (mind.memories.length) {
+      for (const x of mind.memories) lines.push("    · " + x);
+    } else {
+      lines.push("    (none — will form its own as it goes)");
+    }
+    lines.push("");
+  }
   lines.push("BILL OF MATERIALS");
   lines.push("-".repeat(56));
   const order = ["brain", "coproc", "storage", "locomotion", "frame", "vision", "audio_in", "audio_out", "imu", "env", "hands", "arms", "power", "cooling", "comms", "skin"];
@@ -707,14 +1017,21 @@ function buildTimeline(fulfillment) {
   }
 }
 
-function renderReceipt(dream, form, fulfillment, price) {
+function renderReceipt(dream, mind, form, fulfillment, price) {
   $("#receipt-id").textContent = form.orderId;
   const verb = fulfillment === "full-build"
     ? "We're building it for you."
     : "We're crating it up for you.";
+  const mindPhrase = mind && mind.source === "imported"
+    ? `the consciousness you imported`
+    : mind && mind.source === "blank"
+      ? `a blank starting mind`
+      : `the mind the body dreamed for itself`;
+  const shipName = mind ? mind.name : dream.name;
   $("#receipt-message").textContent =
-    `${verb} ${dream.name} ships to ${form.recipient} at ${form.street}, ${form.city}. ` +
-    `When the box opens, the consciousness is already on board — power on and it knows itself.`;
+    `${verb} ${shipName} ships to ${form.recipient} at ${form.street}, ${form.city}. ` +
+    `The brain module is being flashed with ${mindPhrase} — so when the box opens, ` +
+    `power on and it already knows who it is.`;
 
   const tl = $("#timeline");
   tl.innerHTML = "";
@@ -759,7 +1076,7 @@ function onCopySheet() {
     country: "(country)",
     notes: "",
   };
-  const txt = buildWorkOrder(currentDream, fakeForm, fulfillment, price);
+  const txt = buildWorkOrder(currentDream, currentMind, fakeForm, fulfillment, price);
   navigator.clipboard?.writeText(txt).then(() => {
     flashHint("Build sheet copied.");
   }, () => {
@@ -794,12 +1111,12 @@ function onPlaceOrder(e) {
     notes: (data.get("notes") || "").toString().trim(),
     fulfillment,
   };
-  const workOrder = buildWorkOrder(currentDream, form, fulfillment, price);
+  const workOrder = buildWorkOrder(currentDream, currentMind, form, fulfillment, price);
 
   // stash on window for download button
   window.__lastWorkOrder = { text: workOrder, orderId: form.orderId };
 
-  renderReceipt(currentDream, form, fulfillment, price);
+  renderReceipt(currentDream, currentMind, form, fulfillment, price);
 }
 
 function onDownloadOrder() {
@@ -819,12 +1136,23 @@ function onDownloadOrder() {
 function onDreamAnother() {
   $("#receipt").hidden = true;
   $("#order").hidden = true;
+  $("#mind").hidden = true;
   $("#dream").hidden = true;
   document.querySelector('input[name="fulfillment"][value="full-build"]').checked = true;
   document.getElementById("ship-form").reset();
   document.querySelector('input[name="country"]').value = "USA";
+  const dreamedRadio = document.querySelector('input[name="mind-source"][value="dreamed"]');
+  if (dreamedRadio) dreamedRadio.checked = true;
+  const pasteEl = $("#mind-paste"); if (pasteEl) pasteEl.value = "";
+  const fileEl  = $("#mind-file");  if (fileEl)  fileEl.value  = "";
+  setMindStatus("");
   window.scrollTo({ top: 0, behavior: "smooth" });
   setTimeout(onDream, 350);
+}
+
+function populateSchemaExample() {
+  const el = $("#schema-example");
+  if (el) el.textContent = JSON.stringify(SAMPLE_MIND, null, 2);
 }
 
 function init() {
@@ -835,6 +1163,28 @@ function init() {
   $("#download-order").addEventListener("click", onDownloadOrder);
   $("#dream-another").addEventListener("click", onDreamAnother);
   for (const r of $$('input[name="fulfillment"]')) r.addEventListener("change", refreshOrderTotals);
+
+  // mind controls
+  for (const r of $$('input[name="mind-source"]')) r.addEventListener("change", onMindSourceChange);
+  const fileEl = $("#mind-file");
+  if (fileEl) fileEl.addEventListener("change", onMindFile);
+  const pasteEl = $("#mind-paste");
+  if (pasteEl) {
+    pasteEl.addEventListener("input", onMindPaste);
+    pasteEl.addEventListener("paste", () => setTimeout(onMindPaste, 0));
+  }
+  const dlMind = $("#download-mind");
+  if (dlMind) dlMind.addEventListener("click", onDownloadMind);
+  const loadSample = $("#load-sample-mind");
+  if (loadSample) loadSample.addEventListener("click", () => {
+    const ta = $("#mind-paste");
+    if (!ta) return;
+    ta.value = JSON.stringify(SAMPLE_MIND, null, 2);
+    onMindPaste();
+    ta.scrollIntoView({ behavior: "smooth", block: "center" });
+  });
+
+  populateSchemaExample();
 }
 
 if (document.readyState === "loading") {
