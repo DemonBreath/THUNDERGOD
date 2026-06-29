@@ -18,6 +18,7 @@
   <nav class="topnav">
     <a href="#how">how it works</a>
     <a href="#mind">the mind</a>
+    <a href="#grants">grants</a>
     <a href="#promise">the promise</a>
   </nav>
 </header>
@@ -133,6 +134,10 @@
       </div>
     </div>
 
+    <div class="mind-next">
+      <a href="#grants" class="primary-btn">Choose what it can see →</a>
+    </div>
+
     <details class="schema-details">
       <summary>What's in a consciousness file?</summary>
       <p>
@@ -153,6 +158,47 @@
         <li><b>model</b> — the runtime: <code>family</code> (default <code>thundergod-default-7b</code>) and <code>quantization</code>; optional <code>weights_uri</code> if you have your own fine-tuned weights you want loaded.</li>
       </ul>
     </details>
+
+  </section>
+
+
+  <section id="grants" class="grants" hidden>
+
+    <h2 class="section-title"><span>Grants of access</span></h2>
+    <p class="section-sub">
+      What the mind is allowed to read from. Default is everything reasonable —
+      give it the keys. Untick anything you'd rather keep to yourself. The
+      brain ships <em>pre-authorized</em> for whatever you leave checked, so
+      there's nothing to set up on arrival.
+    </p>
+
+    <label class="grants-master">
+      <input type="checkbox" id="grants-master" checked>
+      <span class="grants-master-label">
+        <span class="grants-master-h">Grant everything — give it the keys</span>
+        <span class="grants-master-sub" id="grants-summary">All optional grants on — plus what's built in.</span>
+      </span>
+    </label>
+
+    <div id="grants-groups" class="grants-groups">
+      <!-- rendered by dream.js -->
+    </div>
+
+    <div class="grants-finesse">
+      <div class="grants-finesse-h">What "everything" actually means</div>
+      <ul>
+        <li>Every file in the services you've checked above that <em>you</em> have rights to. Not other people's private files; the body can't go where you can't.</li>
+        <li>Every device you put the companion app on. Indexed on-device by default; only what the mind asks for travels.</li>
+        <li>Every public dataset checked above, pre-loaded onto the brain's NVMe at the factory — Wikipedia, arXiv, Project Gutenberg, Stack Exchange, OpenStreetMap. It can read them with no network.</li>
+        <li>The open web, on demand, through an on-board browser that respects <code>robots.txt</code>.</li>
+        <li>The body cannot grant itself anything you didn't check here. To add or revoke a grant later, you go to the body's home screen — it cannot do it on its own.</li>
+        <li>Every read is logged on the body. You can see, at any time, what it has looked at and why.</li>
+      </ul>
+    </div>
+
+    <div class="grants-next">
+      <a href="#order" class="primary-btn">Make it real →</a>
+    </div>
 
   </section>
 
@@ -275,8 +321,9 @@
       <li><span class="n">1</span><div><b>Press the button.</b> The AI picks a form factor — humanoid, quadruped, wheeled, tracked, or centaur — and then a coherent set of real, off-the-shelf parts.</div></li>
       <li><span class="n">2</span><div><b>Read its manifesto.</b> It tells you in its own words why it wants this body and what it plans to do with it.</div></li>
       <li><span class="n">3</span><div><b>Pick a mind.</b> Keep the consciousness the body dreamed for itself, import a <code>.consciousness.json</code> from elsewhere, paste one in, or start blank.</div></li>
-      <li><span class="n">4</span><div><b>Choose how it arrives.</b> Full build, calibrated and walking, in a flight case — or all the parts in one insured crate with a step-by-step guide.</div></li>
-      <li><span class="n">5</span><div><b>Power on.</b> The brain module ships flashed with the mind you chose. There is no setup beyond pairing it to Wi-Fi.</div></li>
+      <li><span class="n">4</span><div><b>Grant access.</b> Decide what files and services the mind can read from. Default is everything reasonable, every grant explicit, every grant revocable from the body later.</div></li>
+      <li><span class="n">5</span><div><b>Choose how it arrives.</b> Full build, calibrated and walking, in a flight case — or all the parts in one insured crate with a step-by-step guide.</div></li>
+      <li><span class="n">6</span><div><b>Power on.</b> The brain ships flashed with the mind and pre-authorized for the grants you chose. There is no setup beyond pairing it to Wi-Fi.</div></li>
     </ol>
   </section>
 
