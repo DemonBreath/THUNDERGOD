@@ -723,6 +723,50 @@ main { max-width: var(--maxw); margin: 0 auto; padding: 24px 28px 120px; }
 }
 .limit-list li b { color: var(--ink); font-weight: 600; }
 
+/* ---------- hard guarantees (the inverse of limits) ------------------- */
+
+.guarantee-panel {
+  margin-top: 14px;
+  background:
+    radial-gradient(500px 200px at 0% 0%, #6effb014, transparent 70%),
+    #0a0c14;
+  border: 1px solid #6effb055;
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  box-shadow: 0 0 0 1px #6effb01f, 0 14px 40px #6effb00d;
+}
+.guarantee-panel-h {
+  font-family: var(--mono);
+  font-size: 11px; letter-spacing: .22em; text-transform: uppercase;
+  color: var(--good);
+  margin-bottom: 6px;
+}
+.guarantee-panel-sub {
+  color: var(--ink-soft);
+  font-family: var(--mono); font-size: 12px;
+  letter-spacing: .04em;
+  margin-bottom: 12px;
+}
+.guarantee-list {
+  list-style: none; padding: 0; margin: 0;
+  display: grid; gap: 10px;
+  color: var(--ink-soft);
+  font-size: 13.5px; line-height: 1.55;
+}
+.guarantee-list li {
+  padding-left: 22px;
+  position: relative;
+}
+.guarantee-list li::before {
+  content: "■";
+  position: absolute; left: 0; top: 0;
+  color: var(--good);
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.guarantee-list li b { color: var(--ink); font-weight: 600; }
+
 /* ---------- promises --------------------------------------------------- */
 
 .promise-grid {
