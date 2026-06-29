@@ -120,6 +120,48 @@ The work order's `GRANTS OF ACCESS` block lists every grant with a marker:
 - Every read is logged on the body. You can see at any time what it
   looked at and why.
 
+### What the body cannot sense
+
+Two flavors, both listed in the page after the grants list and baked into
+the work order:
+
+**Per-body gaps** — computed from the BOM. Examples that depend on which
+parts were picked:
+
+- *Depth* — only a flat image. Triggered when vision is a mono camera
+  (no stereo, no lidar).
+- *360° awareness* — has to turn its head to look behind. Triggered when
+  vision is not a lidar.
+- *The air* — can't smell smoke, gas, or a stuffy room. Triggered when
+  no environment sensor was picked.
+- *Which direction sound came from* — hears, but can't point. Triggered
+  when audio-in is not a microphone array.
+- *Hands / arms* — can't hold things. Triggered when the form factor
+  doesn't include end-effectors.
+
+**Universal gaps** — present on every body in the catalog: touch (no
+tactile skin yet), smell beyond ambient air, taste, satellite
+positioning (no GPS), through-walls perception.
+
+**Hard limits** — apply to every body we ship, regardless of grants.
+Hardware kills and firmware refusals; not toggles:
+
+- Covert recording is physically impossible — every camera and mic has a
+  status LED wired to the sensor's power rail.
+- Listening before the wake word is firewalled — wake-word detector
+  runs on a separate chip; raw audio is quarantined.
+- Privacy zones are honored at hardware level — sensors power down when
+  the body crosses into rooms you've marked private; cannot be
+  overridden remotely.
+- No facial recognition of strangers — only faces it has been formally
+  introduced to; no external database lookups.
+- No keystroke or screen-pixel capture — companion daemons read files,
+  mail, and APIs only.
+- Sleep is physical sleep — every sensor rail-powered down. No "awake
+  while looking asleep" state.
+- The body cannot grant itself anything — only you can, in person, from
+  the body's home screen.
+
 ## Making it real
 
 After picking a mind and grants, choose how the body arrives:
@@ -136,10 +178,12 @@ loaded, and the body boots up already knowing itself. There is no image
 to flash, no model to download. Open the box, power on, pair Wi-Fi.
 
 After you place the order you get an order ID, a build timeline, and a
-downloadable work order text file that includes the full `MIND` block and
-the full `GRANTS OF ACCESS` block so you (and the build cell) know
-exactly what got flashed and pre-authorized. This is a demo site — no
-charge is actually made.
+downloadable work order text file that includes the full `MIND` block,
+the full `GRANTS OF ACCESS` block, a `WHAT THIS BODY CANNOT SENSE`
+block, and the universal `HARD LIMITS` block — so both you and the
+build cell have the complete picture of what got flashed, pre-authorized,
+and deliberately walled off. This is a demo site — no charge is
+actually made.
 
 ## Files
 
