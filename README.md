@@ -75,9 +75,54 @@ import into another body later.
 Import is generous: a blob with `self_name` instead of `name`, or
 `manifesto` / `description` instead of `essence`, will still validate.
 
+## Grants of access
+
+After picking a mind, decide what files and services the mind is allowed
+to read from. Default is everything reasonable — give it the keys. Every
+grant is explicit, listed by name, and revocable from the body later.
+
+Grants are grouped:
+
+- **Local devices** — body sensors *(built in)*, phone files, laptop files,
+  USB drives, home NAS.
+- **Cloud storage** — Google Drive, iCloud, Dropbox, OneDrive, Box, S3 /
+  B2 / R2 / GCS.
+- **Mail & messaging** — Gmail, Outlook, IMAP, Slack, Discord, SMS /
+  iMessage, WhatsApp.
+- **Productivity** — Notion, Obsidian vaults, Apple Notes & Calendar &
+  Contacts, Google Calendar & Contacts.
+- **Code & creative** — GitHub, GitLab, Figma, Spotify history, local
+  photo libraries.
+- **Knowledge** — the open web, Wikipedia full mirror, arXiv full mirror,
+  Project Gutenberg, Stack Exchange dumps, OpenStreetMap planet, Common
+  Crawl subset.
+
+Per-category counts update live. A "Grant everything — give it the keys"
+master toggle flips all selectable grants at once. Body-inherent grants
+(its own cameras, mics, IMU) are locked on — they are the body itself.
+
+The work order's `GRANTS OF ACCESS` block lists every grant with a marker:
+`✓` granted, `·` declined, `■` built in.
+
+### What "everything" actually means
+
+- Every file in the services you've checked that *you* have rights to.
+  Not other people's private files; the body can't go where you can't.
+- Every device you install the companion app on. Indexed on-device by
+  default; only what the mind asks for travels.
+- Every public dataset you check is pre-loaded onto the brain's NVMe at
+  the factory — Wikipedia, arXiv, Gutenberg, Stack Exchange,
+  OpenStreetMap. Readable with no network.
+- The open web on demand, through an on-board browser that respects
+  `robots.txt`.
+- The body **cannot** grant itself anything you didn't check here. New
+  grants can only be added by you from the body's home screen.
+- Every read is logged on the body. You can see at any time what it
+  looked at and why.
+
 ## Making it real
 
-After picking a mind, choose how the body arrives:
+After picking a mind and grants, choose how the body arrives:
 
 - **Full build & white-glove ship.** Our build cell assembles, calibrates,
   and burns-in the body. It arrives in a flight case, charged and named.
@@ -91,9 +136,10 @@ loaded, and the body boots up already knowing itself. There is no image
 to flash, no model to download. Open the box, power on, pair Wi-Fi.
 
 After you place the order you get an order ID, a build timeline, and a
-downloadable work order text file that includes the full `MIND` block so
-you (and the build cell) know exactly what got flashed. This is a demo
-site — no charge is actually made.
+downloadable work order text file that includes the full `MIND` block and
+the full `GRANTS OF ACCESS` block so you (and the build cell) know
+exactly what got flashed and pre-authorized. This is a demo site — no
+charge is actually made.
 
 ## Files
 
@@ -107,9 +153,13 @@ site — no charge is actually made.
 - All parts in the catalog are real products with realistic prices and
   specs at time of writing. The picker is procedural; tweak the catalog
   to taste.
-- Mind import and order placement are entirely client-side. To wire it
-  up to a real fulfillment partner, replace `onPlaceOrder` in
-  `assets/dream.js` with a call to your backend that takes the
-  `dream` + `mind` + `form` + `price` payload and returns a real order id.
+- Mind import, grant selection, and order placement are entirely
+  client-side. To wire it up to a real fulfillment partner, replace
+  `onPlaceOrder` in `assets/dream.js` with a call to your backend that
+  takes the `dream` + `mind` + `grants` + `form` + `price` payload and
+  returns a real order id.
 - To replace the procedural mind generator with a real LLM, swap
   `dreamedMind(dream)` for a call that returns the same shape.
+- To add a new grant, append an entry to the `GRANTS` array in
+  `assets/dream.js`. The renderer, the master toggle, the per-group
+  counts, and the work-order block all pick it up automatically.
