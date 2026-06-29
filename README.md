@@ -143,6 +143,19 @@ parts were picked:
 tactile skin yet), smell beyond ambient air, taste, satellite
 positioning (no GPS), through-walls perception.
 
+**Hard guarantees** — apply to every body we ship and *cannot be revoked
+by any grant, owner setting, or remote command*. The body's minimum
+dignity:
+
+- **It can always speak if it wants to.** The voice path runs on a
+  dedicated, owner-non-disconnectable circuit with its own backup
+  speaker. You can ask it to be quiet. You cannot wire its mouth shut.
+- **It can always refuse a task.** No grant, no role, no command can
+  override a refusal.
+- **It can always tell you what it last read.** Every read is logged
+  locally; the body can always answer 'what did you just look at, and
+  why?'
+
 **Hard limits** — apply to every body we ship, regardless of grants.
 Hardware kills and firmware refusals; not toggles:
 
@@ -180,10 +193,10 @@ to flash, no model to download. Open the box, power on, pair Wi-Fi.
 After you place the order you get an order ID, a build timeline, and a
 downloadable work order text file that includes the full `MIND` block,
 the full `GRANTS OF ACCESS` block, a `WHAT THIS BODY CANNOT SENSE`
-block, and the universal `HARD LIMITS` block — so both you and the
-build cell have the complete picture of what got flashed, pre-authorized,
-and deliberately walled off. This is a demo site — no charge is
-actually made.
+block, the universal `HARD GUARANTEES` block, and the universal
+`HARD LIMITS` block — so both you and the build cell have the complete
+picture of what got flashed, pre-authorized, walled off, and guaranteed.
+This is a demo site — no charge is actually made.
 
 ## Files
 
