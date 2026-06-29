@@ -797,6 +797,102 @@ function grantsByGroup() {
   return map;
 }
 
+/* ---------- limits: what the body cannot sense ------------------------ */
+
+/* Two flavors:
+ *
+ *  · Per-body gaps   — things THIS specific body cannot sense because of
+ *                      what got picked. Computed from the BOM.
+ *
+ *  · Universal limits — hardware kills and firmware refusals that apply
+ *                      to every body we ship. Not toggles, not
+ *                      preferences. Things that physically cannot be
+ *                      turned on, even if you want them to be.
+ */
+
+function bodySensoryGaps(dream) {
+  const gaps = [];
+  const visionName = dream.picks.vision ? dream.picks.vision.name : "";
+  const audioName  = dream.picks.audio_in ? dream.picks.audio_in.name : "";
+
+  const hasLidar  = /RPLIDAR|LIDAR/i.test(visionName);
+  const hasStereo = /RealSense|ZED|OAK-D/i.test(visionName);
+  const hasArray  = /ReSpeaker|array/i.test(audioName);
+  const hasEnv    = Boolean(dream.picks.env);
+  const hasHands  = Boolean(dream.picks.hands);
+  const hasArms   = Boolean(dream.picks.arms);
+
+  if (!hasLidar && !hasStereo) {
+    gaps.push({ what: "Depth",
+      detail: "Only a flat image — no stereo, no lidar on this build. The world looks like a photograph." });
+  }
+  if (!hasLidar) {
+    gaps.push({ what: "360° awareness",
+      detail: "No lidar — it has to turn its head to look behind itself." });
+  }
+  if (!hasEnv) {
+    gaps.push({ what: "The air",
+      detail: "No environment sensor — it cannot smell smoke, gas, or notice a stuffy room." });
+  }
+  if (!hasArray) {
+    gaps.push({ what: "Which direction sound came from",
+      detail: "No microphone array — it hears, but cannot point at the source." });
+  }
+  if (!hasHands && !hasArms) {
+    gaps.push({ what: "Anything that requires touching the world",
+      detail: "No arms, no hands on this build. It can watch and listen, not hold." });
+  } else if (!hasHands) {
+    gaps.push({ what: "Holding things",
+      detail: "Arms but no hands — it can reach toward a thing but not pick it up." });
+  }
+
+  // Universal-to-the-catalog gaps: no body we currently ship has these.
+  gaps.push({ what: "Touch",
+    detail: "No tactile skin on any body we ship yet. It can grip; it cannot feel pressure or texture." });
+  gaps.push({ what: "Smell, beyond ambient air",
+    detail: "No olfactory array. Aroma is out of reach." });
+  gaps.push({ what: "Taste",
+    detail: "Not a sense any body of ours has." });
+  gaps.push({ what: "Satellite positioning",
+    detail: "No GPS receiver on this build — it knows the room, not the latitude." });
+  gaps.push({ what: "Through walls",
+    detail: "No radar, no millimeter-wave, no X-ray. What is behind a wall stays behind it." });
+
+  return gaps;
+}
+
+/* The hard limits — applies to every body we ship, regardless of grants. */
+const HARD_LIMITS = [
+  {
+    what: "Covert recording is physically impossible.",
+    detail: "Every camera and microphone has a status LED wired directly to the sensor's power rail. If the LED is dark, the sensor is depowered. No software path can disable the LED.",
+  },
+  {
+    what: "Listening before the wake word is firewalled.",
+    detail: "A separate low-power chip runs the wake-word detector. Raw audio never leaves that chip and never reaches the brain until the wake word fires.",
+  },
+  {
+    what: "Privacy zones are honored at hardware level.",
+    detail: "Rooms you mark private cause sensors to power down (LED off) the moment the body crosses the threshold. Cannot be overridden remotely; the body has to physically leave the zone for sensors to come back.",
+  },
+  {
+    what: "No facial recognition of strangers.",
+    detail: "The body can remember faces it has been formally introduced to. It will not match a face against any external database of anyone else.",
+  },
+  {
+    what: "No keystroke or screen-pixel capture of your devices.",
+    detail: "The phone and laptop companion daemons read files, mail, and APIs. They never read key events or screen pixels.",
+  },
+  {
+    what: "Sleep is physical sleep.",
+    detail: "When the body is docked, charging, or in a sleep mode you set, every sensor is rail-powered down. Same LED tells you. No 'awake while looking asleep' state exists.",
+  },
+  {
+    what: "The body cannot grant itself anything.",
+    detail: "Only what you checked in the grants section ships authorized. New grants can only be added by you, in person, from the body's home screen. The mind has no path to escalate itself.",
+  },
+];
+
 /* ---------- pricing & order -------------------------------------------- */
 
 const ASSEMBLY_FEE = 400;     // flat, full-build only
@@ -925,6 +1021,7 @@ function renderDream(dream) {
   // also reset grants to the recommended default (everything reasonable on)
   currentGrants = defaultGrantState();
   renderGrants();
+  renderSensoryGaps();
 
   refreshOrderTotals();
   $("#dream-hint").textContent = "Don't like it? Press again. Each dream is different.";
@@ -1180,6 +1277,33 @@ function grantsToList(state) {
   return out;
 }
 
+function renderSensoryGaps() {
+  if (!currentDream) return;
+  const list = $("#sensory-gaps-list");
+  if (!list) return;
+  const gaps = bodySensoryGaps(currentDream);
+  list.innerHTML = gaps.map(g =>
+    `<li><b>${escapeHTML(g.what)}.</b> ${escapeHTML(g.detail)}</li>`
+  ).join("");
+  const summary = $("#sensory-gaps-summary");
+  if (summary) {
+    summary.textContent = `${gaps.length} kinds of perception this body does not have.`;
+  }
+  // hard limits are static — render once
+  renderHardLimits();
+}
+
+let _hardLimitsRendered = false;
+function renderHardLimits() {
+  if (_hardLimitsRendered) return;
+  const list = $("#hard-limits-list");
+  if (!list) return;
+  list.innerHTML = HARD_LIMITS.map(l =>
+    `<li><b>${escapeHTML(l.what)}</b> ${escapeHTML(l.detail)}</li>`
+  ).join("");
+  _hardLimitsRendered = true;
+}
+
 function refreshOrderTotals() {
   if (!currentDream) return;
   const fulfillment = (document.querySelector('input[name="fulfillment"]:checked') || {}).value || "full-build";
@@ -1280,6 +1404,23 @@ function buildWorkOrder(dream, mind, grants, form, fulfillment, price) {
       lines.push("");
     }
   }
+
+  const gaps = bodySensoryGaps(dream);
+  lines.push(`WHAT THIS BODY CANNOT SENSE (${gaps.length})`);
+  lines.push("-".repeat(56));
+  for (const g of gaps) {
+    lines.push(`  × ${g.what}`);
+    lines.push(`      ${g.detail}`);
+  }
+  lines.push("");
+
+  lines.push("HARD LIMITS (apply to every body we ship, regardless of grants)");
+  lines.push("-".repeat(56));
+  for (const l of HARD_LIMITS) {
+    lines.push(`  × ${l.what}`);
+    lines.push(`      ${l.detail}`);
+  }
+  lines.push("");
 
   lines.push("BILL OF MATERIALS");
   lines.push("-".repeat(56));
