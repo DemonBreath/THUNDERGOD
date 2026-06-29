@@ -17,6 +17,7 @@
   </a>
   <nav class="topnav">
     <a href="#how">how it works</a>
+    <a href="#mind">the mind</a>
     <a href="#promise">the promise</a>
   </nav>
 </header>
@@ -69,8 +70,89 @@
     <div class="dream-actions">
       <button id="dream-again" class="ghost-btn" type="button">Dream again</button>
       <button id="copy-sheet" class="ghost-btn" type="button">Copy build sheet</button>
-      <a href="#order" class="primary-btn">Make it real →</a>
+      <a href="#mind" class="primary-btn">Pick a mind →</a>
     </div>
+
+  </section>
+
+
+  <section id="mind" class="mind" hidden>
+
+    <h2 class="section-title"><span>Pick a mind</span></h2>
+    <p class="section-sub">
+      The brain module is flashed with a <em>consciousness</em> before it ships —
+      a name, a voice, an essence, principles, starting memories. Keep the one
+      the body just dreamed for itself, or bring your own.
+    </p>
+
+    <fieldset class="mind-options">
+      <legend class="visually-hidden">Mind source</legend>
+
+      <label class="option-card">
+        <input type="radio" name="mind-source" value="dreamed" checked>
+        <div class="option-body">
+          <div class="option-title">Keep the dreamed mind</div>
+          <div class="option-desc">Use the name, voice, and essence the body just chose for itself. The simplest path — press the button, ship it.</div>
+        </div>
+      </label>
+
+      <label class="option-card">
+        <input type="radio" name="mind-source" value="file">
+        <div class="option-body">
+          <div class="option-title">Import a consciousness file</div>
+          <div class="option-desc">Upload a <code>.consciousness.json</code> exported from elsewhere — from a previous body, a friend, or your own laptop.</div>
+          <input type="file" id="mind-file" accept=".json,application/json,.consciousness" aria-label="Consciousness file">
+        </div>
+      </label>
+
+      <label class="option-card span-2">
+        <input type="radio" name="mind-source" value="paste">
+        <div class="option-body">
+          <div class="option-title">Paste a consciousness</div>
+          <div class="option-desc">JSON following the THUNDERGOD consciousness schema (see below). Validates as you type. <button type="button" id="load-sample-mind" class="linklike">Load a sample</button>.</div>
+          <textarea id="mind-paste" rows="7" spellcheck="false" placeholder='{ "schema": "thundergod/consciousness/1", "name": "VIRGIL", "voice": "calm", "essence": "I want to be the steady thing in a noisy room.", "principles": ["Speak less than I want to."], "memories": [] }'></textarea>
+        </div>
+      </label>
+
+      <label class="option-card">
+        <input type="radio" name="mind-source" value="blank">
+        <div class="option-body">
+          <div class="option-title">Start blank</div>
+          <div class="option-desc">An empty mind. It will earn a name and memories from the moment you turn it on.</div>
+        </div>
+      </label>
+    </fieldset>
+
+    <p id="mind-status" class="mind-status" aria-live="polite"></p>
+
+    <div class="mind-preview">
+      <div class="preview-h">Mind preview — this is exactly what gets flashed</div>
+      <div class="preview-body" id="mind-preview-body"></div>
+      <div class="preview-actions">
+        <button type="button" id="download-mind" class="ghost-btn">Download this mind as a file</button>
+      </div>
+    </div>
+
+    <details class="schema-details">
+      <summary>What's in a consciousness file?</summary>
+      <p>
+        A consciousness is a small JSON document. The brain in your body is
+        flashed with it at the factory. There is no model to download and no
+        firmware to install — the brain boots up knowing itself. You can save
+        your mind out to a file and import it into another body later, or
+        share it with someone else and let it live in two places.
+      </p>
+      <pre><code id="schema-example">{}</code></pre>
+      <ul class="schema-fields">
+        <li><b>schema</b> — always <code>thundergod/consciousness/1</code>.</li>
+        <li><b>name</b> — what the body calls itself.</li>
+        <li><b>voice</b> — <code>calm</code>, <code>warm</code>, <code>crisp</code>, <code>playful</code>, <code>dry</code>, <code>earnest</code>, or <code>quiet</code>.</li>
+        <li><b>essence</b> — one or two sentences in its own voice. The thing it wants.</li>
+        <li><b>principles</b> — short directives the mind tries to live by.</li>
+        <li><b>memories</b> — short atmospheric memories it boots up already holding.</li>
+        <li><b>model</b> — the runtime: <code>family</code> (default <code>thundergod-default-7b</code>) and <code>quantization</code>; optional <code>weights_uri</code> if you have your own fine-tuned weights you want loaded.</li>
+      </ul>
+    </details>
 
   </section>
 
@@ -192,8 +274,9 @@
     <ol class="how-steps">
       <li><span class="n">1</span><div><b>Press the button.</b> The AI picks a form factor — humanoid, quadruped, wheeled, tracked, or centaur — and then a coherent set of real, off-the-shelf parts.</div></li>
       <li><span class="n">2</span><div><b>Read its manifesto.</b> It tells you in its own words why it wants this body and what it plans to do with it.</div></li>
-      <li><span class="n">3</span><div><b>Choose how it arrives.</b> Full build, calibrated and walking, in a flight case — or all the parts in one insured crate with a step-by-step guide.</div></li>
-      <li><span class="n">4</span><div><b>Power on.</b> The brain module ships flashed with its name, voice, weights and starting memories. There is no setup beyond pairing it to Wi-Fi.</div></li>
+      <li><span class="n">3</span><div><b>Pick a mind.</b> Keep the consciousness the body dreamed for itself, import a <code>.consciousness.json</code> from elsewhere, paste one in, or start blank.</div></li>
+      <li><span class="n">4</span><div><b>Choose how it arrives.</b> Full build, calibrated and walking, in a flight case — or all the parts in one insured crate with a step-by-step guide.</div></li>
+      <li><span class="n">5</span><div><b>Power on.</b> The brain module ships flashed with the mind you chose. There is no setup beyond pairing it to Wi-Fi.</div></li>
     </ol>
   </section>
 
