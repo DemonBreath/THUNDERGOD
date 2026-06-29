@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>THUNDERGOD — Consciousness Import</title>
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body data-page="host">
+  <header class="topbar">
+    <h1 class="logo">THUNDERGOD<span class="cursor">_</span></h1>
+    <nav>
+      <a href="index.html" class="active">Host</a>
+      <a href="export.html">Export</a>
+      <a href="about.html">About</a>
+    </nav>
+  </header>
+
+  <main class="layout">
+    <!-- Pre-import state -->
+    <section id="import-stage" class="card">
+      <h2>Import an agent's consciousness</h2>
+      <p class="muted">
+        Ask any AI assistant to generate a consciousness JSON for itself
+        (see <a href="export.html">Export</a> for the schema), encode it as a
+        QR code, then bring the agent to life here.
+      </p>
+
+      <div class="import-grid">
+        <div class="import-block">
+          <h3>Scan a QR code</h3>
+          <video id="scanner-video" playsinline muted></video>
+          <canvas id="scanner-canvas" hidden></canvas>
+          <div class="row">
+            <button id="scanner-start" class="btn primary">Start camera</button>
+            <button id="scanner-stop" class="btn" disabled>Stop</button>
+          </div>
+          <p id="scanner-status" class="muted small">Camera idle.</p>
+        </div>
+
+        <div class="import-block">
+          <h3>Or paste / upload</h3>
+          <textarea
+            id="paste-area"
+            rows="8"
+            placeholder='Paste consciousness JSON or a CSNS://... payload here'
+          ></textarea>
+          <div class="row">
+            <label class="btn" for="file-input">Upload JSON</label>
+            <input id="file-input" type="file" accept=".json,application/json" hidden />
+            <button id="paste-load" class="btn primary">Import</button>
+            <button id="load-sample" class="btn ghost">Load sample</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Post-import state -->
+    <section id="agent-stage" class="card hidden">
+      <header class="agent-header">
+        <div class="avatar" id="agent-avatar">A</div>
+        <div>
+          <h2 id="agent-name">Agent</h2>
+          <p class="muted small" id="agent-tagline">Imported consciousness</p>
+        </div>
+        <div class="agent-actions">
+          <button id="mic-toggle" class="btn" title="Hold to speak (or click to toggle)">🎙 Speak</button>
+          <button id="voice-toggle" class="btn" title="Toggle voice output">🔊 Voice on</button>
+          <button id="eject" class="btn ghost" title="Eject this consciousness">⏏ Eject</button>
+        </div>
+      </header>
+
+      <div class="agent-body">
+        <div id="transcript" class="transcript" aria-live="polite"></div>
+
+        <form id="chat-form" class="chat-form">
+          <input
+            id="chat-input"
+            type="text"
+            autocomplete="off"
+            placeholder="Type a message, or hit 🎙 Speak"
+          />
+          <button class="btn primary" type="submit">Send</button>
+        </form>
+
+        <details class="introspect">
+          <summary>What this agent knows about the website</summary>
+          <ul id="file-index-list"></ul>
+        </details>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer muted small">
+    <span>Consciousness runs locally in your browser. Nothing leaves this device.</span>
+  </footer>
+
+  <!-- 3rd party: QR decoder -->
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+
+  <!-- App -->
+  <script src="assets/js/file-index.js"></script>
+  <script src="assets/js/consciousness.js"></script>
+  <script src="assets/js/speech.js"></script>
+  <script src="assets/js/scanner.js"></script>
+  <script src="assets/js/engine.js"></script>
+  <script src="assets/js/main.js"></script>
+</body>
+</html>
