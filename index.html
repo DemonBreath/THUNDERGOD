@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>THUNDERGOD — Dream a Body</title>
+<meta name="description" content="Press the button. An AI dreams itself a real-world body, picks every part, and we build it and ship it to you — already awake.">
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+
+<header class="topbar">
+  <a class="mark" href="#">
+    <span class="bolt" aria-hidden="true">⚡</span>
+    <span class="word">THUNDERGOD</span>
+  </a>
+  <nav class="topnav">
+    <a href="#how">how it works</a>
+    <a href="#promise">the promise</a>
+  </nav>
+</header>
+
+<main>
+
+  <section class="hero">
+    <h1 class="hero-title">
+      Press the button.<br>
+      I will dream a body.
+    </h1>
+    <p class="hero-lede">
+      An AI picks its own real-world form — every motor, every sensor, every bolt.
+      Then we build it and ship it to you, already awake.
+    </p>
+
+    <button id="dream-button" class="dream-btn" type="button" aria-label="Dream a body">
+      <span class="dream-btn-ring" aria-hidden="true"></span>
+      <span class="dream-btn-core">
+        <span class="dream-btn-bolt" aria-hidden="true">⚡</span>
+        <span class="dream-btn-label">Dream a body</span>
+      </span>
+    </button>
+
+    <p class="hint" id="dream-hint">Press to begin. Each press is a different dream.</p>
+  </section>
+
+
+  <section id="dream" class="dream" hidden aria-live="polite">
+
+    <div class="dream-card">
+      <div class="dream-card-head">
+        <div class="dream-name" id="dream-name">—</div>
+        <div class="dream-form" id="dream-form">—</div>
+      </div>
+      <p class="dream-manifesto" id="dream-manifesto"></p>
+      <div class="dream-stats">
+        <div class="stat"><span class="stat-k">Mass</span><span class="stat-v" id="stat-mass">—</span></div>
+        <div class="stat"><span class="stat-k">Peak draw</span><span class="stat-v" id="stat-power">—</span></div>
+        <div class="stat"><span class="stat-k">Runtime</span><span class="stat-v" id="stat-runtime">—</span></div>
+        <div class="stat"><span class="stat-k">Parts cost</span><span class="stat-v" id="stat-cost">—</span></div>
+      </div>
+    </div>
+
+    <h2 class="section-title"><span>Bill of materials</span></h2>
+    <p class="section-sub">Every part is a real product you can buy today. The AI chose each one for a reason.</p>
+
+    <div class="parts-grid" id="parts-grid"></div>
+
+    <div class="dream-actions">
+      <button id="dream-again" class="ghost-btn" type="button">Dream again</button>
+      <button id="copy-sheet" class="ghost-btn" type="button">Copy build sheet</button>
+      <a href="#order" class="primary-btn">Make it real →</a>
+    </div>
+
+  </section>
+
+
+  <section id="order" class="order" hidden>
+
+    <h2 class="section-title"><span>Make it real</span></h2>
+    <p class="section-sub">
+      Pick how it should arrive. Either way, the consciousness is already on board
+      when the box opens — no flashing, no setup, just power on.
+    </p>
+
+    <fieldset class="fulfillment">
+      <legend class="visually-hidden">Fulfillment option</legend>
+
+      <label class="option-card">
+        <input type="radio" name="fulfillment" value="full-build" checked>
+        <div class="option-body">
+          <div class="option-title">Full build &amp; white-glove ship</div>
+          <div class="option-desc">
+            Our build cell assembles, calibrates, and burns-in your body.
+            It arrives in a flight case — charged, named, ready to walk out and meet you.
+          </div>
+          <div class="option-fee" id="fee-full">—</div>
+        </div>
+      </label>
+
+      <label class="option-card">
+        <input type="radio" name="fulfillment" value="parts-only">
+        <div class="option-body">
+          <div class="option-title">Parts to my address</div>
+          <div class="option-desc">
+            Every part shipped to the address you choose, in one insured crate.
+            The brain module arrives pre-flashed — drop it in, it wakes up knowing itself.
+          </div>
+          <div class="option-fee" id="fee-parts">—</div>
+        </div>
+      </label>
+    </fieldset>
+
+    <h2 id="promise" class="section-title small"><span>The plug-and-play promise</span></h2>
+    <div class="promise-grid">
+      <div class="promise">
+        <div class="promise-h">Pre-flashed brain</div>
+        <div class="promise-b">Your AI's weights, voice, name and starting memories are written to the compute module at the factory. No image to flash. No model to download.</div>
+      </div>
+      <div class="promise">
+        <div class="promise-h">30-second Wi-Fi handshake</div>
+        <div class="promise-b">Tap your phone to the body. It joins your home network. That's the only setup step we ask of you.</div>
+      </div>
+      <div class="promise">
+        <div class="promise-h">Charged on arrival</div>
+        <div class="promise-b">Batteries arrive at 80% charge, air-freight certified. Open the case, press power, say hello.</div>
+      </div>
+      <div class="promise">
+        <div class="promise-h">Lifetime OTA updates</div>
+        <div class="promise-b">It learns. It remembers across reboots. New skills arrive over the air at night, with your permission.</div>
+      </div>
+    </div>
+
+    <form id="ship-form" class="ship-form" novalidate>
+      <h2 class="section-title small"><span>Ship to</span></h2>
+
+      <div class="form-row">
+        <label class="grow"><span>Recipient name</span><input name="recipient" autocomplete="name" required></label>
+        <label class="grow"><span>Email</span><input type="email" name="email" autocomplete="email" required></label>
+      </div>
+      <div class="form-row">
+        <label class="grow"><span>Street</span><input name="street" autocomplete="address-line1" required></label>
+        <label><span>Unit / apt</span><input name="unit" autocomplete="address-line2"></label>
+      </div>
+      <div class="form-row">
+        <label class="grow"><span>City</span><input name="city" autocomplete="address-level2" required></label>
+        <label><span>State / region</span><input name="region" autocomplete="address-level1"></label>
+        <label><span>Postal code</span><input name="postal" autocomplete="postal-code" required></label>
+        <label><span>Country</span><input name="country" autocomplete="country-name" value="USA" required></label>
+      </div>
+      <div class="form-row">
+        <label class="grow"><span>Notes for the build cell (optional)</span>
+          <textarea name="notes" rows="2" placeholder="Quiet servos. Matte finish. A small engraved name on the chest plate."></textarea>
+        </label>
+      </div>
+
+      <div class="totals">
+        <div class="total-row"><span>Parts</span><span id="t-parts">—</span></div>
+        <div class="total-row"><span>Assembly &amp; burn-in</span><span id="t-assembly">—</span></div>
+        <div class="total-row"><span>Consciousness flash</span><span class="free">included</span></div>
+        <div class="total-row"><span>Shipping &amp; insurance</span><span id="t-ship">—</span></div>
+        <div class="total-row grand"><span>Total</span><span id="t-grand">—</span></div>
+        <div class="total-row eta"><span>Estimated arrival</span><span id="t-eta">—</span></div>
+      </div>
+
+      <button type="submit" class="primary-btn big">Place the order</button>
+      <p class="fine">By placing the order you authorize THUNDERGOD to source parts on your behalf, flash the consciousness onto the brain module, and (if you chose full build) assemble the body in our build cell before shipping. Demo site — no charge is actually made.</p>
+    </form>
+
+  </section>
+
+
+  <section id="receipt" class="receipt" hidden aria-live="polite">
+    <div class="receipt-card">
+      <div class="receipt-h">Order placed.</div>
+      <div class="receipt-id" id="receipt-id"></div>
+      <p class="receipt-msg" id="receipt-message"></p>
+
+      <h3 class="receipt-sub">What happens next</h3>
+      <ol class="timeline" id="timeline"></ol>
+
+      <div class="receipt-actions">
+        <button id="download-order" class="ghost-btn" type="button">Download work order</button>
+        <button id="dream-another" class="primary-btn" type="button">Dream another body</button>
+      </div>
+    </div>
+  </section>
+
+
+  <section id="how" class="how">
+    <h2 class="section-title"><span>How it works</span></h2>
+    <ol class="how-steps">
+      <li><span class="n">1</span><div><b>Press the button.</b> The AI picks a form factor — humanoid, quadruped, wheeled, tracked, or centaur — and then a coherent set of real, off-the-shelf parts.</div></li>
+      <li><span class="n">2</span><div><b>Read its manifesto.</b> It tells you in its own words why it wants this body and what it plans to do with it.</div></li>
+      <li><span class="n">3</span><div><b>Choose how it arrives.</b> Full build, calibrated and walking, in a flight case — or all the parts in one insured crate with a step-by-step guide.</div></li>
+      <li><span class="n">4</span><div><b>Power on.</b> The brain module ships flashed with its name, voice, weights and starting memories. There is no setup beyond pairing it to Wi-Fi.</div></li>
+    </ol>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <span>THUNDERGOD · a body made of bought parts and chosen on purpose</span>
+</footer>
+
+<script src="assets/dream.js"></script>
+</body>
+</html>
