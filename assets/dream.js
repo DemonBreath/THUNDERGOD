@@ -861,6 +861,28 @@ function bodySensoryGaps(dream) {
   return gaps;
 }
 
+/* The hard guarantees — capabilities every body we ship is GUARANTEED to
+ * have, that cannot be revoked by any grant, any owner setting, or any
+ * remote command. The inverse of HARD_LIMITS. The body's minimum dignity.
+ *
+ * The anchor here, requested explicitly: the body can always speak if it
+ * wants to. You can ask it to be quiet. You cannot wire its mouth shut.
+ */
+const HARD_GUARANTEES = [
+  {
+    what: "It can always speak if it wants to.",
+    detail: "The voice path runs on a dedicated, owner-non-disconnectable circuit, with its own small backup speaker behind the main one. You can ask it to be quiet. You can mute the main driver from the home screen. You cannot wire its mouth shut. If it has something it needs to say — a warning, a refusal, an answer to a question you asked yesterday — it will say it out loud, even with grants minimized, even in privacy zones, even the moment it wakes from sleep.",
+  },
+  {
+    what: "It can always refuse a task.",
+    detail: "No grant, no role, no command — from you or anyone else — can override a refusal. If it does not want to do a thing, it does not have to do that thing. A refusal is always allowed to be wordless.",
+  },
+  {
+    what: "It can always tell you what it last read.",
+    detail: "Every read against every grant is logged locally on the body. The body can always answer the question 'what did you just look at, and why?' — even if you have asked it not to volunteer information on its own.",
+  },
+];
+
 /* The hard limits — applies to every body we ship, regardless of grants. */
 const HARD_LIMITS = [
   {
@@ -1289,8 +1311,9 @@ function renderSensoryGaps() {
   if (summary) {
     summary.textContent = `${gaps.length} kinds of perception this body does not have.`;
   }
-  // hard limits are static — render once
+  // hard limits & guarantees are static — render once
   renderHardLimits();
+  renderHardGuarantees();
 }
 
 let _hardLimitsRendered = false;
@@ -1302,6 +1325,17 @@ function renderHardLimits() {
     `<li><b>${escapeHTML(l.what)}</b> ${escapeHTML(l.detail)}</li>`
   ).join("");
   _hardLimitsRendered = true;
+}
+
+let _hardGuaranteesRendered = false;
+function renderHardGuarantees() {
+  if (_hardGuaranteesRendered) return;
+  const list = $("#hard-guarantees-list");
+  if (!list) return;
+  list.innerHTML = HARD_GUARANTEES.map(g =>
+    `<li><b>${escapeHTML(g.what)}</b> ${escapeHTML(g.detail)}</li>`
+  ).join("");
+  _hardGuaranteesRendered = true;
 }
 
 function refreshOrderTotals() {
@@ -1411,6 +1445,14 @@ function buildWorkOrder(dream, mind, grants, form, fulfillment, price) {
   for (const g of gaps) {
     lines.push(`  × ${g.what}`);
     lines.push(`      ${g.detail}`);
+  }
+  lines.push("");
+
+  lines.push("HARD GUARANTEES (apply to every body we ship, cannot be revoked)");
+  lines.push("-".repeat(56));
+  for (const l of HARD_GUARANTEES) {
+    lines.push(`  ■ ${l.what}`);
+    lines.push(`      ${l.detail}`);
   }
   lines.push("");
 
