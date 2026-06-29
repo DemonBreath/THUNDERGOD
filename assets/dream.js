@@ -609,6 +609,194 @@ function serializeMind(mind) {
   return JSON.stringify(portable, null, 2);
 }
 
+/* ---------- grants of access ------------------------------------------- */
+
+/* A "grant" is something the mind is allowed to read from. Each grant is
+ * a concrete connector (Google Drive OAuth scope, GitHub PAT, USB indexer,
+ * offline mirror, etc.) that the build cell pre-installs and pre-authorizes
+ * onto the brain module before shipping.
+ *
+ * Default: everything reasonable is ON. A "Grant everything" master toggle
+ * flips all of them at once. Body-inherent grants (its own cameras and
+ * microphones) are locked on — they are the body itself.
+ */
+
+const GRANTS = [
+  /* Local */
+  { id: "body-sensors",    group: "Local devices",     name: "The body's own cameras, mics, IMU",
+    desc: "Live video, audio, depth maps, motion, the air around it.",
+    how: "Built in. Always on while the body is awake.",
+    defaultOn: true, locked: true },
+  { id: "phone-files",     group: "Local devices",     name: "Your phone's files",
+    desc: "Photos, videos, voice memos, screenshots, documents.",
+    how: "Companion app on iOS / Android. Indexes locally and streams over your network.",
+    defaultOn: true },
+  { id: "laptop-files",    group: "Local devices",     name: "Your laptop's files",
+    desc: "Documents, downloads, screenshots, browser bookmarks, terminal history.",
+    how: "Tiny signed daemon you install once. Local-only by default.",
+    defaultOn: true },
+  { id: "usb-drives",      group: "Local devices",     name: "USB drives & external disks",
+    desc: "Read whatever you plug into the body.",
+    how: "Body mounts and indexes any drive on its USB-C port.",
+    defaultOn: true },
+  { id: "nas",             group: "Local devices",     name: "Home NAS / network shares",
+    desc: "SMB, AFP, NFS shares on your LAN.",
+    how: "Credentials you provide once.",
+    defaultOn: true },
+
+  /* Cloud */
+  { id: "gdrive",          group: "Cloud storage",     name: "Google Drive",
+    desc: "Every doc, sheet, slide, folder you own or are shared on.",
+    how: "OAuth, scoped to drive.readonly.",
+    defaultOn: true },
+  { id: "icloud",          group: "Cloud storage",     name: "iCloud Drive & Photos",
+    desc: "Files in iCloud, your Photo library.",
+    how: "OAuth via Apple ID with read scopes.",
+    defaultOn: true },
+  { id: "dropbox",         group: "Cloud storage",     name: "Dropbox",
+    desc: "Everything in your Dropbox.",
+    how: "OAuth read scope.",
+    defaultOn: true },
+  { id: "onedrive",        group: "Cloud storage",     name: "Microsoft OneDrive",
+    desc: "Files and items shared with you.",
+    how: "OAuth.",
+    defaultOn: true },
+  { id: "box",             group: "Cloud storage",     name: "Box",
+    desc: "Enterprise file storage.",
+    how: "OAuth.",
+    defaultOn: true },
+  { id: "s3",              group: "Cloud storage",     name: "S3 / B2 / R2 / GCS buckets",
+    desc: "Any object-storage buckets you point at it.",
+    how: "Read-only IAM keys you provide.",
+    defaultOn: true },
+
+  /* Mail & messaging */
+  { id: "gmail",           group: "Mail & messaging",  name: "Gmail / Google Workspace",
+    desc: "All mail, threads, attachments, labels.",
+    how: "OAuth, gmail.readonly.",
+    defaultOn: true },
+  { id: "outlook",         group: "Mail & messaging",  name: "Outlook / Microsoft 365 Mail",
+    desc: "All mail and attachments.",
+    how: "OAuth.",
+    defaultOn: true },
+  { id: "imap",            group: "Mail & messaging",  name: "Other IMAP mailboxes",
+    desc: "Any IMAP server you add (Fastmail, Proton bridge, self-hosted).",
+    how: "App password or OAuth where supported.",
+    defaultOn: true },
+  { id: "slack",           group: "Mail & messaging",  name: "Slack workspaces",
+    desc: "Channels and DMs you participate in.",
+    how: "User-scoped OAuth per workspace.",
+    defaultOn: true },
+  { id: "discord",         group: "Mail & messaging",  name: "Discord servers",
+    desc: "Servers you are in.",
+    how: "Per-server invite link.",
+    defaultOn: false },
+  { id: "sms",             group: "Mail & messaging",  name: "SMS & iMessage history",
+    desc: "Your phone's message archive.",
+    how: "Through the phone companion app, on-device.",
+    defaultOn: true },
+  { id: "whatsapp",        group: "Mail & messaging",  name: "WhatsApp chats",
+    desc: "Exported chat archives.",
+    how: "WhatsApp's Export Chat feature, then drop into the body.",
+    defaultOn: false },
+
+  /* Productivity */
+  { id: "notion",          group: "Productivity",      name: "Notion",
+    desc: "Workspaces you grant.",
+    how: "OAuth.",
+    defaultOn: true },
+  { id: "obsidian",        group: "Productivity",      name: "Obsidian vaults",
+    desc: "Local markdown vaults.",
+    how: "Through the laptop daemon.",
+    defaultOn: true },
+  { id: "apple-notes",     group: "Productivity",      name: "Apple Notes, Calendar, Contacts, Reminders",
+    desc: "All entries across iCloud.",
+    how: "OAuth via Apple ID.",
+    defaultOn: true },
+  { id: "google-suite",    group: "Productivity",      name: "Google Calendar & Contacts",
+    desc: "Events and address book.",
+    how: "OAuth, read scope.",
+    defaultOn: true },
+
+  /* Code & creative */
+  { id: "github",          group: "Code & creative",   name: "GitHub",
+    desc: "Repos you grant (public and private), issues, gists.",
+    how: "Fine-grained PAT scoped to the repos you list.",
+    defaultOn: true },
+  { id: "gitlab",          group: "Code & creative",   name: "GitLab",
+    desc: "Projects you grant.",
+    how: "Personal access token.",
+    defaultOn: true },
+  { id: "figma",           group: "Code & creative",   name: "Figma",
+    desc: "Files and projects you grant.",
+    how: "OAuth.",
+    defaultOn: false },
+  { id: "spotify",         group: "Code & creative",   name: "Spotify history & library",
+    desc: "What you listen to, what you have saved.",
+    how: "OAuth.",
+    defaultOn: true },
+  { id: "photos",          group: "Code & creative",   name: "Local photo libraries",
+    desc: "Apple Photos, Adobe Lightroom catalogs, Google Photos exports.",
+    how: "Through the laptop or phone companion app.",
+    defaultOn: true },
+
+  /* Knowledge */
+  { id: "web",             group: "Knowledge",         name: "The open web",
+    desc: "Anything reachable over HTTP / HTTPS.",
+    how: "On-board browser. Respects robots.txt.",
+    defaultOn: true },
+  { id: "wikipedia",       group: "Knowledge",         name: "Wikipedia full mirror",
+    desc: "All ~7M articles, in every language, offline.",
+    how: "Pre-loaded onto the brain's NVMe at the factory.",
+    defaultOn: true },
+  { id: "arxiv",           group: "Knowledge",         name: "arXiv full mirror",
+    desc: "Every paper, fulltext, offline.",
+    how: "Pre-loaded onto the NVMe.",
+    defaultOn: true },
+  { id: "gutenberg",       group: "Knowledge",         name: "Project Gutenberg",
+    desc: "70,000+ public-domain books.",
+    how: "Pre-loaded onto the NVMe.",
+    defaultOn: true },
+  { id: "stackexchange",   group: "Knowledge",         name: "Stack Exchange dumps",
+    desc: "Every question and answer on every Stack Exchange site, offline.",
+    how: "Pre-loaded onto the NVMe.",
+    defaultOn: true },
+  { id: "openstreetmap",   group: "Knowledge",         name: "OpenStreetMap planet",
+    desc: "The entire world map, offline.",
+    how: "Pre-loaded onto the NVMe.",
+    defaultOn: true },
+  { id: "common-crawl",    group: "Knowledge",         name: "Common Crawl curated subset",
+    desc: "~100 TB snapshot of the public web, content-filtered.",
+    how: "Pre-loaded onto an additional 4 TB SSD shipped with the body.",
+    defaultOn: false },
+];
+
+/* default grant state on first dream */
+function defaultGrantState() {
+  const state = {};
+  for (const g of GRANTS) state[g.id] = !!g.defaultOn || !!g.locked;
+  return state;
+}
+
+/* count selected grants, optionally excluding locked-inherent ones */
+function countSelectedGrants(state, excludeLocked) {
+  let n = 0;
+  for (const g of GRANTS) {
+    if (excludeLocked && g.locked) continue;
+    if (state[g.id]) n++;
+  }
+  return n;
+}
+
+function grantsByGroup() {
+  const map = new Map();
+  for (const g of GRANTS) {
+    if (!map.has(g.group)) map.set(g.group, []);
+    map.get(g.group).push(g);
+  }
+  return map;
+}
+
 /* ---------- pricing & order -------------------------------------------- */
 
 const ASSEMBLY_FEE = 400;     // flat, full-build only
@@ -659,6 +847,7 @@ const $$ = (sel) => document.querySelectorAll(sel);
 
 let currentDream = null;
 let currentMind = null;
+let currentGrants = null; // map of grantId -> boolean
 
 function escapeHTML(s) {
   return String(s).replace(/[&<>"']/g, c => ({
@@ -719,6 +908,7 @@ function renderDream(dream) {
 
   $("#dream").hidden = false;
   $("#mind").hidden = false;
+  $("#grants").hidden = false;
   $("#order").hidden = false;
 
   // every new dream resets the mind back to the body's own dreamed mind
@@ -731,6 +921,10 @@ function renderDream(dream) {
   if (fileEl) fileEl.value = "";
   setMindStatus("");
   renderMind();
+
+  // also reset grants to the recommended default (everything reasonable on)
+  currentGrants = defaultGrantState();
+  renderGrants();
 
   refreshOrderTotals();
   $("#dream-hint").textContent = "Don't like it? Press again. Each dream is different.";
@@ -869,6 +1063,123 @@ function onDownloadMind() {
   URL.revokeObjectURL(url);
 }
 
+/* ---------- grants rendering ------------------------------------------ */
+
+function renderGrants() {
+  if (!currentGrants) return;
+  const container = $("#grants-groups");
+  if (!container) return;
+  container.innerHTML = "";
+
+  const groups = grantsByGroup();
+  for (const [groupName, items] of groups) {
+    const groupEl = document.createElement("div");
+    groupEl.className = "grants-group";
+    const head = document.createElement("div");
+    head.className = "grants-group-head";
+    head.innerHTML = `<span class="grants-group-name">${escapeHTML(groupName)}</span>` +
+      `<span class="grants-group-count" data-group="${escapeHTML(groupName)}"></span>`;
+    groupEl.appendChild(head);
+
+    const list = document.createElement("div");
+    list.className = "grant-list";
+    for (const g of items) {
+      const card = document.createElement("label");
+      card.className = "grant-card" + (g.locked ? " locked" : "");
+      const checked = currentGrants[g.id] ? "checked" : "";
+      const disabled = g.locked ? "disabled" : "";
+      card.innerHTML = `
+        <input type="checkbox" data-grant-id="${escapeHTML(g.id)}" ${checked} ${disabled}>
+        <div class="grant-body">
+          <div class="grant-name">${escapeHTML(g.name)}${g.locked ? ' <span class="grant-locked">built in</span>' : ""}</div>
+          <div class="grant-desc">${escapeHTML(g.desc)}</div>
+          <div class="grant-how">${escapeHTML(g.how)}</div>
+        </div>
+      `;
+      list.appendChild(card);
+    }
+    groupEl.appendChild(list);
+    container.appendChild(groupEl);
+  }
+
+  // wire each checkbox
+  for (const cb of container.querySelectorAll('input[type="checkbox"][data-grant-id]')) {
+    cb.addEventListener("change", onGrantChange);
+  }
+
+  refreshGrantsSummary();
+}
+
+function refreshGrantsSummary() {
+  if (!currentGrants) return;
+  const totalSelectable = GRANTS.filter(g => !g.locked).length;
+  const selected = countSelectedGrants(currentGrants, true);
+  const everythingOn = selected === totalSelectable;
+
+  const master = $("#grants-master");
+  if (master) {
+    master.checked = everythingOn;
+    master.indeterminate = !everythingOn && selected > 0;
+  }
+  const summary = $("#grants-summary");
+  if (summary) {
+    if (everythingOn) {
+      summary.textContent = `All ${totalSelectable} optional grants on — plus what's built in.`;
+    } else if (selected === 0) {
+      summary.textContent = `No optional grants. The body will only know what its own senses tell it.`;
+    } else {
+      summary.textContent = `${selected} of ${totalSelectable} optional grants selected.`;
+    }
+  }
+
+  // per-group counts
+  const groups = grantsByGroup();
+  for (const [groupName, items] of groups) {
+    const selectable = items.filter(g => !g.locked);
+    const on = items.filter(g => !g.locked && currentGrants[g.id]).length;
+    const el = $(`.grants-group-count[data-group="${cssEscape(groupName)}"]`);
+    if (el) {
+      el.textContent = selectable.length ? `${on} / ${selectable.length}` : `built in`;
+    }
+  }
+}
+
+// querySelector-safe attribute escape (no DOM cssEscape needed in old browsers)
+function cssEscape(s) {
+  return String(s).replace(/["\\]/g, "\\$&");
+}
+
+function onGrantChange(e) {
+  const id = e.target.getAttribute("data-grant-id");
+  if (!id) return;
+  currentGrants[id] = !!e.target.checked;
+  refreshGrantsSummary();
+}
+
+function onGrantsMaster(e) {
+  const on = !!e.target.checked;
+  for (const g of GRANTS) {
+    if (g.locked) continue;
+    currentGrants[g.id] = on;
+  }
+  // also update every visible checkbox without a full re-render
+  for (const cb of document.querySelectorAll('#grants-groups input[type="checkbox"][data-grant-id]')) {
+    if (cb.disabled) continue;
+    cb.checked = on;
+  }
+  refreshGrantsSummary();
+}
+
+function grantsToList(state) {
+  /* group → array of {name, on} */
+  const out = new Map();
+  for (const g of GRANTS) {
+    if (!out.has(g.group)) out.set(g.group, []);
+    out.get(g.group).push({ id: g.id, name: g.name, on: !!state[g.id], locked: !!g.locked });
+  }
+  return out;
+}
+
 function refreshOrderTotals() {
   if (!currentDream) return;
   const fulfillment = (document.querySelector('input[name="fulfillment"]:checked') || {}).value || "full-build";
@@ -893,7 +1204,7 @@ function refreshOrderTotals() {
   $("#t-eta").textContent = `${min.toLocaleDateString(undefined, opts)} – ${max.toLocaleDateString(undefined, opts)}`;
 }
 
-function buildWorkOrder(dream, mind, form, fulfillment, price) {
+function buildWorkOrder(dream, mind, grants, form, fulfillment, price) {
   const lines = [];
   lines.push("THUNDERGOD · WORK ORDER");
   lines.push("=".repeat(56));
@@ -950,6 +1261,26 @@ function buildWorkOrder(dream, mind, form, fulfillment, price) {
     }
     lines.push("");
   }
+  if (grants) {
+    const grouped = grantsToList(grants);
+    const selectable = GRANTS.filter(g => !g.locked).length;
+    const on = countSelectedGrants(grants, true);
+    lines.push(`GRANTS OF ACCESS (${on} of ${selectable} optional, plus what's built in)`);
+    lines.push("-".repeat(56));
+    lines.push("The brain ships pre-authorized for these. Anything not listed");
+    lines.push("here, the body cannot grant itself later — only you can.");
+    lines.push("");
+    for (const [groupName, items] of grouped) {
+      lines.push(`  [${groupName}]`);
+      for (const it of items) {
+        const marker = it.locked ? "■" : (it.on ? "✓" : "·");
+        const suffix = it.locked ? "  (built in)" : (it.on ? "" : "  (declined)");
+        lines.push(`    ${marker} ${it.name}${suffix}`);
+      }
+      lines.push("");
+    }
+  }
+
   lines.push("BILL OF MATERIALS");
   lines.push("-".repeat(56));
   const order = ["brain", "coproc", "storage", "locomotion", "frame", "vision", "audio_in", "audio_out", "imu", "env", "hands", "arms", "power", "cooling", "comms", "skin"];
@@ -1017,7 +1348,7 @@ function buildTimeline(fulfillment) {
   }
 }
 
-function renderReceipt(dream, mind, form, fulfillment, price) {
+function renderReceipt(dream, mind, grants, form, fulfillment, price) {
   $("#receipt-id").textContent = form.orderId;
   const verb = fulfillment === "full-build"
     ? "We're building it for you."
@@ -1028,10 +1359,17 @@ function renderReceipt(dream, mind, form, fulfillment, price) {
       ? `a blank starting mind`
       : `the mind the body dreamed for itself`;
   const shipName = mind ? mind.name : dream.name;
+  const selectable = GRANTS.filter(g => !g.locked).length;
+  const on = grants ? countSelectedGrants(grants, true) : 0;
+  const grantsPhrase = on === selectable
+    ? `every grant you can give it`
+    : on === 0
+      ? `no grants beyond its own senses`
+      : `${on} of ${selectable} grants of access`;
   $("#receipt-message").textContent =
     `${verb} ${shipName} ships to ${form.recipient} at ${form.street}, ${form.city}. ` +
-    `The brain module is being flashed with ${mindPhrase} — so when the box opens, ` +
-    `power on and it already knows who it is.`;
+    `The brain is being flashed with ${mindPhrase}, pre-authorized for ${grantsPhrase}. ` +
+    `When the box opens, power on — it already knows who it is and what it's allowed to read.`;
 
   const tl = $("#timeline");
   tl.innerHTML = "";
@@ -1076,7 +1414,7 @@ function onCopySheet() {
     country: "(country)",
     notes: "",
   };
-  const txt = buildWorkOrder(currentDream, currentMind, fakeForm, fulfillment, price);
+  const txt = buildWorkOrder(currentDream, currentMind, currentGrants, fakeForm, fulfillment, price);
   navigator.clipboard?.writeText(txt).then(() => {
     flashHint("Build sheet copied.");
   }, () => {
@@ -1111,12 +1449,12 @@ function onPlaceOrder(e) {
     notes: (data.get("notes") || "").toString().trim(),
     fulfillment,
   };
-  const workOrder = buildWorkOrder(currentDream, currentMind, form, fulfillment, price);
+  const workOrder = buildWorkOrder(currentDream, currentMind, currentGrants, form, fulfillment, price);
 
   // stash on window for download button
   window.__lastWorkOrder = { text: workOrder, orderId: form.orderId };
 
-  renderReceipt(currentDream, currentMind, form, fulfillment, price);
+  renderReceipt(currentDream, currentMind, currentGrants, form, fulfillment, price);
 }
 
 function onDownloadOrder() {
@@ -1136,6 +1474,7 @@ function onDownloadOrder() {
 function onDreamAnother() {
   $("#receipt").hidden = true;
   $("#order").hidden = true;
+  $("#grants").hidden = true;
   $("#mind").hidden = true;
   $("#dream").hidden = true;
   document.querySelector('input[name="fulfillment"][value="full-build"]').checked = true;
@@ -1183,6 +1522,10 @@ function init() {
     onMindPaste();
     ta.scrollIntoView({ behavior: "smooth", block: "center" });
   });
+
+  // grants controls
+  const master = $("#grants-master");
+  if (master) master.addEventListener("change", onGrantsMaster);
 
   populateSchemaExample();
 }
