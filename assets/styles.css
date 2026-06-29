@@ -676,6 +676,53 @@ main { max-width: var(--maxw); margin: 0 auto; padding: 24px 28px 120px; }
   color: var(--ink);
 }
 
+.limit-panel {
+  margin-top: 14px;
+  background: #0a0c14;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+}
+.limit-panel.hard {
+  border-color: #ff7ba055;
+  background:
+    radial-gradient(500px 200px at 100% 0%, #ff7ba014, transparent 70%),
+    #0a0c14;
+  box-shadow: 0 0 0 1px #ff7ba022, 0 14px 40px #ff7ba00f;
+}
+.limit-panel-h {
+  font-family: var(--mono);
+  font-size: 11px; letter-spacing: .22em; text-transform: uppercase;
+  color: var(--rose);
+  margin-bottom: 6px;
+}
+.limit-panel-sub {
+  color: var(--ink-soft);
+  font-family: var(--mono); font-size: 12px;
+  letter-spacing: .04em;
+  margin-bottom: 12px;
+}
+.limit-list {
+  list-style: none; padding: 0; margin: 0;
+  display: grid; gap: 10px;
+  color: var(--ink-soft);
+  font-size: 13.5px; line-height: 1.55;
+}
+.limit-list li {
+  padding-left: 22px;
+  position: relative;
+}
+.limit-list li::before {
+  content: "×";
+  position: absolute; left: 0; top: 0;
+  color: var(--rose);
+  font-weight: 700;
+  font-family: var(--mono);
+  font-size: 16px;
+  line-height: 1.4;
+}
+.limit-list li b { color: var(--ink); font-weight: 600; }
+
 /* ---------- promises --------------------------------------------------- */
 
 .promise-grid {
