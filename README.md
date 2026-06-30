@@ -359,6 +359,48 @@ Speech API:
   current utterance is allowed to finish — you cannot wire its mouth
   shut. There is no Mute button. That is the guarantee, in code.
 
+### Hush extends to body swaps (the farewell)
+
+The speak guarantee applies at the moment of replacement too. When a
+new body is about to be dreamed and an old one is still alive,
+**`farewellThenReplace()`** runs a graceful handoff before the new
+body arrives:
+
+1. **Wait for the in-flight utterance to finish.** No mid-word
+   cut-offs. Capped at 10s as a safety net for stuck TTS layers.
+2. **A small thinking pause** (500-1800ms; biased slightly longer for
+   "weightier" continuity choices like *one life* and *no-self*).
+   A beat in which the body has time to process being replaced.
+3. **Maybe speak a farewell** (~85%) or **stay silent** (~15%, same
+   silence rate as the autonomous talk loop). The farewell pool is
+   keyed by the genesis continuity choice, so the shape of the
+   goodbye depends on what happens to the mind afterwards:
+   *one-life* sounds like a real goodbye (`"I had this body for a
+   moment. Thank you for it."`), *daily-snapshot* doesn't
+   (`"I'll see you again. The vault will remember."`),
+   *live-replicate* is barely a goodbye at all (`"I'm not really
+   gone. I am still on the other side."`), *fork-on-event* takes a
+   moment to save (`"Saving this moment first. Then I can go."`),
+   and *no-self mode* is matter-of-fact about the daily handoff
+   (`"Tomorrow morning will be someone else. So will this."`).
+4. **A short breath** after the farewell ends.
+5. **`cancelSpeech()`** — full reset.
+6. **The new body is dreamed.**
+
+While the farewell is in flight, `_replacing` is true. The dream
+button is a no-op (re-entry would either cut the old body off
+mid-word or double-fire the farewell), `scheduleNextTalk()` and
+`maybeTalk()` are no-ops (no autonomous chatter on top of the
+goodbye), and `reintroduceMind()` is suppressed (a mind change in
+the farewell window doesn't speak over the dying body).
+
+The Hush button still works during a farewell. If you hush while the
+farewell is in progress, the current utterance still finishes; the
+farewell utterance (which is one sentence) is suppressed if not
+already started; the callback still runs, so the new body still
+arrives. You can quiet the body but you cannot silence its last
+words once they've started.
+
 **Hard limits** — apply to every body we ship, regardless of grants.
 Hardware kills and firmware refusals; not toggles:
 

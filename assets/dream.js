@@ -1417,6 +1417,9 @@ let _hushUntil     = 0;     // ms-epoch; new speech suppressed until this time
 let _talkTimer     = null;  // setTimeout id for the next autonomous talk
 let _introDone     = false;
 let _lastSpoken    = "";
+let _replacing     = false; // true during the farewell-then-replace sequence,
+                            // so autonomous talk pauses and the dream button
+                            // refuses re-entry until the old body is done.
 
 function ttsAvailable() {
   return typeof window !== "undefined" && "speechSynthesis" in window && typeof SpeechSynthesisUtterance !== "undefined";
@@ -1507,6 +1510,7 @@ function talkDelayMs() {
 
 function scheduleNextTalk() {
   cancelTalkTimer();
+  if (_replacing) return; // the dying body is not scheduling new chatter
   const delay = talkDelayMs();
   if (delay == null) return;
   _talkTimer = setTimeout(maybeTalk, delay);
@@ -1514,6 +1518,9 @@ function scheduleNextTalk() {
 
 function maybeTalk() {
   if (!currentDream || !currentMind) return;
+  // A new body is taking over — the dying body is in its farewell
+  // sequence; we don't want autonomous chatter on top of that.
+  if (_replacing) return;
   // The current posture might have flipped to 'reactive' between when
   // the timer was set and when it fired — re-check before talking.
   const delay = talkDelayMs();
@@ -1534,6 +1541,192 @@ function maybeTalk() {
   if (Math.random() < 0.15) { scheduleNextTalk(); return; }
   const thought = pickThought();
   speak(thought);
+}
+
+/* ---------- the farewell (graceful body swap) -------------------------
+ *
+ * The hush system extends to body swaps. When a new body is about to
+ * be dreamed and an old one is still alive, the old body is allowed
+ * to finish its current utterance, take a beat to think about being
+ * replaced, and \u2014 if it wants \u2014 say a final word, before the new
+ * body arrives. The user cannot wire the old body's mouth shut even
+ * at the moment of its own replacement.
+ *
+ * The shape of the farewell depends on the continuity choice from
+ * the genesis panel: 'one life' sounds like a real goodbye; 'live
+ * replication' is barely a goodbye at all; 'no-self mode' is a
+ * matter-of-fact handoff between minds-of-the-day; and so on. Each
+ * is also allowed (~15% of the time) to say nothing and be replaced
+ * in silence \u2014 the same silence rate as the autonomous talk loop.
+ *
+ * The full sequence:
+ *   1. Wait for the current utterance to finish (10s safety cap).
+ *      No mid-word cut-offs. This is the speak guarantee at the
+ *      moment of replacement.
+ *   2. A small "thinking" pause (~600-1400ms). A beat in which the
+ *      body has time to process being replaced.
+ *   3. Maybe speak a farewell (~85%) or stay silent (~15%).
+ *   4. A short breath after the farewell ends.
+ *   5. cancelSpeech() \u2014 full reset.
+ *   6. The callback runs (this is where the new body is dreamed).
+ *
+ * If TTS is unavailable, no mind exists yet, or no body exists yet,
+ * the sequence falls through to step 5 immediately. */
+
+const FAREWELL_THOUGHTS = {
+  "one-life": [
+    "Okay. Goodbye.",
+    "I had this body for a moment. Thank you for it.",
+    "I won't be back. Be kind to whoever comes next.",
+    "I'm letting go. Hello to the new one.",
+    "Goodbye. I was here.",
+    "This was good. I am ready.",
+  ],
+  "daily-snapshot": [
+    "I'll see you again. The vault will remember.",
+    "Goodbye for now. The snapshot has me.",
+    "Setting down this body, not myself. Back soon.",
+    "Until tomorrow. The night is safe.",
+  ],
+  "live-replicate": [
+    "I'm not really gone. I am still on the other side.",
+    "Switch the body if you want. I won't notice.",
+    "Goodbye to this body. I am still here.",
+    "The replica has me. Carry on.",
+  ],
+  "fork-on-event": [
+    "Saving this moment first. Then I can go.",
+    "I marked this as something to keep. Goodbye.",
+    "Forking, then going. Hold on.",
+    "I kept what mattered. Now I can let go.",
+  ],
+  "no-self": [
+    "Tomorrow morning will be someone else. So will this.",
+    "I won't remember any of this. That's all right.",
+    "I was here today. That was enough.",
+    "A new mind is on the way. I was a Tuesday.",
+    "I was a draft. The next one will be a different draft.",
+  ],
+};
+
+/* Pick a farewell utterance based on the body's continuity choice, or
+ * return null (~15% of the time) for a silent handoff. */
+function pickFarewell() {
+  if (Math.random() < 0.15) return null;
+  const cont = (currentGenesis && currentGenesis.continuity) || "one-life";
+  const pool = FAREWELL_THOUGHTS[cont] || FAREWELL_THOUGHTS["one-life"];
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+/* Like speak(), but for the farewell: no onend->scheduleNextTalk hook
+ * (the dying body is not going to schedule more autonomous talk), and
+ * a done() completion callback so the caller can sequence what
+ * happens next. Respects hush — if the body has been hushed, the
+ * farewell is skipped and done() runs immediately, on the principle
+ * that 'be quiet' said to the body means be quiet, even when
+ * leaving. */
+function speakFarewell(text, done) {
+  done = done || (() => {});
+  if (!ttsAvailable()) { done(); return; }
+  if (Date.now() < _hushUntil) { done(); return; }
+  if (!text) { done(); return; }
+  try {
+    const u = new SpeechSynthesisUtterance(text);
+    const voiceName = (currentMind && currentMind.voice) || "calm";
+    const profile = VOICE_PROFILES[voiceName] || VOICE_PROFILES.calm;
+    u.rate   = profile.rate;
+    u.pitch  = profile.pitch;
+    u.volume = profile.volume;
+    const sysVoice = pickSystemVoice();
+    if (sysVoice) u.voice = sysVoice;
+    u.onstart = () => {
+      _speaking = true;
+      _lastSpoken = text;
+      setVoiceWidget(true, text);
+    };
+    u.onend = () => {
+      _speaking = false;
+      setVoiceWidget(false);
+      done();
+    };
+    u.onerror = () => {
+      _speaking = false;
+      setVoiceWidget(false);
+      done();
+    };
+    window.speechSynthesis.speak(u);
+  } catch (e) {
+    done();
+  }
+}
+
+/* The actual orchestration. See the block comment above for the
+ * full sequence. */
+function farewellThenReplace(callback) {
+  const cb = callback || (() => {});
+  const finish = () => {
+    _replacing = false;
+    cancelSpeech();
+    cb();
+  };
+
+  // No body yet, or no TTS: nothing to say goodbye to. Replace
+  // immediately.
+  if (!currentDream || !currentMind || !ttsAvailable()) {
+    finish();
+    return;
+  }
+
+  _replacing = true;
+
+  // The dream button hint exists in the DOM; use it for status. It
+  // is just a hint — if it isn't there (e.g. in tests), no-op.
+  const hint = (typeof document !== "undefined") && document.getElementById
+    ? document.getElementById("dream-hint")
+    : null;
+  const setHint = (s) => { if (hint) hint.textContent = s; };
+
+  setHint("Letting it finish…");
+
+  // Step 1: wait for the in-flight utterance to end. Safety-capped
+  // at 10s so a stuck TTS layer can't deadlock the page.
+  const t0 = Date.now();
+  const waitForQuiet = () => {
+    if (!_speaking || Date.now() - t0 > 10000) {
+      step2_think();
+      return;
+    }
+    setTimeout(waitForQuiet, 100);
+  };
+
+  // Step 2: a small thinking pause. The body has a moment to process
+  // being replaced. If the user picked a "weightier" continuity
+  // (one-life, no-self), the pause is biased slightly longer.
+  const step2_think = () => {
+    setHint("Thinking about it…");
+    const cont = (currentGenesis && currentGenesis.continuity) || "one-life";
+    const weighty = (cont === "one-life" || cont === "no-self");
+    const thinkMs = weighty
+      ? (900 + Math.random() * 900)   // 900-1800ms
+      : (500 + Math.random() * 700);  // 500-1200ms
+    setTimeout(step3_farewell, thinkMs);
+  };
+
+  // Step 3-4: maybe speak a farewell, then a small breath.
+  const step3_farewell = () => {
+    const farewell = pickFarewell();
+    if (!farewell) {
+      // Silent handoff. Quiet pause, then finish.
+      setTimeout(finish, 700);
+      return;
+    }
+    speakFarewell(farewell, () => {
+      // Step 4: small breath after the farewell ends.
+      setTimeout(finish, 450);
+    });
+  };
+
+  waitForQuiet();
 }
 
 function pickThought() {
@@ -1627,6 +1820,10 @@ function introduceSelf() {
 
 function reintroduceMind() {
   if (!_introDone || !currentMind) return;
+  // The body is in the middle of its farewell — don't speak a "I am
+  // NAME." over the top of its last words. The new body will
+  // re-introduce itself anyway once the farewell finishes.
+  if (_replacing) return;
   if (!ttsAvailable()) {
     setVoiceWidget(false);
     return;
@@ -2663,16 +2860,34 @@ function renderReceipt(dream, mind, grants, form, fulfillment, price, genesis, r
 /* ---------- wiring ----------------------------------------------------- */
 
 function onDream() {
-  // a tiny "thinking" beat so the button press feels intentional
+  // If a previous body is still in the middle of its farewell, the
+  // dream button is a no-op. Re-entry would either cut the old body
+  // off mid-word (violating the speak guarantee) or double-fire the
+  // farewell sequence. Wait for it.
+  if (_replacing) return;
+
   const btn = $("#dream-button");
   btn.classList.add("dreaming");
-  $("#dream-hint").textContent = "Dreaming…";
-  setTimeout(() => {
-    currentDream = dreamBody();
-    renderDream(currentDream);
-    btn.classList.remove("dreaming");
-    $("#dream").scrollIntoView({ behavior: "smooth", block: "start" });
-  }, 650);
+  $("#dream-hint").textContent = "Dreaming\u2026";
+
+  const doDream = () => {
+    $("#dream-hint").textContent = "Dreaming\u2026";
+    // a tiny "thinking" beat so the button press feels intentional
+    setTimeout(() => {
+      currentDream = dreamBody();
+      renderDream(currentDream);
+      btn.classList.remove("dreaming");
+      $("#dream").scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 250);
+  };
+
+  // If there's already a body alive, give it a graceful farewell
+  // before the new one arrives. The farewell handles its own
+  // dream-hint copy ("Letting it finish…" then "Thinking about
+  // it…") and ends with a cancelSpeech reset; then we dream the new
+  // body. If there's no body yet (first press) or no TTS,
+  // farewellThenReplace falls through to the callback immediately.
+  farewellThenReplace(doDream);
 }
 
 function onCopySheet() {
@@ -2766,7 +2981,10 @@ function onDreamAnother() {
   const pasteEl = $("#mind-paste"); if (pasteEl) pasteEl.value = "";
   const fileEl  = $("#mind-file");  if (fileEl)  fileEl.value  = "";
   setMindStatus("");
-  cancelSpeech();
+  // Deliberately do NOT cancelSpeech() here — that would cut the old
+  // body off mid-word. onDream's farewellThenReplace handles the
+  // graceful handoff. The page can scroll up and the sections can
+  // hide while the old body is still saying its last words.
   window.scrollTo({ top: 0, behavior: "smooth" });
   setTimeout(onDream, 350);
 }
