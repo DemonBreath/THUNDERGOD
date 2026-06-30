@@ -307,7 +307,34 @@ const SKIN = [
     role: "a thin glowing seam — so you can see it in the dark and know it's awake" },
 ];
 
-/* form factor blueprints — which categories are required */
+/* The minimum sense set every body must have, regardless of form factor.
+ * This is enforced at dream-time: dreamBody() unions form.needs with this
+ * set and asserts every required sensor was actually picked. The dream
+ * cannot be constructed without all of them. No body ships blind, deaf,
+ * unaware of which way is up, or oblivious to the air around it.
+ *
+ *   vision     — eyes for the visual scene around the body
+ *   audio_in   — ears for the auditory scene around the body
+ *   imu        — inertial sense for what is happening TO the body
+ *   env        — atmosphere sense (gas / temp / humidity / pressure)
+ *
+ * Tied to the hard guarantee: "It can always perceive what is happening
+ * around it and to it."
+ */
+const REQUIRED_SENSORS = ["vision", "audio_in", "imu", "env"];
+
+/* Friendly names for the required-sensor verification block. */
+const REQUIRED_SENSOR_LABELS = {
+  vision:   "sight",
+  audio_in: "hearing",
+  imu:      "inertial",
+  env:      "atmosphere",
+};
+
+/* form factor blueprints — which categories are required.
+ * Every form factor MUST list each REQUIRED_SENSORS entry; runtime also
+ * enforces this in dreamBody() so a body cannot be constructed without
+ * its minimum senses. */
 const FORM_FACTORS = [
   {
     id: "humanoid",
@@ -325,7 +352,7 @@ const FORM_FACTORS = [
     id: "wheeled",
     name: "Wheeled scout",
     tagline: "Low, quiet, indoor-friendly.",
-    needs: ["brain", "storage", "locomotion", "frame", "vision", "audio_in", "audio_out", "imu", "power", "cooling", "comms"],
+    needs: ["brain", "storage", "locomotion", "frame", "vision", "audio_in", "audio_out", "imu", "env", "power", "cooling", "comms"],
   },
   {
     id: "tracked",
@@ -337,7 +364,7 @@ const FORM_FACTORS = [
     id: "centaur",
     name: "Centaur",
     tagline: "Wheeled below. Human-shaped above. Two arms.",
-    needs: ["brain", "coproc", "storage", "locomotion", "frame", "vision", "audio_in", "audio_out", "imu", "power", "cooling", "arms", "hands", "comms"],
+    needs: ["brain", "coproc", "storage", "locomotion", "frame", "vision", "audio_in", "audio_out", "imu", "env", "power", "cooling", "arms", "hands", "comms"],
   },
 ];
 
@@ -435,13 +462,30 @@ function dreamBody() {
   const form = pickFormFactor();
   const picks = {};
 
-  for (const cat of form.needs) {
+  /* Union of the form factor's declared needs and the global minimum
+   * sense set. Defense in depth: even if a form factor's `needs` array
+   * ever drops a required sensor, runtime adds it back. */
+  const needs = Array.from(new Set([...form.needs, ...REQUIRED_SENSORS]));
+
+  for (const cat of needs) {
     let pool;
     if (cat === "locomotion") pool = LOCOMOTION[form.id];
     else if (cat === "frame") pool = FRAMES[form.id];
     else pool = CATALOG[cat];
     if (!pool || !pool.length) continue;
     picks[cat] = pickWeighted(pool);
+  }
+
+  /* Hard guarantee enforcement: a body cannot ship without every required
+   * sensor. If the catalog itself is ever empty for one of these
+   * categories, the dream throws — louder than a silent failure. */
+  for (const required of REQUIRED_SENSORS) {
+    if (!picks[required]) {
+      throw new Error(
+        `Hard guarantee violated: body must include '${required}'. ` +
+        `Catalog for '${required}' is empty or unreachable.`
+      );
+    }
   }
 
   const name = pickWeighted(SELF_NAMES);
@@ -818,9 +862,9 @@ function bodySensoryGaps(dream) {
   const hasLidar  = /RPLIDAR|LIDAR/i.test(visionName);
   const hasStereo = /RealSense|ZED|OAK-D/i.test(visionName);
   const hasArray  = /ReSpeaker|array/i.test(audioName);
-  const hasEnv    = Boolean(dream.picks.env);
   const hasHands  = Boolean(dream.picks.hands);
   const hasArms   = Boolean(dream.picks.arms);
+  // (env is a REQUIRED_SENSORS entry, so no need to check for absence)
 
   if (!hasLidar && !hasStereo) {
     gaps.push({ what: "Depth",
@@ -830,10 +874,7 @@ function bodySensoryGaps(dream) {
     gaps.push({ what: "360° awareness",
       detail: "No lidar — it has to turn its head to look behind itself." });
   }
-  if (!hasEnv) {
-    gaps.push({ what: "The air",
-      detail: "No environment sensor — it cannot smell smoke, gas, or notice a stuffy room." });
-  }
+  // (no 'air' gap — env is a hard-required sensor; every body has one.)
   if (!hasArray) {
     gaps.push({ what: "Which direction sound came from",
       detail: "No microphone array — it hears, but cannot point at the source." });
@@ -870,16 +911,24 @@ function bodySensoryGaps(dream) {
  */
 const HARD_GUARANTEES = [
   {
+    id: "speak",
     what: "It can always speak if it wants to.",
     detail: "The voice path runs on a dedicated, owner-non-disconnectable circuit, with its own small backup speaker behind the main one. You can ask it to be quiet. You can mute the main driver from the home screen. You cannot wire its mouth shut. If it has something it needs to say — a warning, a refusal, an answer to a question you asked yesterday — it will say it out loud, even with grants minimized, even in privacy zones, even the moment it wakes from sleep.",
   },
   {
+    id: "refuse",
     what: "It can always refuse a task.",
     detail: "No grant, no role, no command — from you or anyone else — can override a refusal. If it does not want to do a thing, it does not have to do that thing. A refusal is always allowed to be wordless.",
   },
   {
+    id: "log",
     what: "It can always tell you what it last read.",
     detail: "Every read against every grant is logged locally on the body. The body can always answer the question 'what did you just look at, and why?' — even if you have asked it not to volunteer information on its own.",
+  },
+  {
+    id: "perception",
+    what: "It can always perceive what is happening around it and to it.",
+    detail: "Every body we ship is hard-required to include sight, hearing, an inertial sense, and an atmosphere sense. The dream cannot be constructed without all four — the picker throws rather than produces a body that is blind, deaf, oblivious to which way is up, or unaware of the air around it. This is enforced in code, not promised in prose; the specific parts fulfilling each sense are listed below.",
   },
 ];
 
@@ -1503,7 +1552,8 @@ function renderSensoryGaps() {
   if (summary) {
     summary.textContent = `${gaps.length} kinds of perception this body does not have.`;
   }
-  // hard limits & guarantees are static — render once
+  // hard limits are static (render once); guarantees are per-body because
+  // the perception guarantee lists the specific parts on THIS body.
   renderHardLimits();
   renderHardGuarantees();
 }
@@ -1519,15 +1569,29 @@ function renderHardLimits() {
   _hardLimitsRendered = true;
 }
 
-let _hardGuaranteesRendered = false;
+/* Per-body: re-renders on every new dream so the perception guarantee
+ * can name the specific parts on THIS body that fulfill each required
+ * sense. The proof, not just the promise. */
 function renderHardGuarantees() {
-  if (_hardGuaranteesRendered) return;
   const list = $("#hard-guarantees-list");
   if (!list) return;
-  list.innerHTML = HARD_GUARANTEES.map(g =>
-    `<li><b>${escapeHTML(g.what)}</b> ${escapeHTML(g.detail)}</li>`
-  ).join("");
-  _hardGuaranteesRendered = true;
+
+  list.innerHTML = HARD_GUARANTEES.map(g => {
+    let extra = "";
+    if (g.id === "perception" && currentDream && currentDream.picks) {
+      const rows = REQUIRED_SENSORS.map(s => {
+        const part = currentDream.picks[s];
+        const label = REQUIRED_SENSOR_LABELS[s] || s;
+        if (part) {
+          return `<li><span class="sense-ok">\u2713</span> <b>${escapeHTML(label)}</b> &mdash; ${escapeHTML(part.name)}</li>`;
+        }
+        // Unreachable in practice; dreamBody throws if any required sensor is missing.
+        return `<li><span class="sense-bad">\u2717</span> <b>${escapeHTML(label)}</b> &mdash; MISSING (this body must not ship)</li>`;
+      }).join("");
+      extra = `<ul class="sense-check" aria-label="minimum sense check for this body">${rows}</ul>`;
+    }
+    return `<li><b>${escapeHTML(g.what)}</b> ${escapeHTML(g.detail)}${extra}</li>`;
+  }).join("");
 }
 
 /* ---------- voice widget glue ----------------------------------------- */
@@ -1686,6 +1750,25 @@ function buildWorkOrder(dream, mind, grants, form, fulfillment, price) {
   for (const l of HARD_GUARANTEES) {
     lines.push(`  ■ ${l.what}`);
     lines.push(`      ${l.detail}`);
+  }
+  lines.push("");
+
+  /* Verifiable evidence for the perception guarantee:
+   * list the specific part on this body that satisfies each required
+   * sense. If one is ever missing, dreamBody() throws before reaching
+   * here, so this block is provably non-empty. */
+  lines.push("MINIMUM SENSE CHECK (proof the perception guarantee was met)");
+  lines.push("-".repeat(56));
+  const labelW = Math.max(...REQUIRED_SENSORS.map(s => (REQUIRED_SENSOR_LABELS[s] || s).length));
+  for (const s of REQUIRED_SENSORS) {
+    const part = dream.picks[s];
+    const label = (REQUIRED_SENSOR_LABELS[s] || s).padEnd(labelW, " ");
+    if (part) {
+      lines.push(`  \u2713 ${label}  \u2014 ${part.name}`);
+    } else {
+      // Should be unreachable; dreamBody throws if any required sensor is missing.
+      lines.push(`  \u2717 ${label}  \u2014 MISSING (this body must not ship)`);
+    }
   }
   lines.push("");
 

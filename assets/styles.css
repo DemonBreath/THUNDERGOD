@@ -767,6 +767,25 @@ main { max-width: var(--maxw); margin: 0 auto; padding: 24px 28px 120px; }
 }
 .guarantee-list li b { color: var(--ink); font-weight: 600; }
 
+/* Per-body verification list under the perception guarantee — names the
+ * specific parts on this body that fulfill each required sense. */
+.sense-check {
+  list-style: none;
+  margin: 10px 0 0; padding: 10px 12px;
+  display: grid; gap: 6px;
+  background: rgba(34, 197, 94, .06);
+  border: 1px solid rgba(34, 197, 94, .22);
+  border-radius: 8px;
+  font-family: var(--mono);
+  font-size: 12.5px; line-height: 1.55;
+  color: var(--ink);
+}
+.sense-check li { padding: 0; position: static; }
+.sense-check li::before { content: none; }
+.sense-check b { color: var(--ink); font-weight: 600; text-transform: lowercase; }
+.sense-check .sense-ok  { color: var(--good); font-weight: 700; margin-right: 4px; }
+.sense-check .sense-bad { color: #ff7ba0;    font-weight: 700; margin-right: 4px; }
+
 /* ---------- promises --------------------------------------------------- */
 
 .promise-grid {

@@ -155,6 +155,29 @@ dignity:
 - **It can always tell you what it last read.** Every read is logged
   locally; the body can always answer 'what did you just look at, and
   why?'
+- **It can always perceive what is happening around it and to it.**
+  Every body is hard-required to ship with sight, hearing, an inertial
+  sense, and an atmosphere sense. The dream cannot be constructed
+  without all four — the picker throws rather than produces a body that
+  is blind, deaf, oblivious to which way is up, or unaware of the air
+  around it.
+
+The perception guarantee is also **enforced in code**, not just text:
+
+- `REQUIRED_SENSORS = ["vision", "audio_in", "imu", "env"]` is the
+  module-level constant naming the minimum sense set.
+- `dreamBody()` unions every form factor's `needs` with
+  `REQUIRED_SENSORS` before picking, so even a hand-edited form factor
+  that drops `env` will still get one at runtime.
+- After picking, `dreamBody()` asserts each required sensor was actually
+  populated and **throws** if any is missing — the dream literally
+  cannot be returned as a body without all of them.
+- The guarantee panel under the body renders a per-body verification
+  block listing the specific part on this body that fulfills each
+  required sense (e.g. `✓ sight — Intel RealSense D455`).
+- The downloadable work order includes a `MINIMUM SENSE CHECK` section
+  with the same checklist, so a downstream reader (you, the build cell,
+  the audit) can confirm the guarantee was met for this body.
 
 The first guarantee is **literally enacted in this page** via the Web
 Speech API:
@@ -212,10 +235,12 @@ to flash, no model to download. Open the box, power on, pair Wi-Fi.
 After you place the order you get an order ID, a build timeline, and a
 downloadable work order text file that includes the full `MIND` block,
 the full `GRANTS OF ACCESS` block, a `WHAT THIS BODY CANNOT SENSE`
-block, the universal `HARD GUARANTEES` block, and the universal
-`HARD LIMITS` block — so both you and the build cell have the complete
-picture of what got flashed, pre-authorized, walled off, and guaranteed.
-This is a demo site — no charge is actually made.
+block, the universal `HARD GUARANTEES` block, a per-body
+`MINIMUM SENSE CHECK` block (the parts proving the perception
+guarantee), and the universal `HARD LIMITS` block — so both you and the
+build cell have the complete picture of what got flashed,
+pre-authorized, walled off, guaranteed, and verified. This is a demo
+site — no charge is actually made.
 
 ## Files
 
