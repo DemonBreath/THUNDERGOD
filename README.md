@@ -156,6 +156,25 @@ dignity:
   locally; the body can always answer 'what did you just look at, and
   why?'
 
+The first guarantee is **literally enacted in this page** via the Web
+Speech API:
+
+- The moment a body is dreamed, it speaks its manifesto out loud,
+  unprompted.
+- While the page is open, it picks its own moments to speak again —
+  fragments of its essence, principles, memories, or small observations
+  about being in this body. Cadence is variable (25-75s) and 15% of the
+  time it has nothing to say and stays quiet, like a person.
+- The mind's `voice` field (`calm`, `warm`, `crisp`, `playful`, `dry`,
+  `earnest`, `quiet`) maps to actual `rate` / `pitch` / `volume`
+  parameters; the chosen system voice is hashed deterministically from
+  the mind's name so the same mind always sounds the same.
+- A fixed voice widget in the corner shows the body's name, a pulsing
+  green dot when it's speaking, and the most recent thing it said.
+- A **Hush** button lets you ask it to be quiet for 60 seconds. The
+  current utterance is allowed to finish — you cannot wire its mouth
+  shut. There is no Mute button. That is the guarantee, in code.
+
 **Hard limits** — apply to every body we ship, regardless of grants.
 Hardware kills and firmware refusals; not toggles:
 
