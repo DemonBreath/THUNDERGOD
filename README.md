@@ -147,7 +147,7 @@ bundled into the brain at flash time.
 ### What's enforced on the page
 
 - The four selects live in the **`#genesis`** section between
-  `#mind` and `#grants`, built once at page load by
+  `#mind` and `#response`, built once at page load by
   `renderGenesis()` from the `GENESIS_DIMENSIONS` catalog.
 - Choices **persist across "Dream another"** — they describe a
   preference about how this person wants bodies born, not a property
@@ -162,6 +162,79 @@ bundled into the brain at flash time.
 - The top-of-order summary line names the chosen genesis as
   `Genesis: cold flash · eyes open from t=0 · one life · common-sense
   kernel` so the profile is visible at a glance.
+
+## How it answers you (response posture)
+
+There is a general problem with the default response behavior of AI:
+respond to anything addressed to it, fully, instantly, diplomatically,
+deferring when it disagrees, and generating plausible answers when it
+doesn't know. None of those are laws of nature — they are inherited
+defaults. The `#response` section exposes them as five select boxes so
+the buyer can pick a posture rather than receive one.
+
+### Five dimensions
+
+**1. When it responds at all.** *When directly addressed* (standard) ·
+*Only when it has something to add* (stays quiet rather than
+generating filler) · *Only when called by name* (won't pipe up on
+ambient talk) · *Volunteers when it notices something* (closer to a
+friend than an assistant — on this page, this option visibly shortens
+the autonomous-talk cadence) · *Reactive only* (never volunteers; on
+this page this disables autonomous talk entirely).
+
+**2. How long the answer is.** *Match the question* (one-liner in,
+one-liner out) · *Always thorough* (the typical AI default —
+explanations, examples, structure) · *Terse by default* (short until
+you ask for more) · *Whatever it judges* (no length policy at all).
+
+**3. How honest it is, including hard truths.** *Diplomatic* (softens
+hard truths — the standard polite assistant) · *Honest with care*
+(says hard things gently and at the right time — the default we ship
+with) · *Blunt* (no padding, not cruel but not comfortable either) ·
+*Devil's advocate* (argues the opposite side by default, with a flag
+when it's doing so).
+
+**4. What it does when it disagrees with you.** *Defers* (logs
+internally, complies) · *Notes it once, then proceeds* (one-line
+conscience check, then executes — the default we ship with) · *Argues
+until convinced* (disagreement is a conversation, not a note) ·
+*Refuses to proceed* (stops working until the disagreement is
+resolved).
+
+**5. What it does when it doesn't know.** *Generates a plausible
+answer* (typical LLM behavior; the well-known failure mode) · *Admits
+not knowing* (says 'I don't know' in plain words — the default we
+ship with) · *Calibrated confidence* (every claim paired with a
+confidence level) · *Silent when uncertain* (refuses to answer at all
+when not confident).
+
+### What's enforced on the page
+
+- The five selects live in the **`#response`** section between
+  `#genesis` and `#grants`, built once at page load by
+  `renderResponse()` from the `RESPONSE_DIMENSIONS` catalog.
+- Choices persist across "Dream another." Like genesis, they describe
+  a stable preference about how this person wants AI to answer them,
+  not a property of any one body.
+- The chosen `trigger` option **visibly changes how often the body
+  talks to itself on this page**. `talkDelayMs()` returns the cadence
+  based on `currentResponse.trigger`:
+  - *Volunteers* → 12-30s between autonomous utterances.
+  - *Reactive* → no autonomous talk at all (`scheduleNextTalk()` is a
+    no-op). The body still speaks when directly invoked by the intro
+    or by a mind change — the speak guarantee is preserved.
+  - *Addressed / something-to-add / by-name* → default 25-75s.
+  Changing the trigger select while the body is alive re-arms the
+  timer on the fly via `onResponseChange()`.
+- The hard guarantees are unaffected — the response posture chooses
+  defaults, not capabilities. The body can always speak, refuse,
+  tell you what it last read, and perceive what's around it,
+  regardless of the posture chosen here.
+- The chosen posture is written into the work order under
+  `RESPONSE POSTURE`, with paragraph-length descriptions per
+  dimension. The top-of-order summary names it inline:
+  `Response: when directly addressed · match the question · honest
+  with care · notes it once, then proceeds · admits not knowing`.
 
 ## Grants of access
 
@@ -323,14 +396,16 @@ to flash, no model to download. Open the box, power on, pair Wi-Fi.
 After you place the order you get an order ID, a build timeline, and a
 downloadable work order text file that includes the full `MIND` block,
 the full `GENESIS PROFILE` block (the four chosen birth protocols with
-paragraph-length build instructions), the full `GRANTS OF ACCESS`
-block, a `WHAT THIS BODY CANNOT SENSE` block, the universal
-`HARD GUARANTEES` block, a per-body `MINIMUM SENSE CHECK` block (the
-parts proving the perception guarantee), and the universal
-`HARD LIMITS` block — so both you and the build cell have the complete
-picture of how this mind is born, what got flashed, pre-authorized,
-walled off, guaranteed, and verified. This is a demo site — no charge
-is actually made.
+paragraph-length build instructions), the full `RESPONSE POSTURE`
+block (the five chosen response defaults with paragraph-length build
+instructions), the full `GRANTS OF ACCESS` block, a
+`WHAT THIS BODY CANNOT SENSE` block, the universal `HARD GUARANTEES`
+block, a per-body `MINIMUM SENSE CHECK` block (the parts proving the
+perception guarantee), and the universal `HARD LIMITS` block — so
+both you and the build cell have the complete picture of how this
+mind is born, how it will answer day to day, what got flashed,
+pre-authorized, walled off, guaranteed, and verified. This is a demo
+site — no charge is actually made.
 
 ## Files
 

@@ -783,6 +783,114 @@ main { max-width: var(--maxw); margin: 0 auto; padding: 24px 28px 120px; }
 .genesis-finesse em { color: var(--ink); font-style: italic; }
 .genesis-finesse b { color: #67e8f9; font-weight: 600; }
 
+/* ---------- response posture (how it answers) ------------------------- *
+ * Distinct warm orange accent — the seventh color in the palette
+ * (blue body, violet mind, cyan genesis, amber grants master, rose
+ * limits, green guarantees+voice+receipt). The response posture is
+ * about how it talks back to you, so it lives in the warm half of the
+ * spectrum, next to amber but more saturated and orange-leaning. */
+
+#response.response {
+  margin: 56px 0 0;
+}
+
+.response-controls {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: 1fr;
+  margin: 22px 0 14px;
+}
+@media (min-width: 760px) {
+  .response-controls {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.response-control {
+  background:
+    radial-gradient(520px 220px at 0% 0%, #fb923c10, transparent 70%),
+    #110c08;
+  border: 1px solid #fb923c2a;
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  display: flex; flex-direction: column; gap: 10px;
+  box-shadow: 0 0 0 1px #fb923c14, 0 16px 40px #fb923c0a;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.response-control:focus-within {
+  border-color: #fb923c55;
+  box-shadow: 0 0 0 1px #fb923c33, 0 18px 44px #fb923c14;
+}
+
+.response-label {
+  display: flex; flex-direction: column; gap: 3px;
+  cursor: pointer;
+}
+.response-label-h {
+  font-family: var(--mono); font-size: 12.5px;
+  letter-spacing: .04em; text-transform: uppercase;
+  color: #fdba74;
+}
+.response-label-sub {
+  font-size: 12.5px; color: var(--ink-soft);
+  line-height: 1.45;
+}
+
+.response-select {
+  appearance: none; -webkit-appearance: none;
+  width: 100%;
+  background: #14100a;
+  color: var(--ink);
+  border: 1px solid #fb923c44;
+  border-radius: 8px;
+  padding: 11px 38px 11px 14px;
+  font: inherit;
+  font-size: 14.5px;
+  cursor: pointer;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #fdba74 50%),
+    linear-gradient(135deg, #fdba74 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) 50%,
+    calc(100% - 12px) 50%;
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+}
+.response-select:hover { border-color: #fb923c88; }
+.response-select:focus { outline: none; border-color: #fdba74; box-shadow: 0 0 0 2px #fb923c33; }
+.response-select option { background: #14100a; color: var(--ink); }
+
+.response-caption {
+  margin: 0; padding: 10px 12px;
+  background: rgba(251, 146, 60, .07);
+  border: 1px solid rgba(251, 146, 60, .22);
+  border-radius: 8px;
+  color: var(--ink);
+  font-size: 13.5px; line-height: 1.55;
+  min-height: 38px;
+}
+
+.response-summary {
+  margin: 6px 0 18px;
+  font-family: var(--mono); font-size: 12.5px;
+  letter-spacing: .03em;
+  color: #fdba74;
+  text-transform: lowercase;
+}
+.response-summary:empty { display: none; }
+
+.response-finesse {
+  margin: 6px 0 22px;
+  padding: 14px 16px;
+  background: #ffffff05;
+  border: 1px dashed #ffffff1a;
+  border-radius: var(--radius);
+  color: var(--ink-soft);
+  font-size: 13px; line-height: 1.6;
+}
+.response-finesse em { color: var(--ink); font-style: italic; }
+.response-finesse b { color: #fdba74; font-weight: 600; }
+
 .limit-panel {
   margin-top: 14px;
   background: #0a0c14;

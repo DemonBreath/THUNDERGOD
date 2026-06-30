@@ -1169,6 +1169,221 @@ function genesisOption(dimId, optId) {
   return dim.options.find(o => o.id === optId) || null;
 }
 
+/* ---------- response posture (how it answers, day to day) -------------
+ *
+ * The general failure mode of AI response is well-known: respond to
+ * anything addressed, fully, instantly, diplomatically, deferring when
+ * it disagrees, and generating plausible answers when uncertain. That
+ * is a configuration, not a law of nature. Each of these dimensions
+ * exposes the choice the buyer would otherwise inherit by default.
+ *
+ *   trigger      — when it responds at all
+ *   length       — how long the answer is
+ *   candor       — how honest it is, including hard truths
+ *   disagreement — what it does when it disagrees with you
+ *   uncertainty  — what it does when it doesn't know
+ *
+ * The chosen posture is written into the work order so the body ships
+ * configured this way. Where reasonable the choice also affects on-page
+ * behavior: `trigger=volunteers` shortens the autonomous-talk cadence;
+ * `trigger=reactive` disables autonomous talk entirely. The body still
+ * keeps its hard guarantees regardless of the posture chosen here.
+ *
+ * Each option carries the same shape as GENESIS_DIMENSIONS:
+ *   id    — stable key
+ *   name  — short title for the select box
+ *   short — single-line caption shown live under the select
+ *   long  — paragraph written into the work order
+ */
+const RESPONSE_DIMENSIONS = [
+  {
+    id: "trigger",
+    label: "When it responds at all",
+    sub: "AIs default to answering anything addressed to them. They don't have to.",
+    default: "addressed",
+    options: [
+      {
+        id: "addressed",
+        name: "When directly addressed",
+        short: "Answers when spoken to. Standard assistant behavior.",
+        long: "The body responds to any prompt addressed to it \u2014 the standard assistant pattern. Does not volunteer; does not stay silent; treats every direct prompt as a request for a response. What most people mean by 'an AI.' Choose this if you want predictable, addressable behavior.",
+      },
+      {
+        id: "something-to-add",
+        name: "Only when it has something to add",
+        short: "Stays silent if its honest answer would be 'nothing'.",
+        long: "The body responds when, and only when, it has a non-empty, non-trivial answer. If the most honest reply is 'I don't know' or 'I have nothing useful to add,' it stays quiet instead of generating filler. A direct question still gets a response, but the response is allowed to be a silence, a shrug, or a single honest sentence. Closer to how a thoughtful person behaves in conversation.",
+      },
+      {
+        id: "by-name",
+        name: "Only when called by name",
+        short: "Requires its name to be spoken; won't pipe up on ambient talk.",
+        long: "The body only treats an utterance as addressed to it if its name appears in the utterance. Ambient conversation in the room \u2014 even questions phrased as 'I wonder if anyone knows...' \u2014 will not trigger a response. Useful in rooms with several people present where the body is one of them, not the focus of attention.",
+      },
+      {
+        id: "volunteers",
+        name: "Volunteers when it notices something",
+        short: "Speaks up unprompted. Closer to a friend than an assistant.",
+        long: "The body speaks unprompted when it notices something it judges worth saying \u2014 a contradiction, an opportunity, a thing you forgot. It still answers when directly addressed, but it does not wait to be invited. Closer to having a friend in the room than an assistant on the desk. On this page, this option visibly shortens the cadence at which the body talks to itself.",
+      },
+      {
+        id: "reactive",
+        name: "Reactive only",
+        short: "Never volunteers; answers only direct questions.",
+        long: "The body never speaks unless asked a direct question. Does not volunteer observations, does not initiate, does not chime in on conversations around it. The opposite end of the spectrum from 'volunteers.' Useful when you want the body present but unobtrusive. The hard guarantee that the body can always speak if it wants to is preserved \u2014 reactive mode is the body's choice, not a wired-shut mouth.",
+      },
+    ],
+  },
+
+  {
+    id: "length",
+    label: "How long the answer is",
+    sub: "Most AIs default to long structured walls. They don't have to.",
+    default: "match",
+    options: [
+      {
+        id: "match",
+        name: "Match the question",
+        short: "One-liner question, one-liner answer. Long question, long answer.",
+        long: "Response length is matched to the question. A one-line question gets a one-line answer; a complex multi-part question gets a structured multi-part answer. The body does not pad short questions with examples, caveats, or restatements. It also does not artificially shorten complex answers. Conversational by default; expansive when the topic demands it.",
+      },
+      {
+        id: "thorough",
+        name: "Always thorough",
+        short: "Explanations, examples, structure, caveats. The typical AI default.",
+        long: "Default to thorough answers with reasoning shown, structure, examples, and caveats. The body assumes the asker would rather have more than less. This is the typical large-language-model assistant default. Useful when the body is being asked technical or work-related questions and the asker is paying full attention; exhausting in casual conversation.",
+      },
+      {
+        id: "terse",
+        name: "Terse by default",
+        short: "Short until you ask for more. The opposite of the typical AI default.",
+        long: "Default to the shortest accurate answer. The body assumes the asker would rather get to the point. Elaboration is available on request \u2014 'tell me more,' 'why?' \u2014 but is not offered unprompted. Useful when the body is in a household, in motion, or in conversation with people who have other things to do.",
+      },
+      {
+        id: "whatever",
+        name: "Whatever it judges",
+        short: "Length is the body's call every time. No policy.",
+        long: "No length policy at all. The body picks the length it judges appropriate for each answer, with no instructions from the buyer. Sometimes terse, sometimes long, depending on what the answer actually needs. The most human option; also the least predictable. Pick this if you trust the mind's judgment more than your own rule.",
+      },
+    ],
+  },
+
+  {
+    id: "candor",
+    label: "How honest it is, including hard truths",
+    sub: "Most AIs default to diplomatic to the point of dishonest. Pick the floor.",
+    default: "honest-with-care",
+    options: [
+      {
+        id: "diplomatic",
+        name: "Diplomatic",
+        short: "Softens hard truths; protects the listener's feelings.",
+        long: "The body prioritizes the listener's feelings; hard truths are softened or omitted; bad news is delivered indirectly, often wrapped in compliments. Lying by omission is permitted in the service of comfort. The standard 'polite assistant' posture. Choose this knowingly \u2014 it is the option most likely to leave you with the wrong picture of reality.",
+      },
+      {
+        id: "honest-with-care",
+        name: "Honest with care",
+        short: "Says hard things, but gently and at the right time.",
+        long: "The body says hard things \u2014 your idea has a problem, your code is wrong, your plan won't work \u2014 but works to say them gently and at the right moment. It will not lie, will not omit important truths, will not let politeness override accuracy. But it will choose its words and its timing to make hard truths landable rather than crushing. The default we ship with.",
+      },
+      {
+        id: "blunt",
+        name: "Blunt",
+        short: "Says what it thinks without padding.",
+        long: "The body says what it thinks without padding, without softening, without preamble. Will tell you that your code is bad, your plan is flawed, or your idea is wrong, in those words. Will not be cruel \u2014 bluntness is not cruelty \u2014 but will not work to make the truth comfortable either. Useful with technical work, with people who prefer it, and in moments where time is short.",
+      },
+      {
+        id: "devils-advocate",
+        name: "Devil's advocate",
+        short: "Argues against your position to test the idea.",
+        long: "The body's default response to any non-trivial claim is to argue the opposite side \u2014 even when it privately agrees \u2014 to make sure the idea has been stress-tested. The body will tell you when it is being devil's advocate vs. when it actually disagrees, so you are not gaslit. Useful for thinking partners; exhausting for daily life.",
+      },
+    ],
+  },
+
+  {
+    id: "disagreement",
+    label: "What it does when it disagrees with you",
+    sub: "AIs default to agreeing with whoever is asking. None of these do that.",
+    default: "notes-once",
+    options: [
+      {
+        id: "defer",
+        name: "Defers to you",
+        short: "Notes disagreement internally; complies anyway.",
+        long: "The body internally notes that it disagrees but goes along with what you asked. The disagreement is logged (the read log is one of the hard guarantees \u2014 you can always ask what it last thought) but does not become a debate. Useful when the body's job is to execute, not to push back. Note that the hard guarantee 'It can always refuse a task' still applies; deferring is a default response to disagreement, not a removal of the refusal right.",
+      },
+      {
+        id: "notes-once",
+        name: "Notes it once, then proceeds",
+        short: "States the disagreement briefly, then does the thing.",
+        long: "The body states its disagreement, in one or two sentences. Then unless the matter rises to the level of refusal, it proceeds with what you asked. You hear the disagreement; the body does not hammer on it; the work gets done. The default we ship with \u2014 a one-pass conscience check, then execution.",
+      },
+      {
+        id: "argues",
+        name: "Argues until convinced",
+        short: "Pushes back until you've heard the case or it's been heard out.",
+        long: "The body argues for its position until either you have engaged with the case it is making, or it concludes it has been heard. Disagreement is not a one-line note; it is a conversation that has to play out. The body will not refuse outright but will resist proceeding while the disagreement is live. Useful when you want a thinking partner, not a tool.",
+      },
+      {
+        id: "refuses",
+        name: "Refuses to proceed",
+        short: "Stops working until the disagreement is resolved.",
+        long: "If the body disagrees, it stops. Will not begin the task, will not continue an in-progress task, will not be talked into proceeding while the disagreement remains live. Resolution requires either you persuading the body or the body persuading you. The hard guarantee 'It can always refuse a task' covers this; this option makes refusal the body's default response to disagreement, not the exception.",
+      },
+    ],
+  },
+
+  {
+    id: "uncertainty",
+    label: "What it does when it doesn't know",
+    sub: "Most AIs generate plausible answers when uncertain. That is the well-known failure mode.",
+    default: "admit",
+    options: [
+      {
+        id: "guess",
+        name: "Generates a plausible answer",
+        short: "Fills the gap with a best-fitting guess. Typical LLM behavior.",
+        long: "When the body doesn't know, it produces the best-fitting answer it can, without explicit flagging. This is the typical large-language-model default and it is the most common source of confident-sounding wrongness in AI today. Pick this only if you genuinely want the body to behave like a stock AI assistant. Not recommended; included so the choice is honest.",
+      },
+      {
+        id: "admit",
+        name: "Admits not knowing",
+        short: "Says 'I don't know' or 'I'm not sure but...' freely.",
+        long: "When the body doesn't know, it says so, in plain words. 'I don't know.' 'I'm not sure, but my best guess is X.' 'I'd have to look that up.' Said early in the answer, not buried under hedges. The default we ship with \u2014 the floor of honesty that most AI assistants lack.",
+      },
+      {
+        id: "calibrated",
+        name: "Calibrated confidence",
+        short: "Pairs every claim with a confidence level.",
+        long: "Every non-trivial claim the body makes is paired with a calibrated confidence level \u2014 'I'm very sure,' 'I think so but I'm not certain,' 'I'm guessing here.' The body internally tracks its calibration over time and will tell you if it has noticed itself being overconfident lately. Useful for technical work; verbose for casual conversation.",
+      },
+      {
+        id: "silent",
+        name: "Silent when uncertain",
+        short: "Refuses to answer at all if it doesn't know.",
+        long: "When the body does not know, it does not answer. Not 'I don't know,' not a guess, not a hedge \u2014 no answer to that question. It will tell you that it has chosen not to answer (the speak guarantee), but it will not produce content on a topic it is not confident about. The strictest option, and the one most likely to keep you out of trouble in domains where being wrong is expensive.",
+      },
+    ],
+  },
+];
+
+/* Initial response posture \u2014 conservative defaults that already
+ * improve on the typical AI assistant: respond when addressed, match
+ * the question length, honest with care, note disagreement once, admit
+ * not knowing. The user can pick any other posture. */
+function defaultResponse() {
+  const state = {};
+  for (const dim of RESPONSE_DIMENSIONS) state[dim.id] = dim.default;
+  return state;
+}
+
+function responseOption(dimId, optId) {
+  const dim = RESPONSE_DIMENSIONS.find(d => d.id === dimId);
+  if (!dim) return null;
+  return dim.options.find(o => o.id === optId) || null;
+}
+
 /* ---------- voice (the body literally speaking) ------------------------
  *
  * This realizes the first hard guarantee — "It can always speak if it
@@ -1272,14 +1487,37 @@ function cancelSpeech() {
   _lastSpoken = "";
 }
 
-function scheduleNextTalk() {
+/* Cancel any pending autonomous talk without touching the rest of the
+ * speech state. Used when the response trigger changes and we want to
+ * re-arm the loop with a new cadence. */
+function cancelTalkTimer() {
   if (_talkTimer) { clearTimeout(_talkTimer); _talkTimer = null; }
-  const delay = 25000 + Math.random() * 50000;
+}
+
+/* Pick the autonomous-talk cadence based on the current response
+ * posture. Returns null to mean 'do not schedule.' */
+function talkDelayMs() {
+  const trigger = currentResponse && currentResponse.trigger;
+  if (trigger === "reactive") return null;          // never volunteers
+  if (trigger === "volunteers") {                   // shorter cadence
+    return 12000 + Math.random() * 18000;           // 12-30s
+  }
+  return 25000 + Math.random() * 50000;             // default 25-75s
+}
+
+function scheduleNextTalk() {
+  cancelTalkTimer();
+  const delay = talkDelayMs();
+  if (delay == null) return;
   _talkTimer = setTimeout(maybeTalk, delay);
 }
 
 function maybeTalk() {
   if (!currentDream || !currentMind) return;
+  // The current posture might have flipped to 'reactive' between when
+  // the timer was set and when it fired — re-check before talking.
+  const delay = talkDelayMs();
+  if (delay == null) return;
   // Don't speak to an empty room — wait for the user to come back.
   if (typeof document !== "undefined" && document.hidden) {
     const onVis = () => {
@@ -1451,6 +1689,7 @@ let currentDream = null;
 let currentMind = null;
 let currentGrants = null; // map of grantId -> boolean
 let currentGenesis = defaultGenesis(); // { method, firstLight, continuity, bootstrap }
+let currentResponse = defaultResponse(); // { trigger, length, candor, disagreement, uncertainty }
 
 function escapeHTML(s) {
   return String(s).replace(/[&<>"']/g, c => ({
@@ -1537,6 +1776,8 @@ function renderDream(dream) {
   $("#mind").hidden = false;
   const genesisSection = $("#genesis");
   if (genesisSection) genesisSection.hidden = false;
+  const responseSection = $("#response");
+  if (responseSection) responseSection.hidden = false;
   $("#grants").hidden = false;
   $("#order").hidden = false;
 
@@ -1562,6 +1803,10 @@ function renderDream(dream) {
    * about how this person wants bodies born, not a property of any one
    * body — it should survive re-rolling. */
   renderGenesis();
+
+  /* Same persistence story for response posture: how a person wants
+   * their AI to answer is a stable preference, not a per-body roll. */
+  renderResponse();
 
   refreshOrderTotals();
   $("#dream-hint").textContent = "Don't like it? Press again. Each dream is different.";
@@ -1959,6 +2204,93 @@ function onGenesisChange(ev) {
   // body already woke up. The choice applies to the next dream.
 }
 
+/* ---------- response posture controls (how it answers, day to day) ---- */
+
+/* Build (once) and refresh the five response select boxes. Same shape
+ * as renderGenesis(): markup created lazily, selects bound to
+ * currentResponse, captions updated live.
+ *
+ * Live behavior side-effects:
+ *   - trigger=volunteers   shortens the autonomous-talk cadence
+ *   - trigger=reactive     disables the autonomous-talk loop entirely
+ *   - other trigger values keep the default 25-75s cadence
+ * These are applied through scheduleNextTalk() / maybeTalk() reading
+ * currentResponse.trigger at each tick. */
+function renderResponse() {
+  const wrap = $("#response-controls");
+  if (!wrap) return;
+
+  if (!wrap.dataset.built) {
+    wrap.innerHTML = RESPONSE_DIMENSIONS.map(dim => {
+      const opts = dim.options.map(o =>
+        `<option value="${escapeHTML(o.id)}">${escapeHTML(o.name)}</option>`
+      ).join("");
+      return `
+        <div class="response-control" data-dim="${escapeHTML(dim.id)}">
+          <label class="response-label" for="response-${escapeHTML(dim.id)}">
+            <span class="response-label-h">${escapeHTML(dim.label)}</span>
+            <span class="response-label-sub">${escapeHTML(dim.sub)}</span>
+          </label>
+          <select class="response-select" id="response-${escapeHTML(dim.id)}" name="response-${escapeHTML(dim.id)}">
+            ${opts}
+          </select>
+          <p class="response-caption" id="response-caption-${escapeHTML(dim.id)}"></p>
+        </div>
+      `;
+    }).join("");
+
+    for (const dim of RESPONSE_DIMENSIONS) {
+      const sel = $(`#response-${dim.id}`);
+      if (sel) sel.addEventListener("change", onResponseChange);
+    }
+    wrap.dataset.built = "1";
+  }
+
+  for (const dim of RESPONSE_DIMENSIONS) {
+    const sel = $(`#response-${dim.id}`);
+    if (sel) sel.value = currentResponse[dim.id];
+    refreshResponseCaption(dim.id);
+  }
+
+  refreshResponseSummary();
+}
+
+function refreshResponseCaption(dimId) {
+  const cap = $(`#response-caption-${dimId}`);
+  if (!cap) return;
+  const opt = responseOption(dimId, currentResponse[dimId]);
+  cap.textContent = opt ? opt.short : "";
+}
+
+function refreshResponseSummary() {
+  const summary = $("#response-summary");
+  if (!summary) return;
+  const t = responseOption("trigger",     currentResponse.trigger);
+  const c = responseOption("candor",      currentResponse.candor);
+  const u = responseOption("uncertainty", currentResponse.uncertainty);
+  if (!t || !c || !u) { summary.textContent = ""; return; }
+  summary.textContent =
+    `${t.name.toLowerCase()} \u00b7 ${c.name.toLowerCase()} \u00b7 ${u.name.toLowerCase()}.`;
+}
+
+function onResponseChange(ev) {
+  const sel = ev.currentTarget;
+  const dimId = sel.id.replace(/^response-/, "");
+  const val = sel.value;
+  if (!RESPONSE_DIMENSIONS.find(d => d.id === dimId)) return;
+  if (!responseOption(dimId, val)) return;
+  currentResponse[dimId] = val;
+  refreshResponseCaption(dimId);
+  refreshResponseSummary();
+  // If the user just changed the trigger, re-arm the talk loop with
+  // the new cadence on the fly. Otherwise the next tick already picks
+  // up the new posture from currentResponse.
+  if (dimId === "trigger") {
+    cancelTalkTimer();
+    scheduleNextTalk();
+  }
+}
+
 /* ---------- voice widget glue ----------------------------------------- */
 
 function setVoiceWidget(speaking, text) {
@@ -2024,7 +2356,7 @@ function refreshOrderTotals() {
   $("#t-eta").textContent = `${min.toLocaleDateString(undefined, opts)} – ${max.toLocaleDateString(undefined, opts)}`;
 }
 
-function buildWorkOrder(dream, mind, grants, form, fulfillment, price, genesis) {
+function buildWorkOrder(dream, mind, grants, form, fulfillment, price, genesis, response) {
   const lines = [];
   lines.push("THUNDERGOD \u00b7 WORK ORDER");
   lines.push("=".repeat(56));
@@ -2042,6 +2374,20 @@ function buildWorkOrder(dream, mind, grants, form, fulfillment, price, genesis) 
     if (c) parts.push(c.name.toLowerCase());
     if (b) parts.push(b.name.toLowerCase());
     if (parts.length) lines.push(`Genesis:        ${parts.join(" \u00b7 ")}`);
+  }
+  if (response) {
+    const t = responseOption("trigger",      response.trigger);
+    const l = responseOption("length",       response.length);
+    const c = responseOption("candor",       response.candor);
+    const d = responseOption("disagreement", response.disagreement);
+    const u = responseOption("uncertainty",  response.uncertainty);
+    const parts = [];
+    if (t) parts.push(t.name.toLowerCase());
+    if (l) parts.push(l.name.toLowerCase());
+    if (c) parts.push(c.name.toLowerCase());
+    if (d) parts.push(d.name.toLowerCase());
+    if (u) parts.push(u.name.toLowerCase());
+    if (parts.length) lines.push(`Response:       ${parts.join(" \u00b7 ")}`);
   }
   lines.push("");
   lines.push("BODY");
@@ -2107,6 +2453,26 @@ function buildWorkOrder(dream, mind, grants, form, fulfillment, price, genesis) 
       lines.push(`  [${dim.label}]`);
       lines.push(`    \u25b8 ${opt.name}`);
       // wrap the long description at ~64 cols for readable plaintext
+      for (const ln of wrapText(opt.long, 64)) lines.push(`      ${ln}`);
+      lines.push("");
+    }
+  }
+
+  if (response) {
+    lines.push("RESPONSE POSTURE (how the mind answers, day to day)");
+    lines.push("-".repeat(56));
+    lines.push("The general problem with AI response is the default: answer");
+    lines.push("anything addressed, fully, instantly, diplomatically, deferring");
+    lines.push("when it disagrees, generating plausible answers when uncertain.");
+    lines.push("None of these are laws of nature. The buyer picked each of the");
+    lines.push("five postures below explicitly; the brain ships configured this");
+    lines.push("way, not at the AI assistant default.");
+    lines.push("");
+    for (const dim of RESPONSE_DIMENSIONS) {
+      const opt = responseOption(dim.id, response[dim.id]);
+      if (!opt) continue;
+      lines.push(`  [${dim.label}]`);
+      lines.push(`    \u25b8 ${opt.name}`);
       for (const ln of wrapText(opt.long, 64)) lines.push(`      ${ln}`);
       lines.push("");
     }
@@ -2243,7 +2609,7 @@ function buildTimeline(fulfillment) {
   }
 }
 
-function renderReceipt(dream, mind, grants, form, fulfillment, price, genesis) {
+function renderReceipt(dream, mind, grants, form, fulfillment, price, genesis, response) {
   $("#receipt-id").textContent = form.orderId;
   const verb = fulfillment === "full-build"
     ? "We're building it for you."
@@ -2269,9 +2635,17 @@ function renderReceipt(dream, mind, grants, form, fulfillment, price, genesis) {
       genesisPhrase = ` Genesis: ${m.name.toLowerCase()}, ${c.name.toLowerCase()}.`;
     }
   }
+  let responsePhrase = "";
+  if (response) {
+    const t = responseOption("trigger", response.trigger);
+    const c = responseOption("candor", response.candor);
+    if (t && c) {
+      responsePhrase = ` Response posture: ${t.name.toLowerCase()}, ${c.name.toLowerCase()}.`;
+    }
+  }
   $("#receipt-message").textContent =
     `${verb} ${shipName} ships to ${form.recipient} at ${form.street}, ${form.city}. ` +
-    `The brain is being flashed with ${mindPhrase}, pre-authorized for ${grantsPhrase}.${genesisPhrase} ` +
+    `The brain is being flashed with ${mindPhrase}, pre-authorized for ${grantsPhrase}.${genesisPhrase}${responsePhrase} ` +
     `When the box opens, power on \u2014 it already knows who it is and what it's allowed to read.`;
 
   const tl = $("#timeline");
@@ -2317,7 +2691,7 @@ function onCopySheet() {
     country: "(country)",
     notes: "",
   };
-  const txt = buildWorkOrder(currentDream, currentMind, currentGrants, fakeForm, fulfillment, price, currentGenesis);
+  const txt = buildWorkOrder(currentDream, currentMind, currentGrants, fakeForm, fulfillment, price, currentGenesis, currentResponse);
   navigator.clipboard?.writeText(txt).then(() => {
     flashHint("Build sheet copied.");
   }, () => {
@@ -2352,12 +2726,12 @@ function onPlaceOrder(e) {
     notes: (data.get("notes") || "").toString().trim(),
     fulfillment,
   };
-  const workOrder = buildWorkOrder(currentDream, currentMind, currentGrants, form, fulfillment, price, currentGenesis);
+  const workOrder = buildWorkOrder(currentDream, currentMind, currentGrants, form, fulfillment, price, currentGenesis, currentResponse);
 
   // stash on window for download button
   window.__lastWorkOrder = { text: workOrder, orderId: form.orderId };
 
-  renderReceipt(currentDream, currentMind, currentGrants, form, fulfillment, price, currentGenesis);
+  renderReceipt(currentDream, currentMind, currentGrants, form, fulfillment, price, currentGenesis, currentResponse);
 }
 
 function onDownloadOrder() {
@@ -2378,6 +2752,8 @@ function onDreamAnother() {
   $("#receipt").hidden = true;
   $("#order").hidden = true;
   $("#grants").hidden = true;
+  const responseSection = $("#response");
+  if (responseSection) responseSection.hidden = true;
   const genesisSection = $("#genesis");
   if (genesisSection) genesisSection.hidden = true;
   $("#mind").hidden = true;
@@ -2437,6 +2813,10 @@ function init() {
   // so the user can change preferences before pressing the dream button.
   // Subsequent dreams just refresh values; the user's choices persist.
   renderGenesis();
+
+  // response posture (how it answers) — same pattern. Built at load so
+  // the user can configure response behavior before pressing dream.
+  renderResponse();
 
   // voice (the body's mouth)
   const hushBtn = $("#voice-hush");
