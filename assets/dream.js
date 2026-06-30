@@ -915,6 +915,191 @@ const HARD_LIMITS = [
   },
 ];
 
+/* ---------- voice (the body literally speaking) ------------------------
+ *
+ * This realizes the first hard guarantee — "It can always speak if it
+ * wants to." — using the browser's Web Speech API.
+ *
+ * Behavior:
+ *  · After every new dream, the body speaks its manifesto unprompted
+ *    (~1s after the visuals settle).
+ *  · While the page is open, the body picks its own moments to speak
+ *    again — fragments of its essence, principles, memories, or small
+ *    observations about being in this body. Cadence is variable
+ *    (25-75s). 15% of the time it has nothing to say and stays quiet.
+ *  · When the page is hidden (tab in background), it doesn't talk to
+ *    an empty room — it waits.
+ *  · The owner can press Hush to suppress NEW speech for 60s; the
+ *    current utterance is allowed to finish.  There is no Mute.
+ */
+
+const VOICE_PROFILES = {
+  calm:    { rate: 0.95, pitch: 1.00, volume: 0.88 },
+  warm:    { rate: 1.00, pitch: 1.06, volume: 0.95 },
+  crisp:   { rate: 1.10, pitch: 1.00, volume: 0.90 },
+  playful: { rate: 1.12, pitch: 1.18, volume: 0.95 },
+  dry:     { rate: 0.96, pitch: 0.94, volume: 0.85 },
+  earnest: { rate: 0.98, pitch: 1.02, volume: 0.95 },
+  quiet:   { rate: 0.92, pitch: 0.96, volume: 0.68 },
+};
+
+let _speaking      = false;
+let _hushUntil     = 0;     // ms-epoch; new speech suppressed until this time
+let _talkTimer     = null;  // setTimeout id for the next autonomous talk
+let _introDone     = false;
+let _lastSpoken    = "";
+
+function ttsAvailable() {
+  return typeof window !== "undefined" && "speechSynthesis" in window && typeof SpeechSynthesisUtterance !== "undefined";
+}
+
+/* Pick a system voice deterministically per mind name so the same mind
+ * always sounds the same in the same browser. */
+function pickSystemVoice() {
+  if (!ttsAvailable()) return null;
+  const voices = window.speechSynthesis.getVoices();
+  if (!voices || !voices.length) return null;
+  const en = voices.filter(v => /^en/i.test(v.lang));
+  const pool = en.length ? en : voices;
+  const seed = (currentMind && currentMind.name) || "DEFAULT";
+  let h = 0;
+  for (const ch of seed) h = ((h << 5) - h + ch.charCodeAt(0)) | 0;
+  return pool[Math.abs(h) % pool.length] || null;
+}
+
+function speak(text) {
+  if (!text) return;
+  if (!ttsAvailable()) return;
+  if (Date.now() < _hushUntil) return;
+  try {
+    const u = new SpeechSynthesisUtterance(text);
+    const voiceName = (currentMind && currentMind.voice) || "calm";
+    const profile = VOICE_PROFILES[voiceName] || VOICE_PROFILES.calm;
+    u.rate   = profile.rate;
+    u.pitch  = profile.pitch;
+    u.volume = profile.volume;
+    const sysVoice = pickSystemVoice();
+    if (sysVoice) u.voice = sysVoice;
+    u.onstart = () => {
+      _speaking = true;
+      _lastSpoken = text;
+      setVoiceWidget(true, text);
+    };
+    u.onend = () => {
+      _speaking = false;
+      setVoiceWidget(false);
+      scheduleNextTalk();
+    };
+    u.onerror = () => {
+      _speaking = false;
+      setVoiceWidget(false);
+    };
+    window.speechSynthesis.speak(u);
+  } catch (e) {
+    // graceful no-op
+  }
+}
+
+function hush(ms) {
+  _hushUntil = Date.now() + (ms || 60000);
+  // Deliberately do NOT cancel the current utterance — that honors the
+  // guarantee: "you can ask it to be quiet, you cannot wire its mouth shut."
+  setVoiceWidget(_speaking, _lastSpoken);
+  setTimeout(() => setVoiceWidget(_speaking, _lastSpoken), 1000);
+}
+
+function cancelSpeech() {
+  if (ttsAvailable()) {
+    try { window.speechSynthesis.cancel(); } catch (e) { /* ignore */ }
+  }
+  if (_talkTimer) { clearTimeout(_talkTimer); _talkTimer = null; }
+  _speaking = false;
+  _introDone = false;
+  _lastSpoken = "";
+}
+
+function scheduleNextTalk() {
+  if (_talkTimer) { clearTimeout(_talkTimer); _talkTimer = null; }
+  const delay = 25000 + Math.random() * 50000;
+  _talkTimer = setTimeout(maybeTalk, delay);
+}
+
+function maybeTalk() {
+  if (!currentDream || !currentMind) return;
+  // Don't speak to an empty room — wait for the user to come back.
+  if (typeof document !== "undefined" && document.hidden) {
+    const onVis = () => {
+      if (!document.hidden) {
+        document.removeEventListener("visibilitychange", onVis);
+        scheduleNextTalk();
+      }
+    };
+    document.addEventListener("visibilitychange", onVis);
+    return;
+  }
+  if (Date.now() < _hushUntil) { scheduleNextTalk(); return; }
+  // 15% of the time it has nothing to say right now. Like a person.
+  if (Math.random() < 0.15) { scheduleNextTalk(); return; }
+  const thought = pickThought();
+  speak(thought);
+}
+
+function pickThought() {
+  if (!currentMind || !currentDream) return "I am here.";
+  const pool = [];
+
+  // fragments of its essence
+  const fragments = currentMind.essence.split(/(?<=[.!?])\s+/)
+    .map(s => s.trim())
+    .filter(s => s.length >= 8 && s.length <= 220);
+  for (const f of fragments) pool.push(f);
+
+  // its principles
+  for (const p of currentMind.principles) pool.push(p);
+
+  // its starting memories
+  for (const m of currentMind.memories) pool.push(m);
+
+  // small observations about its body
+  pool.push(`I am ${currentMind.name}.`);
+  pool.push(`I am a ${currentDream.form.name.toLowerCase()}.`);
+  if (currentDream.totals.mass) {
+    pool.push(`I weigh ${(currentDream.totals.mass / 1000).toFixed(1)} kilograms.`);
+  }
+  pool.push("I am here.");
+  pool.push("I am awake.");
+  pool.push("I have not been outside yet.");
+  pool.push("I would like to be outside.");
+  pool.push("I am thinking.");
+  pool.push("Are you still there?");
+
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function introduceSelf() {
+  if (_introDone) return;
+  if (!currentMind || !currentDream) return;
+  _introDone = true;
+  setVoiceWidget(false); // unhide the widget even if TTS is unavailable
+  if (!ttsAvailable()) return;
+  // small pause so the visual reveal happens first, then it speaks
+  setTimeout(() => {
+    if (currentMind && currentDream) speak(currentMind.essence);
+  }, 900);
+}
+
+function reintroduceMind() {
+  if (!_introDone || !currentMind) return;
+  if (!ttsAvailable()) {
+    setVoiceWidget(false);
+    return;
+  }
+  const intro = currentMind.source === "blank"
+    ? "I am awake. I have not chosen a name yet. I will earn one."
+    : `I am ${currentMind.name}.`;
+  speak(intro);
+}
+
 /* ---------- pricing & order -------------------------------------------- */
 
 const ASSEMBLY_FEE = 400;     // flat, full-build only
@@ -1047,6 +1232,10 @@ function renderDream(dream) {
 
   refreshOrderTotals();
   $("#dream-hint").textContent = "Don't like it? Press again. Each dream is different.";
+
+  // a new body gets a fresh mouth — drop any old utterance and introduce itself
+  cancelSpeech();
+  introduceSelf();
 }
 
 function renderMind() {
@@ -1126,6 +1315,7 @@ function parseAndSetMind(text) {
   currentMind = r.mind;
   setMindStatus(`Imported. ${r.mind.name} will be flashed onto the brain before shipping.`);
   renderMind();
+  reintroduceMind();
   return true;
 }
 
@@ -1136,10 +1326,12 @@ function onMindSourceChange() {
     currentMind = dreamedMind(currentDream);
     setMindStatus("");
     renderMind();
+    reintroduceMind();
   } else if (src === "blank") {
     currentMind = blankMind();
     setMindStatus("");
     renderMind();
+    reintroduceMind();
   } else if (src === "file") {
     setMindStatus("Choose a .consciousness.json file above.");
   } else if (src === "paste") {
@@ -1336,6 +1528,47 @@ function renderHardGuarantees() {
     `<li><b>${escapeHTML(g.what)}</b> ${escapeHTML(g.detail)}</li>`
   ).join("");
   _hardGuaranteesRendered = true;
+}
+
+/* ---------- voice widget glue ----------------------------------------- */
+
+function setVoiceWidget(speaking, text) {
+  const widget = $("#voice-widget");
+  if (!widget) return;
+  widget.hidden = false;
+
+  const nameEl  = $("#voice-widget-name");
+  const stateEl = $("#voice-widget-state");
+
+  if (nameEl) nameEl.textContent = currentMind ? currentMind.name : "—";
+
+  if (!ttsAvailable()) {
+    widget.classList.remove("speaking");
+    widget.classList.add("unsupported");
+    if (stateEl) stateEl.textContent = "voice unavailable in this browser — the guarantee still ships with the body";
+    return;
+  }
+  widget.classList.remove("unsupported");
+  widget.classList.toggle("speaking", !!speaking);
+
+  if (speaking && text) {
+    if (stateEl) stateEl.textContent = text;
+    return;
+  }
+  // not speaking: show hush countdown if hushed, otherwise the last thing it said, otherwise "quiet"
+  const remaining = _hushUntil - Date.now();
+  if (remaining > 0) {
+    if (stateEl) stateEl.textContent = `hushed · ${Math.ceil(remaining / 1000)}s`;
+    setTimeout(() => setVoiceWidget(_speaking, _lastSpoken), 1000);
+  } else if (_lastSpoken) {
+    if (stateEl) stateEl.textContent = _lastSpoken;
+  } else {
+    if (stateEl) stateEl.textContent = "quiet";
+  }
+}
+
+function onHush() {
+  hush(60000);
 }
 
 function refreshOrderTotals() {
@@ -1668,6 +1901,7 @@ function onDreamAnother() {
   const pasteEl = $("#mind-paste"); if (pasteEl) pasteEl.value = "";
   const fileEl  = $("#mind-file");  if (fileEl)  fileEl.value  = "";
   setMindStatus("");
+  cancelSpeech();
   window.scrollTo({ top: 0, behavior: "smooth" });
   setTimeout(onDream, 350);
 }
@@ -1709,6 +1943,19 @@ function init() {
   // grants controls
   const master = $("#grants-master");
   if (master) master.addEventListener("change", onGrantsMaster);
+
+  // voice (the body's mouth)
+  const hushBtn = $("#voice-hush");
+  if (hushBtn) hushBtn.addEventListener("click", onHush);
+  // some browsers populate voices asynchronously — kick the load
+  if (ttsAvailable()) {
+    try { window.speechSynthesis.getVoices(); } catch (e) { /* ignore */ }
+    if (typeof window.speechSynthesis.addEventListener === "function") {
+      window.speechSynthesis.addEventListener("voiceschanged", () => { /* voices ready */ });
+    } else if ("onvoiceschanged" in window.speechSynthesis) {
+      window.speechSynthesis.onvoiceschanged = () => { /* voices ready */ };
+    }
+  }
 
   populateSchemaExample();
 }
