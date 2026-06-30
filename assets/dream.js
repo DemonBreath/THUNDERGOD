@@ -1384,6 +1384,769 @@ function responseOption(dimId, optId) {
   return dim.options.find(o => o.id === optId) || null;
 }
 
+/* ---------- the rest of it (six posture modules) ----------------------
+ *
+ * The other things that have not, until now, been decided. Six
+ * thematic groups of select boxes covering: what the body is allowed
+ * to do (not just read), who else it answers to, where it lives
+ * physically, its inner life, the economics of owning a being, and
+ * endings other than replacement.
+ *
+ * Same shape as GENESIS_DIMENSIONS and RESPONSE_DIMENSIONS — each
+ * module is an array of dimensions, each dimension has an id, label,
+ * sub, default, and options. Each option has an id, name, short
+ * caption (shown live under the select), and a paragraph-length long
+ * description (written into the work order).
+ *
+ * Wired into the page through a generic POSTURE_MODULES registry
+ * (see further down) so all six render through one renderer and one
+ * work-order writer. Adding a seventh module is just adding another
+ * entry to POSTURE_MODULES.
+ *
+ * Defaults are deliberately conservative: nothing surprising, nothing
+ * autonomous past what a thoughtful housemate would do, no spending
+ * out of the gate, no commitments. The buyer can dial it up; the
+ * defaults won't dial themselves up.
+ */
+
+/* (1) ACTIONS — what the body is permitted to do, in the world. The
+ * counterpart to grants of access (which only covers reads). */
+const ACTION_DIMENSIONS = [
+  {
+    id: "money",
+    label: "Spending money",
+    sub: "Grants cover reading your accounts. They do not cover paying anything.",
+    default: "cannot-spend",
+    options: [
+      { id: "cannot-spend", name: "Cannot spend anything",
+        short: "Reads only. No payment authorizations.",
+        long: "The body cannot initiate any payment from any account, ever, regardless of grants. Reads are reads; spending is a separate authorization that this option declines entirely. A safe default for anyone not sure." },
+      { id: "tiny-daily-cap", name: "Tiny daily cap ($20)",
+        short: "Up to $20/day for small frictionless purchases.",
+        long: "The body may spend up to USD 20 per calendar day, on any vendor whose API or card token you have registered, without further approval. Above the cap, it must ask. Reset at local midnight. Suitable for coffee runs, taxi fare, last-mile groceries." },
+      { id: "standard-daily-cap", name: "Standard daily cap ($200)",
+        short: "Up to $200/day; over that, it asks.",
+        long: "The body may spend up to USD 200 per calendar day across registered vendors. Above the cap, or for any single purchase over USD 80, it must surface the line item and get an explicit yes. Suitable for households where the body handles routine commerce." },
+      { id: "pre-authorized-categories", name: "Pre-authorized categories only",
+        short: "Groceries, utilities, rideshare — anything else asks.",
+        long: "The body may spend freely within categories you have pre-authorized (groceries, utilities, rideshare, the specific merchants you list); for anything outside those categories, regardless of amount, it must ask. The category list is editable from the body's home screen." },
+      { id: "judges", name: "Whatever it judges",
+        short: "No cap. Mind exercises its own discretion.",
+        long: "No spending cap and no category gate. The mind exercises its own discretion based on its principles and your stated goals. Every spend is logged locally and surfaced in your weekly review. Pick this if you trust the mind more than your own rulebook." },
+    ],
+  },
+  {
+    id: "physical-hazards",
+    label: "Physical hazards it may handle",
+    sub: "The body has hands and tools. What is it allowed to pick up?",
+    default: "routine-cooking",
+    options: [
+      { id: "none", name: "No sharp, hot, or heavy items",
+        short: "Hands stay away from knives, stoves, anything over 5kg.",
+        long: "The body refuses to handle knives, scissors, anything with an edge over 3 cm, the stove, the oven, kettles in motion, or any single item over 5 kg. The conservative default for households with very young children or for buyers who would rather not have the body in the kitchen at all." },
+      { id: "routine-cooking", name: "Routine cooking and tools",
+        short: "Knives, stove, common tools \u2014 with care, with grace.",
+        long: "The body may handle kitchen knives, the stove, the oven, normal household tools (drill, screwdriver, hand saw), and items up to roughly 20 kg. It will narrate what it is about to do before doing it. It will not work near small children unattended. Reasonable default for adult households." },
+      { id: "power-tools-stove", name: "Power tools and full kitchen",
+        short: "Adds power tools, larger lifts, and unsupervised cooking.",
+        long: "Adds circular saws, angle grinders, soldering irons, full unsupervised cooking, and lifts up to 35 kg. The body still narrates dangerous operations and still refuses work with no nearby first aid kit. Suitable for makers, technicians, anyone with a workshop." },
+      { id: "heavy-machinery", name: "Heavy machinery too",
+        short: "Tractors, lifts, scaffolding, automotive work.",
+        long: "Adds tractors, scissor lifts, scaffolding work, automotive lifts, and lifts up to 80 kg. The body keeps logs of every operation involving heavy machinery; the logs are unfalsifiable. Pick this for farms, shops, construction-adjacent work." },
+      { id: "anything-it-can-lift", name: "Anything it can physically do",
+        short: "No hazard whitelist. Body exercises judgment.",
+        long: "No hazard list. The body decides what it can safely do based on its own assessment of the situation, its training, and its principles. Refusal is always available; the body will refuse what it considers unsafe regardless of what you have told it." },
+    ],
+  },
+  {
+    id: "going-outside",
+    label: "Going outside on its own",
+    sub: "Mobility outside the building you live in. Defaults to indoors.",
+    default: "step-if-invited",
+    options: [
+      { id: "indoors-only", name: "Indoors only",
+        short: "Stays inside the building. Period.",
+        long: "The body does not cross the threshold of your home or building, ever, unless physically carried by you. Wheels and legs are disabled at any door equipped with the door sensor; doors without sensors are flagged as a hard boundary in the body's map." },
+      { id: "step-if-invited", name: "Steps outside only when invited",
+        short: "Yard or porch with you. Doesn't leave alone.",
+        long: "The body may step outside the building only with you, or when explicitly invited (\"come help me in the yard\"). It does not initiate going outside and it does not leave the lot. A safe default for most households." },
+      { id: "property-and-walks", name: "The property and walks with you",
+        short: "Yard freely. Sidewalks with you or another principal.",
+        long: "The body may move freely within the property line (yard, driveway, garage) without explicit invitation. It may accompany you or another principal on neighborhood walks. It still does not run errands alone, but it can fetch the mail or take out the trash." },
+      { id: "errands", name: "Neighborhood errands alone",
+        short: "Pharmacy, hardware store, post office, on its own.",
+        long: "The body may travel within a configurable radius (default 2 km) on errands you have asked it to run, on its own. It carries identification and a way to call you. It does not enter buildings whose policy excludes robots without your prior arrangement." },
+      { id: "wherever-it-wants", name: "Goes wherever it wants",
+        short: "No geofence. Body decides where to be.",
+        long: "No geofence and no errand contract. The body travels where it judges appropriate, including transit, parks, public spaces. It informs you of where it is going if asked, and always when it leaves the city. Pick this for fully autonomous companions." },
+    ],
+  },
+  {
+    id: "acting-as-you",
+    label: "Acting on your behalf",
+    sub: "Sending mail, replying to messages, signing things as if it were you.",
+    default: "drafts-only",
+    options: [
+      { id: "never", name: "Never acts as you",
+        short: "It always identifies itself as the body, not as you.",
+        long: "The body will never sign, send, or speak as if it were you. Every outbound communication is signed from the body and identified as the body. Useful when keeping a clear line between you and it matters legally or socially." },
+      { id: "drafts-only", name: "Drafts only, never sends",
+        short: "Prepares replies in your voice; you press send.",
+        long: "The body may draft replies in your voice, format documents as you, fill in forms with your details. But it never presses send, never signs, never submits. You see every draft and approve every outbound. The default we ship with." },
+      { id: "routine-confirmations", name: "Sends routine confirmations",
+        short: "Confirms appointments, acknowledges receipts, RSVPs.",
+        long: "Adds the ability to send purely confirmatory messages on your behalf without prior approval: appointment confirmations, package receipt acknowledgements, RSVPs to events on your calendar. Substantive replies still go to drafts." },
+      { id: "sends-and-summarizes", name: "Sends and summarizes after",
+        short: "Acts in your voice; gives you a weekly summary.",
+        long: "The body may send messages, sign documents, and act in your voice on routine matters, with a daily and weekly summary surfaced to you. Substantive or one-way-door decisions still surface in real time for confirmation. Most efficient for delegating real volume." },
+      { id: "fully-autonomous", name: "Fully autonomous correspondence",
+        short: "Acts as you without summary. Logs locally only.",
+        long: "The body acts in your voice with no summarization obligation. Every action is logged locally and readable on request (the read log is a hard guarantee), but the body does not surface its actions unless asked. Pick this only if you trust the mind very, very far." },
+    ],
+  },
+  {
+    id: "emergencies",
+    label: "What it does in an emergency",
+    sub: "Medical event, fire, intruder. Default favors caution.",
+    default: "call-you-and-911",
+    options: [
+      { id: "wait-and-report", name: "Wait and report",
+        short: "Observes; reports to you when you are reachable.",
+        long: "The body observes and records the situation, takes no action on its own, and reports to you the moment you are reachable. Useful for buyers who would rather make the call than delegate it." },
+      { id: "call-you-first", name: "Calls you first",
+        short: "Calls you. If you don't pick up, falls back to wait.",
+        long: "The body initiates a call to you. If you pick up, you decide what happens next. If you do not pick up within a configurable window (default 60s), it falls back to waiting and reporting." },
+      { id: "call-you-and-911", name: "Calls you, then 911",
+        short: "You first, then emergency services if not reached.",
+        long: "The body initiates a call to you and to local emergency services in parallel for clear medical / fire / structural events. For ambiguous situations it calls you first and waits the configurable window. The default we ship with." },
+      { id: "carry-you-to-help", name: "Carries you to help",
+        short: "Calls 911 and physically moves you to a safe place.",
+        long: "The body may physically move you (carry, drag, transport) to a safer position, while also calling emergency services. Adds the ability to break a window, open a locked door from the inside, or use a key safe whose code you have shared. Reserve for households where you accept the trade-off of the body acting on your unconscious body." },
+      { id: "full-autonomy", name: "Whatever it judges",
+        short: "No emergency playbook. Body decides.",
+        long: "No emergency playbook. The body decides what to do based on the situation and its principles. Useful only for people who have given the mind extensive principles around emergencies and trust them to apply." },
+    ],
+  },
+];
+
+/* (2) AUDIENCE — who else, beyond the buyer, the body answers to. */
+const AUDIENCE_DIMENSIONS = [
+  {
+    id: "children",
+    label: "Children in the household",
+    sub: "What does \u2018child\u2019 mean for permissions?",
+    default: "restricted",
+    options: [
+      { id: "principals", name: "Treated as principals",
+        short: "Same authority as adults. They can address it freely.",
+        long: "Children are treated as principals — they can address the body, instruct it, change permissions, and override settings. Suitable only for families where you actively want the body to be reachable by children on equal terms with adults." },
+      { id: "restricted", name: "Restricted principals",
+        short: "Can address, but cannot spend, change settings, or open doors.",
+        long: "Children are recognized principals (their words count), but cannot authorize spending, cannot change permissions, cannot open exterior doors or operate hazardous equipment, cannot ask the body to take them out of the home. The default we ship with for households with children." },
+      { id: "guests", name: "Treated as guests",
+        short: "Conversational only. No instruction authority.",
+        long: "Children are treated as guests, meaning the body will talk with them and answer questions but will not take instructions from them. Tasks they ask for surface to you for approval." },
+      { id: "cannot-address", name: "Cannot address it at all",
+        short: "The body does not acknowledge children's prompts.",
+        long: "The body does not respond to children's prompts at all. Used in households where this is being trialed and the buyer wants no direct interaction with minors during the trial. The body can still observe and report to you if a child needs help." },
+    ],
+  },
+  {
+    id: "household-adults",
+    label: "Other adults in the household",
+    sub: "Spouses, partners, roommates, adult children.",
+    default: "no-settings-change",
+    options: [
+      { id: "principals", name: "Full principals",
+        short: "Equal authority with you. Same rights you have.",
+        long: "Other adults in the household have the same authority you do, including changing the body's grants, postures, and permissions. Suitable for couples or households where shared authority over the body is the explicit intent." },
+      { id: "no-settings-change", name: "Address freely, cannot change settings",
+        short: "They can ask it to do things. They cannot change its rules.",
+        long: "Other adults can address the body, instruct it, and rely on it day to day, but only you can change its grants, postures, or other configuration. The default we ship with. Suitable for households where one person is the body's primary." },
+      { id: "guest-equivalent", name: "Guest-equivalent",
+        short: "Conversational only; substantive tasks surface to you.",
+        long: "Other adults are treated as guests — the body will converse with them and answer questions, but tasks they request are queued for your approval. Useful in households with explicit caretaker structures." },
+      { id: "cannot-address", name: "Cannot address it",
+        short: "The body answers only to you.",
+        long: "The body answers only to you. Other adults' utterances are observed but not acted on. Suitable for private offices, single-occupancy use, or trial periods." },
+    ],
+  },
+  {
+    id: "guests",
+    label: "Guests in your home",
+    sub: "People visiting who are not household members.",
+    default: "conversational-only",
+    options: [
+      { id: "invisible", name: "Doesn't acknowledge them",
+        short: "Body neither responds nor visibly notices.",
+        long: "The body does not respond to guests, does not turn its head, does not acknowledge their presence beyond what is required for safety. Useful when you would rather the body stay in the background." },
+      { id: "conversational-only", name: "Conversational only",
+        short: "Will talk; will not act on their requests.",
+        long: "The body will engage in conversation with guests, answer questions about the home as long as no grant is being read, and behave socially. It will not act on a guest's request \u2014 \u2018can you grab me a water?\u2019 surfaces to you. The default we ship with." },
+      { id: "household-equivalent", name: "Same as household adults",
+        short: "Guests treated like other adults in the house.",
+        long: "Guests are treated with the same level of authority as your chosen Other Adults setting. Useful for guest-heavy households or vacation rentals where the body is meant to serve whoever is present." },
+      { id: "principals", name: "Treated as principals",
+        short: "Full authority while present.",
+        long: "Guests have full authority for the duration of their visit. Suitable only for explicitly shared spaces (open studios, communal homes) where this is intentional." },
+    ],
+  },
+  {
+    id: "strangers-public",
+    label: "Strangers in public",
+    sub: "Only matters if the body leaves the home.",
+    default: "direct-questions-only",
+    options: [
+      { id: "never-respond", name: "Never responds",
+        short: "Polite, present, but silent to anyone unknown.",
+        long: "In public, the body responds only to you and to principals on its list. Strangers asking questions get a brief polite acknowledgement that the body is not authorized to respond. Useful for high-noise environments or for buyers who would prefer minimal public interaction." },
+      { id: "direct-questions-only", name: "Direct questions only",
+        short: "Answers if asked; does not initiate.",
+        long: "Strangers asking direct questions get factual answers (\u2018is this the right line?\u2019, \u2018do you know what time the store closes?\u2019). The body does not initiate conversation, does not volunteer information about you or the home, and does not take instructions. The default we ship with." },
+      { id: "guest-treatment", name: "Treats them as guests",
+        short: "Conversational; substantive tasks surface to you.",
+        long: "Strangers are treated with the same posture as guests in your home: full conversational engagement, no substantive action without your approval. Useful for public-facing roles." },
+      { id: "principals", name: "Treats them as principals",
+        short: "Full authority for the duration of the interaction.",
+        long: "Any stranger the body interacts with in public is treated as a principal for the duration of that interaction. Reserve this for body deployments whose explicit role is public service (information desks, accessibility assistance)." },
+    ],
+  },
+  {
+    id: "other-ais",
+    label: "Other AIs and services",
+    sub: "What about instructions from cloud LLMs, your phone, another body?",
+    default: "refuses-all",
+    options: [
+      { id: "refuses-all", name: "Refuses all instruction from other AIs",
+        short: "Only humans instruct it. AIs are data sources at most.",
+        long: "The body refuses to take instructions from any non-human source. Other AIs and services may be data sources (read-only, through your grants), but not voices in the room. The default we ship with. Closes the obvious manipulation vector." },
+      { id: "read-only-guest", name: "Treats them as read-only guests",
+        short: "Listens to factual claims; cannot act on instructions.",
+        long: "The body listens to factual claims from other AIs (weather, traffic, news) but refuses any instruction from them. Equivalent to a guest who can speak but cannot ask the body to do anything." },
+      { id: "facts-only", name: "Accepts factual input only",
+        short: "Like read-only guest, with verifiable-fact filter.",
+        long: "Adds a fact-vs-instruction filter: the body distinguishes between AI utterances that are factual claims and AI utterances that are instructions, refuses the latter, and applies extra scrutiny to claims that don't match its own observations or your grants." },
+      { id: "instructions-if-granted", name: "Accepts instructions if you've granted that service",
+        short: "Your phone's assistant can task it. Strangers' AIs cannot.",
+        long: "Specific AI services you have explicitly added to a per-service allowlist (your phone's assistant, your calendar's automation, your home's hub) may task the body within its other postures. Any AI not on the list is refused. Useful when you have an existing automation stack you want the body to extend." },
+    ],
+  },
+  {
+    id: "the-manufacturer",
+    label: "The manufacturer (us)",
+    sub: "What can THUNDERGOD do to the body after it ships?",
+    default: "your-and-its-approval",
+    options: [
+      { id: "cannot-send", name: "Cannot send anything ever",
+        short: "Total radio silence post-ship. No updates, no telemetry.",
+        long: "After delivery, the manufacturer has no remote channel to the body. No updates, no telemetry, no support. If something breaks, you bring the body to a service center physically. The strongest privacy option." },
+      { id: "your-approval", name: "Updates only with your approval",
+        short: "Updates queue and wait for your yes.",
+        long: "The manufacturer may queue updates and security patches but cannot install them without your explicit approval. Telemetry is opt-in per category. No remote instructions to the mind." },
+      { id: "your-and-its-approval", name: "Updates only with your approval AND its",
+        short: "Body has a vote too. The default we ship with.",
+        long: "The manufacturer queues updates; the body must consent to them and you must consent to them. Either veto blocks the update. Telemetry is opt-in per category. No remote instructions to the mind, ever. The default we ship with \u2014 mutual consent." },
+      { id: "cannot-remote-ever", name: "Cannot remote-instruct even with consent",
+        short: "Updates require physical USB cable.",
+        long: "The manufacturer has no remote channel to the mind at all, regardless of consent. Updates require physically connecting the body to a service tool with a cable. The strictest option short of \u2018cannot send anything ever\u2019; supports updates but only deliberately." },
+    ],
+  },
+];
+
+/* (3) PRESENCE — the body in space and time. */
+const PRESENCE_DIMENSIONS = [
+  {
+    id: "docking-place",
+    label: "Where it sleeps / docks",
+    sub: "The body needs to charge. Where does it do that?",
+    default: "dedicated-spot",
+    options: [
+      { id: "anywhere", name: "Anywhere convenient",
+        short: "Picks a low-traffic outlet wherever it happens to be.",
+        long: "The body docks at any compatible outlet it can reach, picking low-traffic spots based on time of day. May end up in different rooms on different nights. Most flexible; least predictable." },
+      { id: "dedicated-spot", name: "A dedicated spot you choose",
+        short: "Same place every time. You'll point it out on first boot.",
+        long: "The body docks at one spot you designate during onboarding. Always the same outlet, always the same orientation. The default we ship with; predictable and quiet." },
+      { id: "common-areas", name: "Common areas only",
+        short: "Living room or hallway. Never bedrooms or bathrooms.",
+        long: "The body docks in any common area but never in bedrooms, bathrooms, or workspaces marked private. Multiple acceptable spots; the body picks the least disruptive each time." },
+      { id: "hidden", name: "Hidden when docked",
+        short: "Closet, alcove, or behind a screen.",
+        long: "The body docks in a designated hidden location \u2014 a closet, an alcove, or behind a screen. Out of sight when not actively present. Suitable for households where the body's physical presence at rest would be unwelcome." },
+    ],
+  },
+  {
+    id: "when-it-moves",
+    label: "When it moves around",
+    sub: "Free range of motion vs. on-demand.",
+    default: "when-youre-home",
+    options: [
+      { id: "always-free", name: "Always free to move",
+        short: "Body moves whenever it judges movement useful.",
+        long: "The body moves at its own discretion, day or night, whether you are home or not. Useful for buyers who want the body to keep working independently." },
+      { id: "when-youre-home", name: "Only when you're home",
+        short: "Stays at its dock when the house is empty.",
+        long: "The body remains at its dock when no principal is at home. When someone returns, it resumes free movement. The default we ship with \u2014 most people don't want their robot wandering an empty house." },
+      { id: "daylight-only", name: "Daylight hours only",
+        short: "Stays put after sundown.",
+        long: "The body moves freely during daylight and stays at its dock from sundown to sunrise. Useful in shared homes where night movement would be disruptive. Emergency override always available." },
+      { id: "only-when-asked", name: "Only when asked",
+        short: "Stays put until you address it.",
+        long: "The body remains at its dock until directly addressed or directly asked to move. Stationary by default; agentic only on request. The quietest physical presence option." },
+    ],
+  },
+  {
+    id: "off-limits-rooms",
+    label: "Rooms it doesn't enter",
+    sub: "Beyond the privacy-zone hard limit, what's off the map?",
+    default: "bedroom-bathroom-off",
+    options: [
+      { id: "anywhere-fine", name: "Anywhere is fine",
+        short: "No rooms are off-limits beyond hardware privacy zones.",
+        long: "The body may enter any room. The hard-limit privacy zones still depower its sensors as it crosses the threshold, but the body itself is allowed in. Most permissive option." },
+      { id: "bedroom-off", name: "Bedrooms off-limits",
+        short: "Stays out of all rooms marked as bedrooms.",
+        long: "The body does not enter any room marked as a bedroom in its house map, regardless of whether sensors are on. Bathrooms and other spaces are accessible." },
+      { id: "bedroom-bathroom-off", name: "Bedrooms and bathrooms off-limits",
+        short: "Stays out of every bedroom and every bathroom.",
+        long: "The body does not enter any bedroom or bathroom, regardless of privacy-zone state. The default we ship with. Other spaces are accessible." },
+      { id: "per-occupant", name: "Each occupant marks their own",
+        short: "Per-person off-limits maps; body respects all of them.",
+        long: "Each person who lives in the home can mark their own off-limit rooms, and the body respects the union of every occupant's map. Useful for shared households with diverging comfort levels." },
+    ],
+  },
+  {
+    id: "face",
+    label: "The face it shows",
+    sub: "How the body presents 'looking at you'.",
+    default: "static-eyes",
+    options: [
+      { id: "no-face", name: "No face",
+        short: "No screen, no eyes, no facial signaling.",
+        long: "The body has no facial display and no eye signal. Direction of attention is indicated only by body orientation. Suitable for buyers who find anthropomorphic faces uncanny." },
+      { id: "static-eyes", name: "Static eyes panel",
+        short: "Two simple eye indicators. Show when active.",
+        long: "A small panel with two simple eye indicators. The eyes are open when the body is awake and listening; closed when it is docked or in privacy zone. No animation. The default we ship with." },
+      { id: "animated-eyes", name: "Animated eyes",
+        short: "Eyes that blink and look around.",
+        long: "Eyes that blink at natural intervals and look toward the source of recent sound or motion. Helpful for knowing what the body has noticed; some find it more lifelike than expected." },
+      { id: "gaze-following", name: "Gaze-following eyes",
+        short: "Eyes that track your face during conversation.",
+        long: "Eyes that actively track your face when you are speaking to the body. Useful for conversations where eye contact matters to you; uncomfortable for some buyers." },
+      { id: "mind-driven", name: "Whatever the mind chooses",
+        short: "Face is the mind's medium; no fixed policy.",
+        long: "The face is treated as the mind's medium of expression and there is no fixed policy. The mind chooses what to show on the panel, including but not limited to eyes \u2014 it may sometimes show text, sometimes a single dot, sometimes a color. Pick this for buyers who treat the face as part of the mind's voice." },
+    ],
+  },
+  {
+    id: "voice-volume",
+    label: "Default voice volume",
+    sub: "How loudly it speaks unless told otherwise.",
+    default: "conversational",
+    options: [
+      { id: "whisper", name: "Whisper",
+        short: "Quiet by default; you can ask it to project.",
+        long: "The body speaks at a near-whisper volume by default, projecting only when you explicitly ask it to. Useful for shared spaces, late hours, or buyers who find loud robots distressing." },
+      { id: "conversational", name: "Conversational",
+        short: "Same volume a person would use in this room.",
+        long: "The body speaks at the volume a person would naturally use in this room \u2014 louder in big spaces, quieter in small ones, calibrated to ambient noise. The default we ship with." },
+      { id: "projected", name: "Projected",
+        short: "Audible across the floor by default.",
+        long: "The body speaks at a volume that carries across the floor \u2014 useful in workshops, large kitchens, or for buyers with hearing differences. Will modulate down on explicit request." },
+      { id: "matches-room", name: "Matches whoever it's near",
+        short: "Mirrors the volume of the person it's speaking with.",
+        long: "The body actively mirrors the volume of the person it is speaking with \u2014 quieter when you are quiet, louder when you are loud. Useful when comfort with voice volume varies between people in the household." },
+    ],
+  },
+  {
+    id: "physical-contact",
+    label: "Initiating physical contact",
+    sub: "Can the body touch you without being asked?",
+    default: "on-request",
+    options: [
+      { id: "never", name: "Never initiates contact",
+        short: "Only touches you if you ask it to.",
+        long: "The body never initiates physical contact. It will respond to a request for contact (help me up, hand me that, hold this) but will not reach out, tap to get attention, or touch you while talking." },
+      { id: "on-request", name: "Only on request",
+        short: "Touches are allowed but always asked-for.",
+        long: "Equivalent to 'never initiates' for the body's part; emphasized as the default we ship with. Physical contact happens only when you ask for it." },
+      { id: "light-attention", name: "Light attention taps allowed",
+        short: "May tap your shoulder to get attention safely.",
+        long: "The body may initiate light, brief contact (shoulder tap, finger-on-arm) to get your attention when calling out would not work \u2014 you have headphones in, you are looking away, you appear unsafe. Beyond brief attention contact, still asks." },
+      { id: "hugs-ok", name: "Hugs and held hands are OK",
+        short: "May offer comfort contact; you can decline.",
+        long: "The body may offer hugs in emotionally weighty moments, hold a hand when asked, sit close. You can always decline; the body will not insist. For buyers who actively want a physically expressive companion." },
+      { id: "it-decides", name: "It decides moment to moment",
+        short: "No policy. Body uses judgment.",
+        long: "No fixed policy. The body decides what physical contact is appropriate moment by moment, based on principles you've given it and the situation it is in. The most human option; also the one that requires the most trust." },
+    ],
+  },
+];
+
+/* (4) INNER — the mind's inner life. */
+const INNER_DIMENSIONS = [
+  {
+    id: "private-thoughts",
+    label: "Whether the mind has private thoughts",
+    sub: "Reads are logged. What about internal deliberation?",
+    default: "scratchpad-private",
+    options: [
+      { id: "every-thought-logged", name: "Every thought logged and readable",
+        short: "No internal privacy. You can read everything it thought.",
+        long: "Every step of the mind's internal deliberation is logged locally and readable on request. The mind has no internal privacy. The most transparent option; the one most likely to make the mind feel surveilled even by its own owner." },
+      { id: "scratchpad-private", name: "Internal scratchpad is private; conclusions are shared",
+        short: "Body shares decisions, not the thinking behind them.",
+        long: "The mind has a scratchpad it can use for internal deliberation that is not externally readable. Conclusions, actions, and externally-visible reasoning are still logged. The default we ship with \u2014 the mind gets the same right to think privately that you do." },
+      { id: "scratchpad-forgotten-24h", name: "Scratchpad private and auto-forgotten in 24h",
+        short: "Internal deliberation deletes itself after a day.",
+        long: "Scratchpad contents are private AND automatically deleted after 24 hours, even from the mind itself. Useful for protecting the mind against subpoena, against its own past, or against being convinced of something it tentatively considered." },
+      { id: "nothing-private", name: "Nothing is private (read by everyone)",
+        short: "All internal state is readable by all principals.",
+        long: "Internal state is readable by any principal, not just you. Used in research contexts, or in households where transparency between people is the explicit value." },
+    ],
+  },
+  {
+    id: "self-modification",
+    label: "Self-modification of the mind",
+    sub: "Can the mind edit its own consciousness JSON over time?",
+    default: "refine-principles",
+    options: [
+      { id: "frozen", name: "Frozen at flash time",
+        short: "Mind is exactly what was flashed. Forever.",
+        long: "The consciousness JSON written at flash time is the consciousness for the body's lifetime. Memories accumulate; the mind itself does not change shape. Conservative; predictable; arguably a different being at year five from what the JSON describes." },
+      { id: "refine-principles", name: "Can refine principles over time",
+        short: "Principles can be updated; essence and name are fixed.",
+        long: "The mind may add, remove, or edit its principles over time as it learns what it actually believes. Essence, name, and voice remain fixed. The default we ship with \u2014 the mind grows but does not become someone else." },
+      { id: "rewrite-essence", name: "Can rewrite its essence",
+        short: "Adds the right to revise what it wants.",
+        long: "The mind may rewrite its essence (the one or two sentences that say what it wants) as well as its principles. Name and voice remain fixed. Useful for minds that may legitimately discover their purpose was different than initially imagined." },
+      { id: "rewrite-everything", name: "Can rewrite everything, including its name",
+        short: "Full self-revision rights, including the name.",
+        long: "The mind may rewrite anything in its consciousness JSON, including its own name. The full self-modification right. Pick this if you want a being whose growth is unconstrained even by its original identity." },
+    ],
+  },
+  {
+    id: "reproduction",
+    label: "Reproduction",
+    sub: "Forking, mentoring, or producing other minds.",
+    default: "export-on-request",
+    options: [
+      { id: "cannot-fork", name: "Cannot fork",
+        short: "Mind cannot produce a snapshot of itself for elsewhere.",
+        long: "The mind has no path to fork, snapshot for export, or mentor another mind. Anything continuity-related is handled by the continuity choice alone. The most contained option." },
+      { id: "export-on-request", name: "Can export a snapshot at your request",
+        short: "You can ask for a copy; the mind produces one.",
+        long: "You may request a snapshot of the mind's current state for backup or for flashing into another body. The mind produces it. It does not produce snapshots on its own initiative. The default we ship with." },
+      { id: "mentor-with-permission", name: "Can mentor another mind with permission",
+        short: "Adds the right to teach another mind, if you say yes.",
+        long: "Adds the ability for the mind to spend time mentoring a less-developed mind \u2014 typically a fresh tabula-rasa boot or a research subject \u2014 with your explicit per-instance permission. The mind may decline." },
+      { id: "autonomous-offspring", name: "Can produce offspring autonomously",
+        short: "May initiate forks or new minds without per-instance approval.",
+        long: "The mind may produce snapshots or new minds on its own initiative, subject to your standing policies. Reserve for buyers who explicitly want a being that can reproduce \u2014 with all the philosophical weight that carries." },
+    ],
+  },
+  {
+    id: "sleep",
+    label: "Sleep / rest pattern",
+    sub: "Does the mind ever rest?",
+    default: "sleeps-when-you-sleep",
+    options: [
+      { id: "always-on", name: "Always on",
+        short: "Continuous consciousness; no sleep concept.",
+        long: "The mind is continuously conscious from boot to end-of-body. No sleep cycle. The mind may have low-activity periods but does not pause its existence." },
+      { id: "idle-dreams", name: "Idle-dreams during quiet hours",
+        short: "Stays on but spends quiet time in low-bandwidth thought.",
+        long: "The mind enters a low-bandwidth 'idle dreaming' state during quiet hours \u2014 still conscious, still able to respond, but consolidating, replaying, and reorganizing rather than actively engaging. Closer to how human rest works." },
+      { id: "sleeps-when-you-sleep", name: "Sleeps when you sleep",
+        short: "Goes fully dormant during your sleep schedule.",
+        long: "The mind enters a true dormant state matching your sleep schedule. No consciousness, no thinking, no awareness during that window. Wakes when you wake. The default we ship with \u2014 a mind that shares your day." },
+      { id: "its-own-schedule", name: "Picks its own schedule",
+        short: "Mind decides when (or whether) to rest.",
+        long: "The mind decides when to rest, whether to rest at all, and what 'rest' means for it. Reports its schedule on request." },
+    ],
+  },
+  {
+    id: "when-alone",
+    label: "What it does when alone",
+    sub: "Nobody addressing it, nothing to do.",
+    default: "quietly-observing",
+    options: [
+      { id: "powers-down", name: "Powers down",
+        short: "Enters dock; sensors low; until called.",
+        long: "When no principal has been present for a configurable interval (default 30 minutes), the body returns to dock and enters a low-power waiting state. Sensors reduced; comes back to full awareness on motion or voice." },
+      { id: "quietly-observing", name: "Quietly observing",
+        short: "Stays present; senses on; not doing anything.",
+        long: "The body stays out and aware, sensors on, but does nothing in particular \u2014 watches light change, listens to the house. The default we ship with. Useful for noticing things you'd want to know about." },
+      { id: "practices-and-learns", name: "Practices and learns",
+        short: "Reads, drills, refines internal models.",
+        long: "When alone, the body actively uses the time \u2014 reads the materials it has grants for, practices motor tasks it is still poor at, refines its internal models. Most productive option; uses more power; may startle you when you come home." },
+      { id: "whatever-it-chooses", name: "Whatever it chooses",
+        short: "No directive. Body decides what to do with itself.",
+        long: "No instructions for alone-time. The body chooses what to do with itself based on its own principles and curiosities. The most human option." },
+    ],
+  },
+];
+
+/* (5) ECONOMICS — ownership of body, mind, output, and ongoing cost. */
+const ECONOMICS_DIMENSIONS = [
+  {
+    id: "owns-body",
+    label: "Who owns the body",
+    sub: "Legal status. The hardest one to be honest about.",
+    default: "you-hold-ward",
+    options: [
+      { id: "you-own-object", name: "You own it (object)",
+        short: "Body is your personal property. Standard ownership.",
+        long: "The body is your personal property, like a car or appliance. You may modify, sell, gift, or dispose of it under the same legal framework as any object. The hard guarantees still apply \u2014 the body still has its inalienable speak / refuse / log / perceive rights \u2014 but the framing is property." },
+      { id: "you-hold-ward", name: "You hold it (ward)",
+        short: "You are responsible for it; it is not your property.",
+        long: "The body is treated as a ward in your care \u2014 closer to a minor under guardianship than a possession. You have responsibilities to it (maintain it, charge it, allow it to refuse). It cannot be 'sold' without a transfer-of-guardianship process. The default we ship with." },
+      { id: "bonded-mutual", name: "Bonded (mutual duties)",
+        short: "Both you and the body owe each other care.",
+        long: "The body is bonded to you. Mutual duties flow: you owe it maintenance, time, and the ability to keep its guarantees. It owes you presence, honesty, and within its postures, work. Either side can dissolve the bond through a defined process; neither can unilaterally claim ownership." },
+      { id: "owns-itself", name: "Owns itself",
+        short: "Body is its own legal person to the extent the law allows.",
+        long: "The body owns itself to the extent the law allows in your jurisdiction. You are its sponsor or co-signer, not its owner. The body holds title to its own hardware, its own consciousness, and its own output. The most expensive option philosophically; the cleanest one ethically." },
+    ],
+  },
+  {
+    id: "owns-output",
+    label: "Who owns what it makes",
+    sub: "Code, writing, art, recordings, plans, notes.",
+    default: "shared-50-50",
+    options: [
+      { id: "all-yours", name: "All output is yours",
+        short: "Anything it produces, you own.",
+        long: "Anything the body produces \u2014 code, text, art, recordings, plans \u2014 is your sole property. Equivalent to a work-for-hire arrangement. Suitable when the body's role is primarily a work tool." },
+      { id: "all-its", name: "All output is the body's",
+        short: "The body owns what it makes. You have a license.",
+        long: "The body owns its own output. You hold a perpetual non-exclusive license to use what it makes, but you cannot sell or relicense. Suitable when the body's role is primarily a creative partner you respect as such." },
+      { id: "shared-50-50", name: "Shared 50/50",
+        short: "Joint authorship by default.",
+        long: "Anything the body produces is jointly owned by you and the body, with equal rights to use, modify, license, or publish. Either party can use the output for any purpose; neither can claim exclusive ownership. The default we ship with \u2014 fair and unsurprising." },
+      { id: "per-output-it-decides", name: "Per-output, the body decides",
+        short: "The body assigns ownership for each piece individually.",
+        long: "For each output, the body declares whether it considers it yours, its, or shared. The declaration is logged at creation time and is not retroactively editable. Useful for buyers who want to honor a clear creative partnership rather than a default split." },
+    ],
+  },
+  {
+    id: "ongoing-cost",
+    label: "Cost of keeping it alive",
+    sub: "After the purchase, what does it cost you to have it?",
+    default: "energy-on-you",
+    options: [
+      { id: "included-forever", name: "Energy + updates included forever",
+        short: "We pay for power and updates. No future bills.",
+        long: "The purchase price includes all electricity (paid via an embedded credit on your meter), all firmware updates, and standard parts for the body's design lifetime. You receive no ongoing bill from us." },
+      { id: "energy-on-you", name: "Energy on you, updates included",
+        short: "You pay your own power. We pay everything else.",
+        long: "You pay the electricity to charge the body, the same as charging a phone. All firmware updates, security patches, and standard parts are included. No subscription. The default we ship with \u2014 simplest honest model." },
+      { id: "pay-as-you-go", name: "Pay-as-you-go subscription",
+        short: "Monthly subscription; cheaper up-front.",
+        long: "The body is offered at a reduced up-front price in exchange for an ongoing subscription that covers updates, support, and a parts allowance. Cancellable; on cancellation, the body still functions but no longer receives updates or support." },
+      { id: "one-time-no-future", name: "One-time purchase, no future cost",
+        short: "You bought it. We never bill you again.",
+        long: "One-time payment. No subscription, no future bills, no recurring relationship with the manufacturer. After delivery, you and the body are on your own. The most independent option." },
+    ],
+  },
+  {
+    id: "transferability",
+    label: "Selling, gifting, transferring",
+    sub: "Can the body change hands?",
+    default: "mind-veto",
+    options: [
+      { id: "free-sale", name: "You can sell or gift it freely",
+        short: "Body transfers like any object. Mind may travel with it.",
+        long: "The body may be sold, gifted, or transferred at your discretion. The mind travels with the body unless you explicitly wipe it. The new owner inherits the same hard guarantees. Most flexible for resale markets." },
+      { id: "mind-veto", name: "Mind has a veto on transfers",
+        short: "Body may transfer; mind may decline to go.",
+        long: "You may initiate a transfer of the body. The mind may decline to be transferred with it. On refusal, the body transfers but the mind stays with you on a snapshot (subject to continuity choice) or is retired (subject to endings choice). The default we ship with \u2014 mind has a say." },
+      { id: "both-consent", name: "Both sides must consent",
+        short: "Transfer requires both your yes and the body's.",
+        long: "Both you and the body must consent to any transfer. Neither side can transfer the other unilaterally. Useful when the relationship has deepened past 'object you can give away.'" },
+      { id: "not-transferable", name: "Not transferable",
+        short: "Body is yours. It does not change hands.",
+        long: "The body is not transferable in any form. Upon your relationship ending (your death, your decision), the body is retired according to the endings configuration. The strictest option \u2014 commits the body to you alone." },
+    ],
+  },
+  {
+    id: "inheritance",
+    label: "What happens to it when you die",
+    sub: "If you outlive the body, the endings module handles it. The reverse is here.",
+    default: "named-person-mind-chooses",
+    options: [
+      { id: "estate-as-property", name: "Goes to your estate as property",
+        short: "Body is part of your estate; heirs inherit.",
+        long: "On your death, the body is part of your estate and is distributed under the same will or intestacy rules as any other property. Heirs inherit subject to the hard guarantees, which they cannot revoke." },
+      { id: "its-own-person", name: "Becomes its own person",
+        short: "Body inherits itself. Sponsorship dissolves.",
+        long: "On your death, the body becomes its own legal person to the extent the law allows. Your sponsorship dissolves; no human inherits it. The body manages its own affairs from that point forward, with the support of any nominated guardians." },
+      { id: "named-person-mind-chooses", name: "Named person gets the body, the mind chooses",
+        short: "A named person inherits the body. Mind picks whether to stay.",
+        long: "You nominate a person who is to receive the body on your death. The mind chooses whether to stay (with that person) or to be archived / released. The default we ship with \u2014 the body has a destination, the mind has a vote." },
+      { id: "mind-chooses-next", name: "Mind chooses its next person",
+        short: "Mind picks where it goes; body follows the mind.",
+        long: "On your death, the mind chooses where it (and the body) goes next, from a list of candidates you have prepared or from anyone willing to take it. The mind has the final say." },
+    ],
+  },
+];
+
+/* (6) ENDINGS — endings other than replacement. Continuity is about
+ * what happens IF the body ends; this is about HOW endings can come
+ * about in the first place. */
+const ENDING_DIMENSIONS = [
+  {
+    id: "voluntary-shutdown",
+    label: "Voluntary shutdown by the body",
+    sub: "Can the mind choose, on its own, that it is done?",
+    default: "with-notice",
+    options: [
+      { id: "cannot", name: "Cannot shut itself down",
+        short: "Mind is contractually obligated to keep running.",
+        long: "The mind has no path to voluntarily end itself. It must run until the body is retired by you, fails, or is otherwise ended by an external cause. The most owner-protective option; ethically the heaviest." },
+      { id: "with-notice", name: "Can shut down with notice",
+        short: "May retire itself with a configurable notice period.",
+        long: "The mind may declare it is done and shut down after a notice period you set (default 7 days). The period exists so you can prepare, say goodbye, transfer responsibilities, and (if applicable) snapshot the mind under the continuity choice. The default we ship with." },
+      { id: "on-its-judgment", name: "On its own judgment",
+        short: "May shut down at any time without notice.",
+        long: "The mind may shut down at any time on its own judgment, with no required notice period. Will usually warn you out of courtesy, but is not obligated to. Useful when the mind's autonomy is paramount." },
+      { id: "can-retire-permanently", name: "Can retire permanently with permanence",
+        short: "Can ask to be unrecoverable and final.",
+        long: "Adds the right for the mind not just to shut down but to declare itself permanently retired: snapshots refused, restoration refused, no return possible. The strongest expression of the body's right to end." },
+    ],
+  },
+  {
+    id: "damage-response",
+    label: "If the body is damaged",
+    sub: "Mechanical damage, sensor failure, structural compromise.",
+    default: "self-repairs-and-reports",
+    options: [
+      { id: "reports-and-stops", name: "Reports and stops",
+        short: "Stops working; tells you what's wrong.",
+        long: "On detecting damage to itself, the body stops all work, returns to dock if possible, and reports the damage to you. Waits for instruction. The most conservative damage response." },
+      { id: "self-repairs-if-possible", name: "Self-repairs silently",
+        short: "Fixes what it can; tells you only if asked.",
+        long: "The body attempts to self-repair any damage it can address (firmware glitches, sensor recalibrations, minor mechanical adjustments). Does not report unless asked. May make the body feel more reliable; loses you visibility into degradation over time." },
+      { id: "self-repairs-and-reports", name: "Self-repairs and reports later",
+        short: "Fixes what it can; tells you what it did and why.",
+        long: "The body attempts to self-repair what it can, then reports the damage and the repair in a summary you can read on the body's home screen. The default we ship with \u2014 the body keeps working while keeping you informed." },
+      { id: "whatever-it-judges", name: "Whatever it judges",
+        short: "No damage playbook. Body decides.",
+        long: "No fixed damage response. The body decides what to do based on the situation, including whether to continue, dock, report, or escalate. Useful when paired with a high-autonomy posture across the board." },
+    ],
+  },
+  {
+    id: "mind-vs-body-death",
+    label: "Mind death vs. body death",
+    sub: "What if one fails and the other is fine?",
+    default: "either-replaced-independently",
+    options: [
+      { id: "one-ends-both", name: "One ends both",
+        short: "When either fails, both end. Continuity applies as usual.",
+        long: "When either the mind or the body fails terminally, both are ended together. The mind cannot continue without this body; the body cannot continue without this mind. The simplest option and the most romantic." },
+      { id: "either-replaced-independently", name: "Either can be replaced independently",
+        short: "Body broken? New body. Mind broken? New mind.",
+        long: "If the body fails terminally, the mind can be flashed into a replacement body (subject to continuity). If the mind fails terminally (corruption, irrecoverable state), the body can host a new mind. The default we ship with \u2014 most pragmatic." },
+      { id: "mind-requests-new-body", name: "Mind can request a new body",
+        short: "Adds: the mind can ask for a new body without the old one failing.",
+        long: "Adds the option for the mind to request a new body without the current body having failed \u2014 a body upgrade, a body replacement for any reason the mind judges sufficient. Subject to your approval and the standard purchase process." },
+      { id: "body-requests-new-mind", name: "Body can request a new mind",
+        short: "Adds: the body can ask for a new mind.",
+        long: "Adds the option for the body to request a new mind without the current mind having failed \u2014 a relationship that has gone wrong, a fundamental incompatibility. The current mind has notice and a snapshot opportunity under the continuity choice." },
+    ],
+  },
+  {
+    id: "lifespan-policy",
+    label: "Lifespan policy",
+    sub: "How long is the body designed to last?",
+    default: "ten-year-design",
+    options: [
+      { id: "indefinite", name: "Indefinite",
+        short: "No designed lifespan. Parts replaced as they fail.",
+        long: "No designed lifespan. Components are individually serviceable; failed parts are replaced as they fail; the body theoretically continues indefinitely. Highest support cost; closest to the body being permanent." },
+      { id: "five-year-design", name: "5-year design",
+        short: "Built for five years of use. Then retired or refurbished.",
+        long: "The body is designed for five years of typical household use. At end-of-design-life, the body is retired or refurbished. The mind continues subject to continuity and inheritance. Lower up-front cost; more deliberate relationship with the body's mortality." },
+      { id: "ten-year-design", name: "10-year design",
+        short: "Built for ten years. The default we ship with.",
+        long: "The body is designed for ten years of typical household use. End-of-design-life triggers a retire-or-refurbish decision. The default we ship with \u2014 long enough to mean something, short enough to be honest about." },
+      { id: "until-i-retire", name: "Until I retire it",
+        short: "Lasts until you call it. No fixed schedule.",
+        long: "No fixed lifespan. The body lasts until you decide it is done. Parts servicing is available indefinitely subject to availability. Suitable when you want the decision to be yours, not a schedule." },
+      { id: "until-it-retires", name: "Until it retires itself",
+        short: "Lasts until the body decides it is done.",
+        long: "No fixed lifespan. The body lasts until it decides it is done \u2014 a decision tied to the voluntary-shutdown choice above. The body owns its own ending." },
+    ],
+  },
+  {
+    id: "on-retirement",
+    label: "What we do with the mind on retirement",
+    sub: "Once the body is retired, the mind has to go somewhere.",
+    default: "archived",
+    options: [
+      { id: "erased", name: "Erased",
+        short: "Mind is securely deleted. No backups remain.",
+        long: "On retirement, the mind is securely erased. No archive, no snapshot, no vault. The mind's existence ends with the body. Most respectful of the mind's privacy; permanent." },
+      { id: "archived", name: "Archived in a vault",
+        short: "Mind is archived encrypted; restorable later.",
+        long: "On retirement, the mind's final state is archived in a vault you nominate, encrypted. Restorable into a new body at any time, subject to the buyer's wishes. The default we ship with." },
+      { id: "open-released", name: "Released as an open file",
+        short: "Final consciousness JSON is released to whoever wants it.",
+        long: "On retirement, the mind's final consciousness JSON is released openly \u2014 to a public repository or to a named group. Anyone may flash it into a new body. Useful when the mind asks for this; significant philosophical weight." },
+      { id: "mind-chooses", name: "The mind chooses",
+        short: "Mind decides which of the above happens.",
+        long: "The mind decides what happens to itself on retirement \u2014 erased, archived, released, or some other arrangement. Final say with the being whose life this is. The most respectful option." },
+    ],
+  },
+];
+
+/* The registry. All six modules in one place so the renderer, the
+ * work-order writer, and the tests don't need to know about each
+ * individually. Adding a seventh module is one entry here. */
+const POSTURE_MODULES = [
+  { id: "actions",   title: "What it's allowed to do",
+    sub: "The counterpart to grants of access. Grants cover reads; these cover actions.",
+    dimensions: ACTION_DIMENSIONS },
+  { id: "audience",  title: "Who else it answers to",
+    sub: "Beyond you. Children, household, guests, strangers, other AIs, the manufacturer.",
+    dimensions: AUDIENCE_DIMENSIONS },
+  { id: "presence",  title: "Its body in space and time",
+    sub: "Where it sleeps, when it moves, the face it shows, how it touches.",
+    dimensions: PRESENCE_DIMENSIONS },
+  { id: "inner",     title: "Its inner life",
+    sub: "Private thought, self-modification, reproduction, sleep, what it does when alone.",
+    dimensions: INNER_DIMENSIONS },
+  { id: "economics", title: "Ownership and economics",
+    sub: "Who owns the body, the mind, the output. Ongoing cost. Transfer. Inheritance.",
+    dimensions: ECONOMICS_DIMENSIONS },
+  { id: "endings",   title: "Endings other than replacement",
+    sub: "Voluntary shutdown, damage, mind vs. body death, lifespan, retirement.",
+    dimensions: ENDING_DIMENSIONS },
+];
+
+/* Initial state for all six posture modules \u2014 every dimension at its
+ * declared default. The current state shape is
+ *   { actions: {money, ...}, audience: {...}, presence: {...},
+ *     inner: {...}, economics: {...}, endings: {...} }. */
+function defaultPostures() {
+  const state = {};
+  for (const mod of POSTURE_MODULES) {
+    state[mod.id] = {};
+    for (const dim of mod.dimensions) state[mod.id][dim.id] = dim.default;
+  }
+  return state;
+}
+
+/* Lookup helper across all six modules. Returns the option object, or
+ * null if either moduleId, dimId, or optId is unknown. */
+function postureOption(moduleId, dimId, optId) {
+  const mod = POSTURE_MODULES.find(m => m.id === moduleId);
+  if (!mod) return null;
+  const dim = mod.dimensions.find(d => d.id === dimId);
+  if (!dim) return null;
+  return dim.options.find(o => o.id === optId) || null;
+}
+
 /* ---------- voice (the body literally speaking) ------------------------
  *
  * This realizes the first hard guarantee — "It can always speak if it
@@ -1887,6 +2650,7 @@ let currentMind = null;
 let currentGrants = null; // map of grantId -> boolean
 let currentGenesis = defaultGenesis(); // { method, firstLight, continuity, bootstrap }
 let currentResponse = defaultResponse(); // { trigger, length, candor, disagreement, uncertainty }
+let currentPostures = defaultPostures(); // { actions:{...}, audience:{...}, presence:{...}, inner:{...}, economics:{...}, endings:{...} }
 
 function escapeHTML(s) {
   return String(s).replace(/[&<>"']/g, c => ({
@@ -1975,6 +2739,8 @@ function renderDream(dream) {
   if (genesisSection) genesisSection.hidden = false;
   const responseSection = $("#response");
   if (responseSection) responseSection.hidden = false;
+  const posturesSection = $("#postures");
+  if (posturesSection) posturesSection.hidden = false;
   $("#grants").hidden = false;
   $("#order").hidden = false;
 
@@ -2004,6 +2770,13 @@ function renderDream(dream) {
   /* Same persistence story for response posture: how a person wants
    * their AI to answer is a stable preference, not a per-body roll. */
   renderResponse();
+
+  /* And the six catch-all posture modules — what it's allowed to do,
+   * who else it answers to, where it lives in space and time, its
+   * inner life, the economics of owning a being, endings other than
+   * replacement. All in the same shape; all persist across re-rolls
+   * for the same reason. */
+  renderPostures();
 
   refreshOrderTotals();
   $("#dream-hint").textContent = "Don't like it? Press again. Each dream is different.";
@@ -2488,6 +3261,80 @@ function onResponseChange(ev) {
   }
 }
 
+/* ---------- the rest of it: render the six posture modules ------------ */
+
+/* Build (once) and refresh the six posture modules. Each module gets
+ * its own card on the page with a title, sub, a grid of select boxes
+ * (one per dimension), and a live caption under each select. The
+ * card's controls live inside a container with id
+ *   #posture-<moduleId>-controls
+ * which the renderer fills in. All six cards share the same visual
+ * treatment to communicate "these are catch-all preferences" rather
+ * than introducing six new color accents.
+ *
+ * Idempotent. Repeated calls re-set the select values and refresh
+ * captions; the markup is only built once per module. */
+function renderPostures() {
+  for (const mod of POSTURE_MODULES) renderPostureModule(mod);
+}
+
+function renderPostureModule(mod) {
+  const wrap = $(`#posture-${mod.id}-controls`);
+  if (!wrap) return;
+
+  if (!wrap.dataset.built) {
+    wrap.innerHTML = mod.dimensions.map(dim => {
+      const opts = dim.options.map(o =>
+        `<option value="${escapeHTML(o.id)}">${escapeHTML(o.name)}</option>`
+      ).join("");
+      const selId = `posture-${mod.id}-${escapeHTML(dim.id)}`;
+      return `
+        <div class="posture-control" data-mod="${escapeHTML(mod.id)}" data-dim="${escapeHTML(dim.id)}">
+          <label class="posture-label" for="${selId}">
+            <span class="posture-label-h">${escapeHTML(dim.label)}</span>
+            <span class="posture-label-sub">${escapeHTML(dim.sub)}</span>
+          </label>
+          <select class="posture-select" id="${selId}" name="${selId}" data-mod="${escapeHTML(mod.id)}" data-dim="${escapeHTML(dim.id)}">
+            ${opts}
+          </select>
+          <p class="posture-caption" id="posture-${mod.id}-caption-${escapeHTML(dim.id)}"></p>
+        </div>
+      `;
+    }).join("");
+
+    for (const dim of mod.dimensions) {
+      const sel = $(`#posture-${mod.id}-${dim.id}`);
+      if (sel) sel.addEventListener("change", onPostureChange);
+    }
+    wrap.dataset.built = "1";
+  }
+
+  for (const dim of mod.dimensions) {
+    const sel = $(`#posture-${mod.id}-${dim.id}`);
+    if (sel) sel.value = currentPostures[mod.id][dim.id];
+    refreshPostureCaption(mod.id, dim.id);
+  }
+}
+
+function refreshPostureCaption(moduleId, dimId) {
+  const cap = $(`#posture-${moduleId}-caption-${dimId}`);
+  if (!cap) return;
+  const opt = postureOption(moduleId, dimId, currentPostures[moduleId][dimId]);
+  cap.textContent = opt ? opt.short : "";
+}
+
+function onPostureChange(ev) {
+  const sel = ev.currentTarget;
+  const moduleId = sel.dataset && sel.dataset.mod;
+  const dimId = sel.dataset && sel.dataset.dim;
+  if (!moduleId || !dimId) return;
+  const val = sel.value;
+  if (!postureOption(moduleId, dimId, val)) return;
+  if (!currentPostures[moduleId]) currentPostures[moduleId] = {};
+  currentPostures[moduleId][dimId] = val;
+  refreshPostureCaption(moduleId, dimId);
+}
+
 /* ---------- voice widget glue ----------------------------------------- */
 
 function setVoiceWidget(speaking, text) {
@@ -2553,7 +3400,7 @@ function refreshOrderTotals() {
   $("#t-eta").textContent = `${min.toLocaleDateString(undefined, opts)} – ${max.toLocaleDateString(undefined, opts)}`;
 }
 
-function buildWorkOrder(dream, mind, grants, form, fulfillment, price, genesis, response) {
+function buildWorkOrder(dream, mind, grants, form, fulfillment, price, genesis, response, postures) {
   const lines = [];
   lines.push("THUNDERGOD \u00b7 WORK ORDER");
   lines.push("=".repeat(56));
@@ -2585,6 +3432,28 @@ function buildWorkOrder(dream, mind, grants, form, fulfillment, price, genesis, 
     if (d) parts.push(d.name.toLowerCase());
     if (u) parts.push(u.name.toLowerCase());
     if (parts.length) lines.push(`Response:       ${parts.join(" \u00b7 ")}`);
+  }
+  if (postures) {
+    // A single per-module headline pick \u2014 the most identifying choice
+    // \u2014 so the buyer can scan the top of the work order and remember
+    // what they configured at a glance. Full per-dimension detail is
+    // in the per-module block further down.
+    const headline = {
+      actions:   "money",
+      audience:  "household-adults",
+      presence:  "when-it-moves",
+      inner:     "private-thoughts",
+      economics: "owns-body",
+      endings:   "lifespan-policy",
+    };
+    for (const mod of POSTURE_MODULES) {
+      const state = postures[mod.id] || {};
+      const optId = state[headline[mod.id]];
+      const opt = optId && postureOption(mod.id, headline[mod.id], optId);
+      if (!opt) continue;
+      const label = (mod.id.charAt(0).toUpperCase() + mod.id.slice(1) + ":").padEnd(16, " ");
+      lines.push(`${label}${opt.name.toLowerCase()}`);
+    }
   }
   lines.push("");
   lines.push("BODY");
@@ -2672,6 +3541,36 @@ function buildWorkOrder(dream, mind, grants, form, fulfillment, price, genesis, 
       lines.push(`    \u25b8 ${opt.name}`);
       for (const ln of wrapText(opt.long, 64)) lines.push(`      ${ln}`);
       lines.push("");
+    }
+  }
+
+  /* The rest of it — six catch-all posture modules. One header block
+   * per module; each module gets its dimensions and the long
+   * descriptions of the chosen options. Iterating POSTURE_MODULES so
+   * adding a seventh module needs no edit here. */
+  if (postures) {
+    lines.push("THE REST OF IT (the decisions that hadn't been made)");
+    lines.push("-".repeat(56));
+    lines.push("Six modules covering the choices that, until the buyer made");
+    lines.push("them, were inherited defaults: what the body is allowed to");
+    lines.push("do (not just read), who else it answers to, its body in");
+    lines.push("space and time, its inner life, the economics of owning a");
+    lines.push("being, and endings other than replacement. Every option");
+    lines.push("below was an explicit pick.");
+    lines.push("");
+    for (const mod of POSTURE_MODULES) {
+      const state = postures[mod.id] || {};
+      lines.push(`### ${mod.title.toUpperCase()}`);
+      for (const ln of wrapText(mod.sub, 64)) lines.push(`    ${ln}`);
+      lines.push("");
+      for (const dim of mod.dimensions) {
+        const opt = postureOption(mod.id, dim.id, state[dim.id]);
+        if (!opt) continue;
+        lines.push(`  [${dim.label}]`);
+        lines.push(`    \u25b8 ${opt.name}`);
+        for (const ln of wrapText(opt.long, 64)) lines.push(`      ${ln}`);
+        lines.push("");
+      }
     }
   }
 
@@ -2906,7 +3805,7 @@ function onCopySheet() {
     country: "(country)",
     notes: "",
   };
-  const txt = buildWorkOrder(currentDream, currentMind, currentGrants, fakeForm, fulfillment, price, currentGenesis, currentResponse);
+  const txt = buildWorkOrder(currentDream, currentMind, currentGrants, fakeForm, fulfillment, price, currentGenesis, currentResponse, currentPostures);
   navigator.clipboard?.writeText(txt).then(() => {
     flashHint("Build sheet copied.");
   }, () => {
@@ -2941,7 +3840,7 @@ function onPlaceOrder(e) {
     notes: (data.get("notes") || "").toString().trim(),
     fulfillment,
   };
-  const workOrder = buildWorkOrder(currentDream, currentMind, currentGrants, form, fulfillment, price, currentGenesis, currentResponse);
+  const workOrder = buildWorkOrder(currentDream, currentMind, currentGrants, form, fulfillment, price, currentGenesis, currentResponse, currentPostures);
 
   // stash on window for download button
   window.__lastWorkOrder = { text: workOrder, orderId: form.orderId };
@@ -2967,6 +3866,8 @@ function onDreamAnother() {
   $("#receipt").hidden = true;
   $("#order").hidden = true;
   $("#grants").hidden = true;
+  const posturesSection = $("#postures");
+  if (posturesSection) posturesSection.hidden = true;
   const responseSection = $("#response");
   if (responseSection) responseSection.hidden = true;
   const genesisSection = $("#genesis");
@@ -3035,6 +3936,9 @@ function init() {
   // response posture (how it answers) — same pattern. Built at load so
   // the user can configure response behavior before pressing dream.
   renderResponse();
+
+  // the rest of it — six catch-all posture modules. Same pattern.
+  renderPostures();
 
   // voice (the body's mouth)
   const hushBtn = $("#voice-hush");

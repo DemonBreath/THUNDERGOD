@@ -891,6 +891,117 @@ main { max-width: var(--maxw); margin: 0 auto; padding: 24px 28px 120px; }
 .response-finesse em { color: var(--ink); font-style: italic; }
 .response-finesse b { color: #fdba74; font-weight: 600; }
 
+/* ---------- the rest of it (six catch-all posture modules) ----------- *
+ * All six modules share one neutral slate treatment to signal that they
+ * are catch-all preference modules rather than six new color accents.
+ * Each card has its own heading and is distinguished by its title, not
+ * its color. */
+
+#postures.postures {
+  margin: 56px 0 0;
+}
+
+.posture-card {
+  margin: 22px 0 0;
+  background:
+    radial-gradient(620px 240px at 0% 0%, #94a3b80f, transparent 70%),
+    #0a0d12;
+  border: 1px solid #94a3b822;
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  box-shadow: 0 0 0 1px #94a3b811, 0 16px 40px #94a3b80a;
+}
+
+.posture-card-head {
+  margin: 0 0 14px;
+  padding: 0 0 12px;
+  border-bottom: 1px solid #94a3b81a;
+}
+.posture-card-h {
+  margin: 0;
+  font-size: 18px;
+  letter-spacing: .005em;
+  color: var(--ink);
+}
+.posture-card-sub {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--ink-soft);
+  line-height: 1.55;
+}
+
+.posture-controls {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 760px) {
+  .posture-controls { grid-template-columns: 1fr 1fr; }
+}
+
+.posture-control {
+  background: #0c1118;
+  border: 1px solid #94a3b81f;
+  border-radius: 10px;
+  padding: 14px 14px;
+  display: flex; flex-direction: column; gap: 8px;
+  transition: border-color .15s ease;
+}
+.posture-control:focus-within { border-color: #94a3b855; }
+
+.posture-label { display: flex; flex-direction: column; gap: 2px; cursor: pointer; }
+.posture-label-h {
+  font-family: var(--mono); font-size: 12px;
+  letter-spacing: .04em; text-transform: uppercase;
+  color: #cbd5e1;
+}
+.posture-label-sub { font-size: 12px; color: var(--ink-soft); line-height: 1.45; }
+
+.posture-select {
+  appearance: none; -webkit-appearance: none;
+  width: 100%;
+  background: #0a0e14;
+  color: var(--ink);
+  border: 1px solid #94a3b833;
+  border-radius: 7px;
+  padding: 10px 36px 10px 12px;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #cbd5e1 50%),
+    linear-gradient(135deg, #cbd5e1 50%, transparent 50%);
+  background-position:
+    calc(100% - 16px) 50%,
+    calc(100% - 10px) 50%;
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+}
+.posture-select:hover { border-color: #94a3b866; }
+.posture-select:focus { outline: none; border-color: #cbd5e1; box-shadow: 0 0 0 2px #94a3b833; }
+.posture-select option { background: #0a0e14; color: var(--ink); }
+
+.posture-caption {
+  margin: 0; padding: 9px 11px;
+  background: rgba(148, 163, 184, .07);
+  border: 1px solid rgba(148, 163, 184, .18);
+  border-radius: 7px;
+  color: var(--ink);
+  font-size: 13px; line-height: 1.5;
+  min-height: 34px;
+}
+
+.postures-finesse {
+  margin: 26px 0 22px;
+  padding: 14px 16px;
+  background: #ffffff05;
+  border: 1px dashed #ffffff1a;
+  border-radius: var(--radius);
+  color: var(--ink-soft);
+  font-size: 13px; line-height: 1.6;
+}
+.postures-finesse em { color: var(--ink); font-style: italic; }
+
 .limit-panel {
   margin-top: 14px;
   background: #0a0c14;

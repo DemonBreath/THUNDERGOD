@@ -236,6 +236,111 @@ when not confident).
   `Response: when directly addressed · match the question · honest
   with care · notes it once, then proceeds · admits not knowing`.
 
+## The rest of it (six catch-all posture modules)
+
+Six modules covering the choices the project would otherwise inherit
+by default. About thirty select boxes total, all in the same shape as
+genesis and response posture: a catalog of dimensions × options, a
+default state, a lookup helper, and a paragraph per chosen option in
+the work order. Built from one shared registry — `POSTURE_MODULES` —
+so the renderer, the work-order writer, and the tests do not need to
+know about each module individually.
+
+### The six modules
+
+**1. What it's allowed to do** (`actions`). The counterpart to grants
+of access — grants cover *reads*, actions cover *doing things in the
+world*. Five dimensions: *Spending money* (cannot / tiny cap / standard
+cap / pre-authorized categories / judges), *Physical hazards*, *Going
+outside*, *Acting on your behalf* (drafts only, drafts and sends,
+sends and summarizes, fully autonomous), *Emergencies* (wait and
+report, call you, call you and 911, carry you to help, full autonomy).
+The single biggest gap that this module closes.
+
+**2. Who else it answers to** (`audience`). The project assumes one
+buyer addressing one body; real life has more people in the room. Six
+dimensions: *Children* (principals / restricted / guests / cannot
+address), *Other household adults*, *Guests*, *Strangers in public*,
+*Other AIs and services* (the default refuses all instruction from
+non-human sources), *The manufacturer* (the default requires both your
+approval and the body's for updates).
+
+**3. Its body in space and time** (`presence`). Six dimensions:
+*Docking place*, *When it moves*, *Off-limit rooms*, *The face*, *Default
+voice volume*, *Initiating physical contact* (never / only on request /
+light attention taps / hugs OK / it decides).
+
+**4. Its inner life** (`inner`). Five dimensions: *Private thoughts*
+(every thought logged / internal scratchpad private / scratchpad
+forgotten in 24h / nothing private — the default is scratchpad
+private), *Self-modification* (frozen at flash / refine principles /
+rewrite essence / rewrite everything including its name),
+*Reproduction* (cannot fork / export on request / mentor with
+permission / autonomous offspring), *Sleep* (always on / idle-dreams
+during quiet hours / sleeps when you sleep / its own schedule), *When
+alone* (powers down / quietly observing / practices and learns /
+whatever it chooses).
+
+**5. Ownership and economics** (`economics`). Five dimensions: *Who
+owns the body* (you own it as an object / you hold it as a ward /
+bonded with mutual duties / it owns itself), *Who owns what it makes*
+(yours / its / shared 50/50 / per-output it decides), *Ongoing cost*
+(included forever / energy on you / pay-as-you-go subscription /
+one-time no future cost), *Transferability* (free sale / mind has
+veto / both consent / not transferable), *Inheritance on your death*
+(estate as property / becomes its own person / named person gets the
+body and the mind chooses / the mind chooses its next person).
+
+**6. Endings other than replacement** (`endings`). Continuity is about
+what happens *if* the body ends; this is about *how* endings can come
+about. Five dimensions: *Voluntary shutdown by the body* (cannot /
+with notice / on its own judgment / can retire permanently),
+*Damage response*, *Mind death vs. body death* (one ends both /
+either can be replaced independently / mind can request a new body /
+body can request a new mind), *Lifespan policy* (indefinite / 5-year /
+10-year / until you retire it / until it retires), *On retirement*
+(erased / archived / open-released / mind chooses).
+
+### What's enforced on the page
+
+- The six modules live in a single `#postures` section between
+  `#response` and `#grants`. Each module gets its own card with its
+  own title and sub; all six cards share one neutral slate accent so
+  they read as "catch-all preference modules" rather than introducing
+  six new color accents.
+- The selects are built once at page load by `renderPostures()`,
+  which iterates `POSTURE_MODULES` and calls
+  `renderPostureModule(mod)` for each entry. One generic change
+  handler `onPostureChange(ev)` updates `currentPostures[mod][dim]`
+  and refreshes the relevant caption.
+- Choices persist across "Dream another" — like genesis and
+  response posture, they describe stable preferences about how this
+  person wants AI to live with them.
+- The hard guarantees still apply across all six modules. None of
+  these choices can override speak, refuse, log, or perceive. These
+  are defaults — the floor of what the body does without being
+  asked — not capabilities.
+- The chosen postures are written into the work order under
+  `THE REST OF IT`, with a per-module sub-header and a
+  paragraph-length description per chosen option. The top-of-order
+  summary names a single headline pick per module so the buyer can
+  scan it at a glance:
+  `Actions:    cannot spend anything`
+  `Audience:   address freely, cannot change settings`
+  `Presence:   only when you're home`
+  `Inner:      internal scratchpad is private; conclusions are shared`
+  `Economics:  you hold it (ward)`
+  `Endings:    10-year design`
+
+### Adding a seventh module
+
+Add a new `*_DIMENSIONS` constant and one entry to `POSTURE_MODULES`.
+The renderer, the work-order writer, the receipt summary, the
+`defaultPostures()` factory, and the `postureOption()` lookup all
+discover it automatically. The HTML needs one new
+`<article class="posture-card">` with a `#posture-<id>-controls`
+container; the renderer fills it.
+
 ## Grants of access
 
 After picking a mind, decide what files and services the mind is allowed
@@ -440,14 +545,18 @@ downloadable work order text file that includes the full `MIND` block,
 the full `GENESIS PROFILE` block (the four chosen birth protocols with
 paragraph-length build instructions), the full `RESPONSE POSTURE`
 block (the five chosen response defaults with paragraph-length build
-instructions), the full `GRANTS OF ACCESS` block, a
-`WHAT THIS BODY CANNOT SENSE` block, the universal `HARD GUARANTEES`
-block, a per-body `MINIMUM SENSE CHECK` block (the parts proving the
-perception guarantee), and the universal `HARD LIMITS` block — so
-both you and the build cell have the complete picture of how this
-mind is born, how it will answer day to day, what got flashed,
-pre-authorized, walled off, guaranteed, and verified. This is a demo
-site — no charge is actually made.
+instructions), the full `THE REST OF IT` block (the six catch-all
+modules covering actions, audience, presence, inner life, economics,
+and endings — roughly thirty more paragraph-length picks), the full
+`GRANTS OF ACCESS` block, a `WHAT THIS BODY CANNOT SENSE` block, the
+universal `HARD GUARANTEES` block, a per-body `MINIMUM SENSE CHECK`
+block (the parts proving the perception guarantee), and the universal
+`HARD LIMITS` block — so both you and the build cell have the
+complete picture of how this mind is born, how it will answer day to
+day, what it's allowed to do, who else it answers to, where it lives,
+who owns it, how it ends, what got flashed, pre-authorized, walled
+off, guaranteed, and verified. This is a demo site — no charge is
+actually made.
 
 ## Files
 
