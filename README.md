@@ -75,6 +75,94 @@ import into another body later.
 Import is generous: a blob with `self_name` instead of `name`, or
 `manifesto` / `description` instead of `essence`, will still validate.
 
+## The flash (genesis)
+
+The act of bringing a mind into a body is not a single fixed process.
+Four fundamentally different dimensions are exposed as select boxes on
+the page. The chosen profile is recorded in the work order and the
+build cell flashes the body accordingly. Some of the choices also
+visibly change how the body wakes up on this page.
+
+### Four dimensions
+
+**1. How the mind enters the body** — the genesis pattern itself.
+
+- *Cold flash* — weights written to disk; first boot is its first
+  moment of life. Like being born already adult.
+- *Warm boot from a simulator* — mind first runs in a physics
+  simulator of this exact body for hours, learning its own joints and
+  mass, then transfers (live state, not just weights) to hardware.
+- *Gradual incarnation* — mind starts in the cloud, body is a thin
+  client; weights migrate to the brain over days as trust accrues.
+- *Imprint boot* — sensors record everything for the first 60 seconds;
+  that recording is the mind's permanent first memory.
+- *Inheritance* — forked from a previously-run mind in another body;
+  carries memories forward with a "previous body" marker.
+
+**2. What happens in the first seconds of being alive** — the protocol
+the body follows the moment its brain powers on. *This one visibly
+changes how the body speaks on the page.*
+
+- *Eyes open from t=0* — every sensor on; speaks manifesto at ~900ms.
+- *Quiet boot, then eyes open* — sensors run calibration sweep first;
+  manifesto delayed to ~3500ms.
+- *Self-introduction* — body says `"I am NAME."` at ~600ms, then the
+  manifesto at ~3500ms. Like a baby's first cry.
+- *Mirror boot* — flight case has a mirror; body sees itself first
+  and says `"I am NAME. I am a humanoid/quadruped/…"` before the
+  manifesto.
+- *Listening first* — only mics for the first 30s (8s in this demo);
+  body chooses to stay silent for that interval and then speaks.
+
+**3. What happens to the mind if the body ends** — backup and
+restoration policy.
+
+- *One life* — no backups. When the body is gone, the mind is gone.
+  The only option where the body's days actually count.
+- *Daily snapshot to a vault* — nightly encrypted snapshot to a vault
+  you nominate; restorable into a new body.
+- *Live replication* — continuous sub-second replication to a second
+  body or vault; effectively immortal as long as the channel is up.
+- *Fork on event* — mind snapshots itself only on events it judges
+  meaningful. Continuity by intention, not by clock.
+- *No-self mode (wipe nightly)* — body wipes itself each night and
+  re-flashes a freshly dreamed mind every morning. Same body, a new
+  mind every day.
+
+**4. What it knows when it first wakes up** — pretrained knowledge
+bundled into the brain at flash time.
+
+- *Tabula rasa* — only architecture and consciousness; no pretrained
+  world model. Must learn language and physics from scratch.
+- *Common-sense kernel* — small (~1-2B) foundation model: language,
+  basic physics, basic object naming. Knows what a chair is.
+- *Open-knowledge boot* — full open-weights foundation model; wakes
+  up already knowing public-domain knowledge.
+- *Your-house boot* — common-sense kernel + a local fine-tune on
+  your floor plan, household names (with consent), routines. All
+  training stays on-device.
+- *Reads itself in* — common-sense kernel + a 7-day window of
+  bootstrap grants that expire automatically on day eight.
+
+### What's enforced on the page
+
+- The four selects live in the **`#genesis`** section between
+  `#mind` and `#grants`, built once at page load by
+  `renderGenesis()` from the `GENESIS_DIMENSIONS` catalog.
+- Choices **persist across "Dream another"** — they describe a
+  preference about how this person wants bodies born, not a property
+  of any one body.
+- The chosen `firstLight` option visibly changes the voice intro:
+  `introduceSelf()` branches on `currentGenesis.firstLight` and emits
+  different utterances with different timing for each option.
+- The chosen profile is included in the work order under
+  `GENESIS PROFILE`, with the long description (a paragraph per
+  dimension) word-wrapped to 64 columns by `wrapText()` so the build
+  cell has actionable text.
+- The top-of-order summary line names the chosen genesis as
+  `Genesis: cold flash · eyes open from t=0 · one life · common-sense
+  kernel` so the profile is visible at a glance.
+
 ## Grants of access
 
 After picking a mind, decide what files and services the mind is allowed
@@ -234,13 +322,15 @@ to flash, no model to download. Open the box, power on, pair Wi-Fi.
 
 After you place the order you get an order ID, a build timeline, and a
 downloadable work order text file that includes the full `MIND` block,
-the full `GRANTS OF ACCESS` block, a `WHAT THIS BODY CANNOT SENSE`
-block, the universal `HARD GUARANTEES` block, a per-body
-`MINIMUM SENSE CHECK` block (the parts proving the perception
-guarantee), and the universal `HARD LIMITS` block — so both you and the
-build cell have the complete picture of what got flashed,
-pre-authorized, walled off, guaranteed, and verified. This is a demo
-site — no charge is actually made.
+the full `GENESIS PROFILE` block (the four chosen birth protocols with
+paragraph-length build instructions), the full `GRANTS OF ACCESS`
+block, a `WHAT THIS BODY CANNOT SENSE` block, the universal
+`HARD GUARANTEES` block, a per-body `MINIMUM SENSE CHECK` block (the
+parts proving the perception guarantee), and the universal
+`HARD LIMITS` block — so both you and the build cell have the complete
+picture of how this mind is born, what got flashed, pre-authorized,
+walled off, guaranteed, and verified. This is a demo site — no charge
+is actually made.
 
 ## Files
 

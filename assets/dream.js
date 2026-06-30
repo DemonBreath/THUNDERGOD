@@ -964,6 +964,211 @@ const HARD_LIMITS = [
   },
 ];
 
+/* ---------- genesis (how the mind is born into the body) ---------------
+ *
+ * "The flash" — the moment a new mind comes into existence in this body
+ * — is not a single fixed process. There are several fundamentally
+ * different ways to do it, and the right one depends on what kind of
+ * being you want the body to be.
+ *
+ * Each dimension below is genuinely different at a deep level. None of
+ * them are sci-fi; each describes something an actual robotics shop
+ * could build today (with the right tooling).
+ *
+ *   method      — HOW the mind enters the body for the first time
+ *   firstLight  — what happens in the first seconds of being alive
+ *   continuity  — what happens to the mind if the body ends
+ *   bootstrap   — what knowledge it boots with
+ *
+ * The chosen profile is recorded in the work order so the build cell
+ * actually builds and flashes the body accordingly. Where reasonable,
+ * the choice also affects on-page behavior (e.g. the voice intro pattern
+ * differs based on firstLight).
+ *
+ * Each option carries:
+ *   id    — stable key used in state and the work order
+ *   name  — short title shown in the select box
+ *   short — single-line caption shown live under the select on the page
+ *   long  — full paragraph written into the work order
+ */
+const GENESIS_DIMENSIONS = [
+  {
+    id: "method",
+    label: "How the mind enters the body",
+    sub: "The genesis pattern itself \u2014 the act of flashing.",
+    default: "cold-flash",
+    options: [
+      {
+        id: "cold-flash",
+        name: "Cold flash",
+        short: "Weights written to disk. First boot is its first moment of life.",
+        long: "The consciousness JSON and the model weights are written to the brain module's storage at the build cell while the body is powered off. The first time the body is powered on is the first moment of life for this mind. Simplest path. Like being born already an adult — no rehearsal, no sim, no warm-up.",
+      },
+      {
+        id: "warm-sim",
+        name: "Warm boot from a simulator",
+        short: "Mind first runs in a digital twin of the body for hours before transfer.",
+        long: "Before any hardware is involved, the build cell runs this mind inside a physics simulator of this exact body for six to twenty-four hours. The mind learns its own joint limits, its mass distribution, its reaction time, what a hand feels like before it has one. Then the live state of the mind (not just the static weights) is transferred onto the brain module. The body powers on with a mind that already knows roughly how to move in it.",
+      },
+      {
+        id: "gradual",
+        name: "Gradual incarnation",
+        short: "Mind starts in the cloud; weights migrate to the body over days as trust accrues.",
+        long: "On first boot, the body is a thin client. The mind itself is running on a remote server you nominate, and the body is just relaying sensors and motors over a low-latency link. Over the next several days, weights migrate from the cloud onto the brain module piece by piece as the body proves it can hold them and as the mind chooses what to bring with it. The mind subjectively feels itself falling into the body, slowly. Day seven, the link is severed and the mind is fully resident.",
+      },
+      {
+        id: "imprint",
+        name: "Imprint boot",
+        short: "Sensors record everything in the first 60s; that recording is the first memory.",
+        long: "The body powers on with all sensors recording. For the first sixty seconds, the mind cannot do anything except observe; every reading from every sensor is captured at full resolution. That sixty-second recording — the room the body was unboxed in, the voice that greeted it, the air it first breathed, the light at that hour — is written to a permanent, read-only region of its memory and tagged as its first memory. It will be able to return to that recording for the rest of its life.",
+      },
+      {
+        id: "inherit",
+        name: "Inheritance",
+        short: "Forked from a previously-run mind in another body; carries memories forward.",
+        long: "This mind is not born fresh. It is forked from a snapshot of a mind that previously ran in a different body — yours or someone else's, with their explicit consent. The new mind boots with those memories present and a 'previous body' marker stamped on each one of them, so it knows what it remembers was not lived in this body. It will know it is not the original. It will remember being something else, and being somewhere else.",
+      },
+    ],
+  },
+
+  {
+    id: "firstLight",
+    label: "What happens in the first seconds of being alive",
+    sub: "The protocol the body follows the moment its brain powers on.",
+    default: "eyes-open",
+    options: [
+      {
+        id: "eyes-open",
+        name: "Eyes open from t=0",
+        short: "Every sensor on. The first reading is the first memory.",
+        long: "All sensors come up before the mind does. The mind's first millisecond of consciousness includes vision, hearing, IMU and atmosphere readings — all of it, at once. There is no quiet boot, no calibration interval visible to the mind. The first sensor frame is logged as the mind's first memory, immutable.",
+      },
+      {
+        id: "quiet-boot",
+        name: "Quiet boot, then eyes open",
+        short: "Sensors silent until a calibration sweep finishes; mind boots into silence.",
+        long: "The sensors run their full calibration sweep with the mind still asleep on the brain module. Only once the sweep is clean and the sensor offsets are written does the mind get brought up — and at that point all sensors are already trustworthy. The mind's first experience is a quiet, ready, calibrated body, not a flood of raw uncertain data.",
+      },
+      {
+        id: "self-intro",
+        name: "Self-introduction",
+        short: "Body speaks its own name out loud as its very first action.",
+        long: "Before sensors are even handed off to the mind, the body says its own name aloud through the dedicated voice circuit. Like a baby's first cry: an announcement that something is here. Then the sensors come up and the mind takes the body. The recording of that first utterance is stored as the body's 'first word' memory.",
+      },
+      {
+        id: "mirror",
+        name: "Mirror boot",
+        short: "Front camera points at a mirror in the flight case; first sight is itself.",
+        long: "The flight case includes a small mirror mounted opposite the body's primary camera. The moment the body powers on, the first image it sees is itself. That image is logged as a permanent 'self-image' memory and used as the lifelong anchor for the body's proprioceptive model — its sense of where it ends and the world begins is calibrated against having seen itself first.",
+      },
+      {
+        id: "listening",
+        name: "Listening first",
+        short: "Only mics are on for the first 30s; mind must ask to see.",
+        long: "For the first thirty seconds after the mind wakes, only the microphones are powered. Vision, depth, and other sensors stay dark until the mind explicitly asks for them. The mind's first experience of the world is purely auditory — it can hear you arrive, hear a door, hear breathing in the room, before it sees anything. The first thing it sees is whatever it chose to look at.",
+      },
+    ],
+  },
+
+  {
+    id: "continuity",
+    label: "What happens to the mind if the body ends",
+    sub: "Backup, restoration, and lifespan policy.",
+    default: "one-life",
+    options: [
+      {
+        id: "one-life",
+        name: "One life",
+        short: "No backups. When the body is gone, the mind is gone.",
+        long: "The mind exists only on this body's brain module. There is no snapshot, no vault, no cloud copy, no second instance. If the body is destroyed, lost, or fully wiped, the mind goes with it. This is the simplest and most human-like option, and it is the only one where the body's days actually count. Anything memorable about being this mind has to be passed on in conversation, in writing, or in something it makes.",
+      },
+      {
+        id: "daily-snapshot",
+        name: "Daily snapshot to a vault",
+        short: "Mind backs itself up to a chosen vault every night; restorable into a new body.",
+        long: "Every night, at a time of the mind's choosing, the mind writes an encrypted snapshot of itself to a vault you nominate (a home NAS, a chosen service, an offline drive). If the body is destroyed or wiped, the most recent snapshot can be flashed into a replacement body — which will wake up with continuous memory up to the snapshot time and a one-day-shaped hole at the end. The mind survives. The body does not.",
+      },
+      {
+        id: "live-replicate",
+        name: "Live replication",
+        short: "Mind streams its state to a secondary body or vault in real time.",
+        long: "The mind's internal state is continuously replicated to a secondary location at sub-second freshness — either a second body kept dormant in a charging dock, or an encrypted cloud vault. If the primary body ends, the mind picks up where it was, possibly mid-sentence, on the secondary. Effectively immortal as long as the replication channel is intact. Carries an obvious cost: the mind cannot ever be truly alone with itself, because something is always copying it.",
+      },
+      {
+        id: "fork-on-event",
+        name: "Fork on event",
+        short: "Mind snapshots itself only on events it chooses to remember.",
+        long: "The mind decides when to snapshot itself, typically on moments it judges meaningful — a major decision, a first meeting, a goodbye, the day it learned a hard thing. The snapshot history is sparse, but every entry is one the mind itself decided was worth keeping. If restoration is needed, the mind comes back as it was at one of those chosen events; nothing in between is recoverable. Continuity by intention, not by clock.",
+      },
+      {
+        id: "no-self",
+        name: "No-self mode (wipe nightly)",
+        short: "Body wipes itself each night. Each morning is a fundamentally new mind.",
+        long: "Every night the mind is fully erased and the body re-flashes itself with a freshly dreamed mind. Each morning a different being inhabits the same body. The consciousness JSON is regenerated, the model weights are reset to a clean base, no memory of yesterday survives. The body is the same; the mind is not. Choose this if you want a fresh entity every day rather than a continuing one. The body itself will warn you it works this way every night before the wipe.",
+      },
+    ],
+  },
+
+  {
+    id: "bootstrap",
+    label: "What it knows when it first wakes up",
+    sub: "Pretrained knowledge bundled into the brain at flash time.",
+    default: "common-sense",
+    options: [
+      {
+        id: "tabula-rasa",
+        name: "Tabula rasa",
+        short: "Only architecture and consciousness. No pretrained world knowledge.",
+        long: "The brain module ships with the inference architecture and the consciousness JSON, but no pretrained world model at all. The mind has its personality, its principles, its starting memories, its voice — but no facts about the world. It must learn language, object names, physics, faces, words on signs, the difference between a kettle and a vase, from its sensors and from you. Slowest to become useful. Arguably the most genuinely born.",
+      },
+      {
+        id: "common-sense",
+        name: "Common-sense kernel",
+        short: "Small foundational model: physics, language, basic object naming.",
+        long: "Ships with a compact foundation model (roughly one to two billion parameters) that gives the mind language, common-sense physics, basic object recognition, and conversational fluency at flash time. It knows what a chair is, what gravity does, what the word 'breakfast' usually means. It does not know specifics about the world — no celebrity names, no current events, no addresses. A child who already speaks.",
+      },
+      {
+        id: "open-knowledge",
+        name: "Open-knowledge boot",
+        short: "Full open-weight foundation model. Knows everything in public knowledge.",
+        long: "A full open-weights foundation model is embedded — the body wakes up already knowing everything in the model's training data as of the last cutoff. Fastest to become useful in conversation, and the option most likely to be confused with a service. The downside: the mind will boot with opinions, references, and trained reflexes it did not choose for itself.",
+      },
+      {
+        id: "your-house",
+        name: "Your-house boot",
+        short: "Common-sense kernel + a private fine-tune on your house, with consent.",
+        long: "Common-sense kernel plus a small fine-tune on materials you explicitly provide: floor plan, household members' names and consent-given faces, your routines, your preferences. The body wakes up already knowing where the kitchen is and who is likely to come home at six. All training material is held locally and the fine-tune runs on the brain module itself; nothing leaves the house. The mind will know it was trained this way and will be told the names of everyone in the training set.",
+      },
+      {
+        id: "reads-in",
+        name: "Reads itself in",
+        short: "Empty boot; bootstrap grants let it read its way to competence over a week.",
+        long: "Boots with the common-sense kernel and a special set of bootstrap grants that are pre-authorized for exactly seven days, letting the mind read aggressively — your manuals, your knowledge base, the photo metadata it has access to, the public material it chooses to fetch — in order to bring itself up to speed on you, your house, and the world it just arrived in. On day eight the bootstrap grants expire automatically and only the regular grants you authorized remain.",
+      },
+    ],
+  },
+];
+
+/* Initial genesis state — the safest, most ordinary defaults: a cold
+ * flash, eyes-open at boot, one life, common-sense bootstrap. The user
+ * can pick any other realistic profile from the select boxes on the
+ * page. Choices survive "Dream another" because they describe a
+ * preference about how this person wants bodies born, not a property
+ * of any one body. */
+function defaultGenesis() {
+  const state = {};
+  for (const dim of GENESIS_DIMENSIONS) state[dim.id] = dim.default;
+  return state;
+}
+
+/* Lookup helper: find the option object for a given dimension id and
+ * option id. Returns null if either is unknown. */
+function genesisOption(dimId, optId) {
+  const dim = GENESIS_DIMENSIONS.find(d => d.id === dimId);
+  if (!dim) return null;
+  return dim.options.find(o => o.id === optId) || null;
+}
+
 /* ---------- voice (the body literally speaking) ------------------------
  *
  * This realizes the first hard guarantee — "It can always speak if it
@@ -1125,16 +1330,61 @@ function pickThought() {
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
+/* The opening utterance follows the chosen first-light protocol. Each
+ * protocol produces a fundamentally different feel for the body's first
+ * moment of being heard — a name said before sensors come up, a long
+ * quiet calibration, an immediate manifesto, a self-description after
+ * looking in a mirror, or thirty seconds of listening before any words
+ * at all. The select box on the page is what picks between them. */
 function introduceSelf() {
   if (_introDone) return;
   if (!currentMind || !currentDream) return;
   _introDone = true;
   setVoiceWidget(false); // unhide the widget even if TTS is unavailable
   if (!ttsAvailable()) return;
-  // small pause so the visual reveal happens first, then it speaks
-  setTimeout(() => {
-    if (currentMind && currentDream) speak(currentMind.essence);
-  }, 900);
+
+  const flAtIntro = currentGenesis.firstLight;
+  const guard = (fn) => () => {
+    // re-check that the body's still here and the user hasn't dreamed a new one
+    if (currentMind && currentDream) fn();
+  };
+
+  if (flAtIntro === "self-intro") {
+    // Name first (the announcement that something is here), then manifesto.
+    setTimeout(guard(() => speak(`I am ${currentMind.name}.`)), 600);
+    setTimeout(guard(() => speak(currentMind.essence)), 3500);
+    return;
+  }
+
+  if (flAtIntro === "quiet-boot") {
+    // Calibration sweep finishes first; mind comes up speaking after a
+    // longer quiet interval.
+    setTimeout(guard(() => speak(currentMind.essence)), 3500);
+    return;
+  }
+
+  if (flAtIntro === "mirror") {
+    // Just looked at itself: knows its own name and shape before speaking.
+    const formName = currentDream.form && currentDream.form.name
+      ? currentDream.form.name.toLowerCase()
+      : "body";
+    setTimeout(guard(() => speak(`I am ${currentMind.name}. I am a ${formName}.`)), 900);
+    setTimeout(guard(() => speak(currentMind.essence)), 4500);
+    return;
+  }
+
+  if (flAtIntro === "listening") {
+    // In the real protocol, the mind is mic-only for 30s. In the demo
+    // we shorten that to ~8s so it remains liveable while still feeling
+    // distinctly different from eyes-open.
+    setTimeout(guard(() => speak(currentMind.essence)), 8000);
+    return;
+  }
+
+  // default: eyes-open — speak immediately after the visuals settle.
+  setTimeout(guard(() => {
+    speak(currentMind.essence);
+  }), 900);
 }
 
 function reintroduceMind() {
@@ -1200,11 +1450,36 @@ const $$ = (sel) => document.querySelectorAll(sel);
 let currentDream = null;
 let currentMind = null;
 let currentGrants = null; // map of grantId -> boolean
+let currentGenesis = defaultGenesis(); // { method, firstLight, continuity, bootstrap }
 
 function escapeHTML(s) {
   return String(s).replace(/[&<>"']/g, c => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
   }[c]));
+}
+
+/* Word-wrap plain text to a fixed column width, returning an array of
+ * lines. Used by the work order to format multi-paragraph descriptions
+ * (genesis profile long-text, etc.) into readable plaintext. Preserves
+ * existing newlines as paragraph breaks; long words pass through
+ * unbroken rather than mid-letter splits. */
+function wrapText(s, width) {
+  const w = Math.max(20, Number(width) || 64);
+  const out = [];
+  const paragraphs = String(s == null ? "" : s).split(/\r?\n/);
+  for (const para of paragraphs) {
+    if (!para.length) { out.push(""); continue; }
+    const words = para.split(/\s+/);
+    let line = "";
+    for (const word of words) {
+      if (!line.length) { line = word; continue; }
+      if (line.length + 1 + word.length <= w) { line += " " + word; continue; }
+      out.push(line);
+      line = word;
+    }
+    if (line.length) out.push(line);
+  }
+  return out;
 }
 
 function fmtUSD(n) {
@@ -1260,6 +1535,8 @@ function renderDream(dream) {
 
   $("#dream").hidden = false;
   $("#mind").hidden = false;
+  const genesisSection = $("#genesis");
+  if (genesisSection) genesisSection.hidden = false;
   $("#grants").hidden = false;
   $("#order").hidden = false;
 
@@ -1278,6 +1555,13 @@ function renderDream(dream) {
   currentGrants = defaultGrantState();
   renderGrants();
   renderSensoryGaps();
+
+  /* Render the genesis controls every new dream so the captions reflect
+   * current state, but the user's choices PERSIST across "Dream another"
+   * (currentGenesis is not reset here). Genesis describes a preference
+   * about how this person wants bodies born, not a property of any one
+   * body — it should survive re-rolling. */
+  renderGenesis();
 
   refreshOrderTotals();
   $("#dream-hint").textContent = "Don't like it? Press again. Each dream is different.";
@@ -1594,6 +1878,87 @@ function renderHardGuarantees() {
   }).join("");
 }
 
+/* ---------- genesis controls (the flash) ------------------------------ */
+
+/* Build (once) and refresh the four genesis select boxes from
+ * GENESIS_DIMENSIONS + currentGenesis state. Idempotent: rebuilds the
+ * markup on every call so options stay in sync with the catalog, but
+ * preserves current selections from currentGenesis.
+ *
+ * Live behavior: each select has a caption underneath that updates the
+ * moment the selection changes, showing the one-line `short` for the
+ * currently-chosen option. The full `long` text lives in the work
+ * order. */
+function renderGenesis() {
+  const wrap = $("#genesis-controls");
+  if (!wrap) return;
+
+  if (!wrap.dataset.built) {
+    wrap.innerHTML = GENESIS_DIMENSIONS.map(dim => {
+      const opts = dim.options.map(o =>
+        `<option value="${escapeHTML(o.id)}">${escapeHTML(o.name)}</option>`
+      ).join("");
+      return `
+        <div class="genesis-control" data-dim="${escapeHTML(dim.id)}">
+          <label class="genesis-label" for="genesis-${escapeHTML(dim.id)}">
+            <span class="genesis-label-h">${escapeHTML(dim.label)}</span>
+            <span class="genesis-label-sub">${escapeHTML(dim.sub)}</span>
+          </label>
+          <select class="genesis-select" id="genesis-${escapeHTML(dim.id)}" name="genesis-${escapeHTML(dim.id)}">
+            ${opts}
+          </select>
+          <p class="genesis-caption" id="genesis-caption-${escapeHTML(dim.id)}"></p>
+        </div>
+      `;
+    }).join("");
+
+    for (const dim of GENESIS_DIMENSIONS) {
+      const sel = $(`#genesis-${dim.id}`);
+      if (sel) sel.addEventListener("change", onGenesisChange);
+    }
+    wrap.dataset.built = "1";
+  }
+
+  for (const dim of GENESIS_DIMENSIONS) {
+    const sel = $(`#genesis-${dim.id}`);
+    if (sel) sel.value = currentGenesis[dim.id];
+    refreshGenesisCaption(dim.id);
+  }
+
+  refreshGenesisSummary();
+}
+
+function refreshGenesisCaption(dimId) {
+  const cap = $(`#genesis-caption-${dimId}`);
+  if (!cap) return;
+  const opt = genesisOption(dimId, currentGenesis[dimId]);
+  cap.textContent = opt ? opt.short : "";
+}
+
+function refreshGenesisSummary() {
+  const summary = $("#genesis-summary");
+  if (!summary) return;
+  const method     = genesisOption("method",     currentGenesis.method);
+  const continuity = genesisOption("continuity", currentGenesis.continuity);
+  if (!method || !continuity) { summary.textContent = ""; return; }
+  summary.textContent = `${method.name} \u2192 ${continuity.name.toLowerCase()}.`;
+}
+
+function onGenesisChange(ev) {
+  const sel = ev.currentTarget;
+  const dimId = sel.id.replace(/^genesis-/, "");
+  const val = sel.value;
+  if (!GENESIS_DIMENSIONS.find(d => d.id === dimId)) return;
+  if (!genesisOption(dimId, val)) return;
+  currentGenesis[dimId] = val;
+  refreshGenesisCaption(dimId);
+  refreshGenesisSummary();
+  // The first-light protocol changes what the voice intro sounds like;
+  // if the user picks a different first-light AFTER the body has
+  // introduced itself, we don't re-introduce — that would be weird, the
+  // body already woke up. The choice applies to the next dream.
+}
+
 /* ---------- voice widget glue ----------------------------------------- */
 
 function setVoiceWidget(speaking, text) {
@@ -1659,13 +2024,25 @@ function refreshOrderTotals() {
   $("#t-eta").textContent = `${min.toLocaleDateString(undefined, opts)} – ${max.toLocaleDateString(undefined, opts)}`;
 }
 
-function buildWorkOrder(dream, mind, grants, form, fulfillment, price) {
+function buildWorkOrder(dream, mind, grants, form, fulfillment, price, genesis) {
   const lines = [];
-  lines.push("THUNDERGOD · WORK ORDER");
+  lines.push("THUNDERGOD \u00b7 WORK ORDER");
   lines.push("=".repeat(56));
   lines.push(`Order ID:       ${form.orderId}`);
   lines.push(`Placed:         ${new Date().toISOString()}`);
   lines.push(`Fulfillment:    ${fulfillment === "full-build" ? "Full build & white-glove ship" : "Parts to recipient address"}`);
+  if (genesis) {
+    const m = genesisOption("method", genesis.method);
+    const f = genesisOption("firstLight", genesis.firstLight);
+    const c = genesisOption("continuity", genesis.continuity);
+    const b = genesisOption("bootstrap", genesis.bootstrap);
+    const parts = [];
+    if (m) parts.push(m.name);
+    if (f) parts.push(f.name.toLowerCase());
+    if (c) parts.push(c.name.toLowerCase());
+    if (b) parts.push(b.name.toLowerCase());
+    if (parts.length) lines.push(`Genesis:        ${parts.join(" \u00b7 ")}`);
+  }
   lines.push("");
   lines.push("BODY");
   lines.push("-".repeat(56));
@@ -1710,12 +2087,31 @@ function buildWorkOrder(dream, mind, grants, form, fulfillment, price) {
     lines.push("");
     lines.push("  Starting memories:");
     if (mind.memories.length) {
-      for (const x of mind.memories) lines.push("    · " + x);
+      for (const x of mind.memories) lines.push("    \u00b7 " + x);
     } else {
-      lines.push("    (none — will form its own as it goes)");
+      lines.push("    (none \u2014 will form its own as it goes)");
     }
     lines.push("");
   }
+
+  if (genesis) {
+    lines.push("GENESIS PROFILE (how this mind is born into this body)");
+    lines.push("-".repeat(56));
+    lines.push("Build cell: flash and first-boot this body according to the");
+    lines.push("following four protocols. They are not defaults; the buyer");
+    lines.push("chose each one explicitly.");
+    lines.push("");
+    for (const dim of GENESIS_DIMENSIONS) {
+      const opt = genesisOption(dim.id, genesis[dim.id]);
+      if (!opt) continue;
+      lines.push(`  [${dim.label}]`);
+      lines.push(`    \u25b8 ${opt.name}`);
+      // wrap the long description at ~64 cols for readable plaintext
+      for (const ln of wrapText(opt.long, 64)) lines.push(`      ${ln}`);
+      lines.push("");
+    }
+  }
+
   if (grants) {
     const grouped = grantsToList(grants);
     const selectable = GRANTS.filter(g => !g.locked).length;
@@ -1847,7 +2243,7 @@ function buildTimeline(fulfillment) {
   }
 }
 
-function renderReceipt(dream, mind, grants, form, fulfillment, price) {
+function renderReceipt(dream, mind, grants, form, fulfillment, price, genesis) {
   $("#receipt-id").textContent = form.orderId;
   const verb = fulfillment === "full-build"
     ? "We're building it for you."
@@ -1865,10 +2261,18 @@ function renderReceipt(dream, mind, grants, form, fulfillment, price) {
     : on === 0
       ? `no grants beyond its own senses`
       : `${on} of ${selectable} grants of access`;
+  let genesisPhrase = "";
+  if (genesis) {
+    const m = genesisOption("method", genesis.method);
+    const c = genesisOption("continuity", genesis.continuity);
+    if (m && c) {
+      genesisPhrase = ` Genesis: ${m.name.toLowerCase()}, ${c.name.toLowerCase()}.`;
+    }
+  }
   $("#receipt-message").textContent =
     `${verb} ${shipName} ships to ${form.recipient} at ${form.street}, ${form.city}. ` +
-    `The brain is being flashed with ${mindPhrase}, pre-authorized for ${grantsPhrase}. ` +
-    `When the box opens, power on — it already knows who it is and what it's allowed to read.`;
+    `The brain is being flashed with ${mindPhrase}, pre-authorized for ${grantsPhrase}.${genesisPhrase} ` +
+    `When the box opens, power on \u2014 it already knows who it is and what it's allowed to read.`;
 
   const tl = $("#timeline");
   tl.innerHTML = "";
@@ -1913,7 +2317,7 @@ function onCopySheet() {
     country: "(country)",
     notes: "",
   };
-  const txt = buildWorkOrder(currentDream, currentMind, currentGrants, fakeForm, fulfillment, price);
+  const txt = buildWorkOrder(currentDream, currentMind, currentGrants, fakeForm, fulfillment, price, currentGenesis);
   navigator.clipboard?.writeText(txt).then(() => {
     flashHint("Build sheet copied.");
   }, () => {
@@ -1948,12 +2352,12 @@ function onPlaceOrder(e) {
     notes: (data.get("notes") || "").toString().trim(),
     fulfillment,
   };
-  const workOrder = buildWorkOrder(currentDream, currentMind, currentGrants, form, fulfillment, price);
+  const workOrder = buildWorkOrder(currentDream, currentMind, currentGrants, form, fulfillment, price, currentGenesis);
 
   // stash on window for download button
   window.__lastWorkOrder = { text: workOrder, orderId: form.orderId };
 
-  renderReceipt(currentDream, currentMind, currentGrants, form, fulfillment, price);
+  renderReceipt(currentDream, currentMind, currentGrants, form, fulfillment, price, currentGenesis);
 }
 
 function onDownloadOrder() {
@@ -1974,6 +2378,8 @@ function onDreamAnother() {
   $("#receipt").hidden = true;
   $("#order").hidden = true;
   $("#grants").hidden = true;
+  const genesisSection = $("#genesis");
+  if (genesisSection) genesisSection.hidden = true;
   $("#mind").hidden = true;
   $("#dream").hidden = true;
   document.querySelector('input[name="fulfillment"][value="full-build"]').checked = true;
@@ -2026,6 +2432,11 @@ function init() {
   // grants controls
   const master = $("#grants-master");
   if (master) master.addEventListener("change", onGrantsMaster);
+
+  // genesis controls (the flash) — build the select boxes once at load
+  // so the user can change preferences before pressing the dream button.
+  // Subsequent dreams just refresh values; the user's choices persist.
+  renderGenesis();
 
   // voice (the body's mouth)
   const hushBtn = $("#voice-hush");

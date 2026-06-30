@@ -676,6 +676,113 @@ main { max-width: var(--maxw); margin: 0 auto; padding: 24px 28px 120px; }
   color: var(--ink);
 }
 
+/* ---------- genesis (the flash) --------------------------------------- *
+ * Distinct cyan/teal accent — different from the body (blue), mind
+ * (violet), grants master (amber), limits (rose), and guarantees +
+ * voice (green). Birth gets its own color because it is its own
+ * category of choice. */
+
+#genesis.genesis {
+  margin: 56px 0 0;
+}
+
+.genesis-controls {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: 1fr;
+  margin: 22px 0 14px;
+}
+@media (min-width: 760px) {
+  .genesis-controls {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.genesis-control {
+  background:
+    radial-gradient(520px 220px at 0% 0%, #22d3ee10, transparent 70%),
+    #0a0e14;
+  border: 1px solid #22d3ee2a;
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  display: flex; flex-direction: column; gap: 10px;
+  box-shadow: 0 0 0 1px #22d3ee14, 0 16px 40px #22d3ee0a;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.genesis-control:focus-within {
+  border-color: #22d3ee55;
+  box-shadow: 0 0 0 1px #22d3ee33, 0 18px 44px #22d3ee14;
+}
+
+.genesis-label {
+  display: flex; flex-direction: column; gap: 3px;
+  cursor: pointer;
+}
+.genesis-label-h {
+  font-family: var(--mono); font-size: 12.5px;
+  letter-spacing: .04em; text-transform: uppercase;
+  color: #67e8f9;
+}
+.genesis-label-sub {
+  font-size: 12.5px; color: var(--ink-soft);
+  line-height: 1.45;
+}
+
+.genesis-select {
+  appearance: none; -webkit-appearance: none;
+  width: 100%;
+  background: #0c1118;
+  color: var(--ink);
+  border: 1px solid #22d3ee44;
+  border-radius: 8px;
+  padding: 11px 38px 11px 14px;
+  font: inherit;
+  font-size: 14.5px;
+  cursor: pointer;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #67e8f9 50%),
+    linear-gradient(135deg, #67e8f9 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) 50%,
+    calc(100% - 12px) 50%;
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+}
+.genesis-select:hover { border-color: #22d3ee88; }
+.genesis-select:focus { outline: none; border-color: #67e8f9; box-shadow: 0 0 0 2px #22d3ee33; }
+.genesis-select option { background: #0c1118; color: var(--ink); }
+
+.genesis-caption {
+  margin: 0; padding: 10px 12px;
+  background: rgba(34, 211, 238, .07);
+  border: 1px solid rgba(34, 211, 238, .22);
+  border-radius: 8px;
+  color: var(--ink);
+  font-size: 13.5px; line-height: 1.55;
+  min-height: 38px;
+}
+
+.genesis-summary {
+  margin: 6px 0 18px;
+  font-family: var(--mono); font-size: 12.5px;
+  letter-spacing: .03em;
+  color: #67e8f9;
+  text-transform: lowercase;
+}
+.genesis-summary:empty { display: none; }
+
+.genesis-finesse {
+  margin: 6px 0 22px;
+  padding: 14px 16px;
+  background: #ffffff05;
+  border: 1px dashed #ffffff1a;
+  border-radius: var(--radius);
+  color: var(--ink-soft);
+  font-size: 13px; line-height: 1.6;
+}
+.genesis-finesse em { color: var(--ink); font-style: italic; }
+.genesis-finesse b { color: #67e8f9; font-weight: 600; }
+
 .limit-panel {
   margin-top: 14px;
   background: #0a0c14;
