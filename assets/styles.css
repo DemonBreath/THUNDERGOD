@@ -185,6 +185,108 @@ main { max-width: var(--maxw); margin: 0 auto; padding: 24px 28px 120px; }
   font-family: var(--mono); font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
 }
 
+/* ---------- QR brain (CSNS import) ------------------------------------- */
+
+.qr-brain {
+  margin-top: 48px;
+  padding: 28px 24px 24px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, #0a0d18, var(--panel));
+  text-align: left;
+  max-width: 920px;
+  margin-left: auto;
+  margin-right: auto;
+  box-shadow: var(--shadow);
+}
+.qr-brain-kicker {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--violet);
+  margin: 0 0 8px;
+}
+.qr-brain-lede {
+  color: var(--ink-soft);
+  margin: 0 0 22px;
+  max-width: 62ch;
+  font-size: 15px;
+  line-height: 1.55;
+}
+.qr-brain-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+@media (max-width: 720px) {
+  .qr-brain-grid { grid-template-columns: 1fr; }
+}
+.qr-brain-block {
+  border: 1px solid var(--line);
+  border-radius: calc(var(--radius) - 4px);
+  padding: 16px;
+  background: #06081088;
+}
+.qr-brain-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 12px;
+}
+.qr-video {
+  width: 100%;
+  max-height: 200px;
+  border-radius: 8px;
+  background: #000;
+  object-fit: cover;
+  border: 1px solid var(--line);
+}
+.qr-brain-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 12px;
+}
+.qr-brain-block textarea {
+  width: 100%;
+  box-sizing: border-box;
+  background: #060810;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  padding: 12px;
+  font-family: var(--mono);
+  font-size: 12px;
+  resize: vertical;
+}
+.qr-brain-block textarea:focus {
+  border-color: var(--violet);
+  box-shadow: 0 0 0 3px #b794f622;
+  outline: none;
+}
+.qr-status {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--ink-faint);
+  font-family: var(--mono);
+}
+.qr-brain-status {
+  margin: 18px 0 0;
+  font-size: 13px;
+  color: var(--ink-faint);
+  min-height: 1.2em;
+}
+.qr-brain-status.has-msg { color: var(--violet); }
+.qr-perfect-btn {
+  margin-top: 18px;
+  display: inline-flex;
+}
+.qr-file-label { cursor: pointer; }
+
 /* ---------- dream card ------------------------------------------------- */
 
 .dream { animation: fadeUp .6s ease both; }

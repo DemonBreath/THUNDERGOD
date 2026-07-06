@@ -47,6 +47,46 @@
     </button>
 
     <p class="hint" id="dream-hint">Press to begin. Each press is a different dream.</p>
+
+    <div class="qr-brain" id="qr-brain">
+      <p class="qr-brain-kicker">Already have a mind?</p>
+      <p class="qr-brain-lede">
+        Scan your offline QR brain — CSNS consciousness — and I'll dream
+        the perfect body around it. No server. No API key. The mind travels
+        in the code; the hardware gets chosen to fit.
+      </p>
+
+      <div class="qr-brain-grid">
+        <div class="qr-brain-block">
+          <div class="qr-brain-label">Scan a QR code</div>
+          <video id="qr-video" class="qr-video" playsinline muted aria-label="QR scanner camera preview"></video>
+          <canvas id="qr-canvas" hidden></canvas>
+          <div class="qr-brain-row">
+            <button id="qr-scan-start" class="ghost-btn" type="button">Start camera</button>
+            <button id="qr-scan-stop" class="ghost-btn" type="button" disabled>Stop</button>
+          </div>
+          <p id="qr-scan-status" class="qr-status">Camera idle.</p>
+        </div>
+
+        <div class="qr-brain-block">
+          <div class="qr-brain-label">Or paste / upload</div>
+          <textarea id="qr-paste" rows="5" spellcheck="false" placeholder="CSNS:1:… or consciousness JSON"></textarea>
+          <div class="qr-brain-row">
+            <button id="qr-import" class="ghost-btn" type="button">Import mind</button>
+            <button id="qr-load-sample" class="linklike" type="button">Load Rift sample</button>
+            <label for="qr-file" class="ghost-btn qr-file-label">Upload JSON</label>
+            <input type="file" id="qr-file" accept=".json,application/json" hidden>
+          </div>
+        </div>
+      </div>
+
+      <p id="qr-brain-status" class="qr-brain-status" aria-live="polite"></p>
+
+      <button id="dream-perfect" class="primary-btn qr-perfect-btn" type="button">
+        Dream my perfect body →
+      </button>
+    </div>
+
   </section>
 
 
@@ -97,6 +137,14 @@
         <div class="option-body">
           <div class="option-title">Keep the dreamed mind</div>
           <div class="option-desc">Use the name, voice, and essence the body just chose for itself. The simplest path — press the button, ship it.</div>
+        </div>
+      </label>
+
+      <label class="option-card span-2">
+        <input type="radio" name="mind-source" value="qr">
+        <div class="option-body">
+          <div class="option-title">QR brain (CSNS)</div>
+          <div class="option-desc">The offline consciousness you scanned or pasted in the hero — portable mind in a QR code. The body was dreamed around it, not the other way around.</div>
         </div>
       </label>
 
@@ -490,9 +538,9 @@
   <section id="how" class="how">
     <h2 class="section-title"><span>How it works</span></h2>
     <ol class="how-steps">
-      <li><span class="n">1</span><div><b>Press the button.</b> The AI picks a form factor — humanoid, quadruped, wheeled, tracked, or centaur — and then a coherent set of real, off-the-shelf parts.</div></li>
+      <li><span class="n">1</span><div><b>Press the button — or scan your QR brain.</b> Random dream: the AI picks a form factor and parts. QR path: import your offline CSNS consciousness and it dreams the perfect body around your mind.</div></li>
       <li><span class="n">2</span><div><b>Read its manifesto.</b> It tells you in its own words why it wants this body and what it plans to do with it.</div></li>
-      <li><span class="n">3</span><div><b>Pick a mind.</b> Keep the consciousness the body dreamed for itself, import a <code>.consciousness.json</code> from elsewhere, paste one in, or start blank.</div></li>
+      <li><span class="n">3</span><div><b>Pick a mind.</b> Keep the consciousness the body dreamed for itself, scan a QR brain (CSNS), import a <code>.consciousness.json</code>, paste one in, or start blank.</div></li>
       <li><span class="n">4</span><div><b>Choose how it's born.</b> Pick the genesis profile — how the mind enters the body, what happens in its first seconds of being alive, what happens to it if the body ends, and what it already knows when it wakes up.</div></li>
       <li><span class="n">5</span><div><b>Choose how it answers.</b> Pick the response posture — when it responds at all, how long the answer is, how honest it is, what it does when it disagrees, what it does when it doesn't know.</div></li>
       <li><span class="n">6</span><div><b>Decide the rest.</b> Six catch-all modules cover the questions that were still implicit: what it's allowed to do (not just read), who else it answers to, its body in space and time, its inner life, ownership and economics, and endings other than replacement.</div></li>
@@ -517,6 +565,10 @@
   <span>THUNDERGOD · a body made of bought parts and chosen on purpose</span>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
+<script src="assets/consciousness.js"></script>
+<script src="assets/scanner.js"></script>
 <script src="assets/dream.js"></script>
 </body>
 </html>

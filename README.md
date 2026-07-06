@@ -29,16 +29,49 @@ python3 -m http.server 8080
 ## Pick a mind
 
 The body's brain is flashed with a **consciousness** before it ships. You
-pick which one. Four paths:
+pick which one. Five paths:
 
+0. **Scan your QR brain (CSNS).** If you already encoded a mind offline —
+   name, persona, voice tuning, knowledge — scan the QR code or paste the
+   `CSNS:1:…` payload in the hero. THUNDERGOD imports it locally (no network)
+   and **dreams the perfect body around it** — form factor and parts chosen
+   to fit that mind, not a random roll.
 1. **Keep the dreamed mind.** Use the name, voice, and essence the body
    chose for itself when you pressed the button.
 2. **Import a consciousness file.** Upload a `.consciousness.json` exported
    from elsewhere — from a previous body, a friend, or your own laptop.
 3. **Paste a consciousness.** Paste JSON conforming to the schema below.
-   Validates as you type.
+   Validates as you type. CSNS payloads are accepted too.
 4. **Start blank.** Ship the body with an empty mind. It will earn a name
    and memories from the moment you turn it on.
+
+### QR brain (CSNS)
+
+Portable offline consciousness from the companion import flow:
+
+```json
+{
+  "v": 1,
+  "name": "Rift",
+  "tagline": "Warm when you're close.",
+  "persona": "You speak with initiative, not just answers.",
+  "voice": { "rate": 1.0, "pitch": 1.05, "gender": "female" },
+  "knowledge": [
+    { "topic": "origin", "content": "I was encoded in a QR code." }
+  ]
+}
+```
+
+Wire format: `CSNS:1:<lz-string-base64-of-json>`. Plain JSON also works.
+See `samples/rift.json` for a ready-made sample. Import in the hero section
+or pass `#csns=<url-encoded-payload>` in the URL.
+
+When a QR brain is imported, the site:
+
+1. Decodes CSNS locally (jsQR + LZ-String; no backend).
+2. Maps it into the THUNDERGOD mind shape (essence, principles, memories).
+3. Infers the best form factor from the mind's persona and knowledge.
+4. Picks top-tier parts for that form — a **perfect body**, not a random dream.
 
 The chosen mind is previewed live — the same content that gets written to
 the brain module. You can also export the current mind as a file for
