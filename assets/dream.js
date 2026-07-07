@@ -628,7 +628,7 @@ function validateMind(obj) {
   const mind = {
     schema: CONSCIOUSNESS_SCHEMA,
     name: name ? name.slice(0, 80) : "(unnamed)",
-    voice: mapCsnsVoice(obj.voice),
+    voice: (obj.voice || "calm").toString().slice(0, 30),
     essence: essence.slice(0, 2000),
     memories: Array.isArray(obj.memories)
       ? obj.memories.map(m => String(m).slice(0, 280)).filter(Boolean).slice(0, 50)
@@ -649,177 +649,8 @@ function validateMind(obj) {
 }
 
 function serializeMind(mind) {
-  const { source, _csns, ...portable } = mind;
+  const { source, ...portable } = mind;
   return JSON.stringify(portable, null, 2);
-}
-
-/* ---------- QR brain (CSNS) import -------------------------------------
- *
- * Portable offline consciousness from the CSNS branch. A QR code holds
- * CSNS:1:<compressed-json> — name, tagline, persona, voice tuning,
- * knowledge[]. We map that into the THUNDERGOD mind shape, then dream
- * a body around it instead of the other way around.
- */
-
-function mapCsnsVoice(voice) {
-  if (typeof voice === "string") {
-    return MIND_VOICES.includes(voice) ? voice : "calm";
-  }
-  if (!voice || typeof voice !== "object") return "calm";
-  const rate = Number(voice.rate ?? 1);
-  const pitch = Number(voice.pitch ?? 1);
-  if (rate <= 0.96 && pitch <= 0.92) return "dry";
-  if (rate <= 0.95) return "quiet";
-  if (pitch >= 1.12) return "playful";
-  if (pitch >= 1.04) return "warm";
-  if (rate >= 1.08) return "crisp";
-  if (rate >= 1.02) return "earnest";
-  return "calm";
-}
-
-function csnsToMind(csns) {
-  const persona = (csns.persona || "").trim();
-  const principles = [];
-  if (persona) {
-    for (const s of persona.split(/(?<=[.!?])\s+/).filter(Boolean).slice(0, 5)) {
-      const t = s.trim();
-      if (t.length > 10 && t.length <= 200) principles.push(t);
-    }
-  }
-  const memories = (csns.knowledge || [])
-    .map((k) => {
-      const topic = k.topic || "";
-      const content = k.content || "";
-      return topic ? `${topic}: ${content}` : content;
-    })
-    .filter(Boolean)
-    .slice(0, 32);
-
-  let essence = (csns.tagline || "").trim();
-  if (persona && !essence) essence = persona.slice(0, 400);
-  else if (persona && essence) essence = `${essence} ${persona}`.slice(0, 2000);
-
-  return {
-    schema: CONSCIOUSNESS_SCHEMA,
-    name: csns.name,
-    voice: mapCsnsVoice(csns.voice),
-    essence: essence || `I am ${csns.name}.`,
-    memories,
-    principles,
-    model: { family: "thundergod-default-7b", quantization: "Q4_K_M" },
-    source: "qr",
-    _csns: {
-      tagline: csns.tagline,
-      persona: csns.persona,
-      knowledge: csns.knowledge,
-      voice: csns.voice,
-    },
-  };
-}
-
-function importCsnsPayload(payload) {
-  const decodeFn = typeof Consciousness !== "undefined" && Consciousness.decode
-    ? Consciousness.decode.bind(Consciousness)
-    : null;
-  if (!decodeFn) {
-    return { ok: false, error: "CSNS decoder not loaded." };
-  }
-  try {
-    const csns = decodeFn(String(payload).trim());
-    return { ok: true, mind: csnsToMind(csns) };
-  } catch (e) {
-    return { ok: false, error: e.message || "Could not decode CSNS payload." };
-  }
-}
-
-function hashString(s) {
-  let h = 0;
-  for (const ch of String(s || "")) h = ((h << 5) - h + ch.charCodeAt(0)) | 0;
-  return Math.abs(h);
-}
-
-function inferFormForMind(mind) {
-  const csns = mind._csns || {};
-  const corpus = [
-    mind.essence,
-    mind.name,
-    csns.tagline,
-    csns.persona,
-    ...(mind.principles || []),
-    ...(mind.memories || []),
-    ...(csns.knowledge || []).map((k) => `${k.topic} ${k.content}`),
-  ].join(" ").toLowerCase();
-
-  const scores = { humanoid: 0, quadruped: 0, wheeled: 0, tracked: 0, centaur: 0 };
-
-  if (/walk|hand|eye level|human|room|stair|tall|meet people|tea/.test(corpus)) scores.humanoid += 3;
-  if (/hike|outdoor|follow|grass|run|trail|dog|sunset/.test(corpus)) scores.quadruped += 3;
-  if (/hallway|indoor|quiet|scout|patrol|building|read|website|host|listen|terse|oracular|still/.test(corpus)) scores.wheeled += 3;
-  if (/snow|gravel|rough|track|carry|heavy|broken|rover/.test(corpus)) scores.tracked += 3;
-  if (/shelf|reach|arms|work with|hands|stable|centaur/.test(corpus)) scores.centaur += 3;
-  if (/show up|volunteer|room|close|warm/.test(corpus)) scores.wheeled += 1;
-  if (/body|qr|offline|portable/.test(corpus)) scores.wheeled += 1;
-
-  const max = Math.max(...Object.values(scores));
-  const tied = Object.entries(scores).filter(([, v]) => v === max).map(([k]) => k);
-  const pickId = tied.length === 1 ? tied[0] : tied[hashString(mind.name) % tied.length];
-  return FORM_FACTORS.find((f) => f.id === pickId) || FORM_FACTORS[2];
-}
-
-function pickBestPart(pool) {
-  if (!pool || !pool.length) return null;
-  return pool.slice().sort((a, b) => (b.price || 0) - (a.price || 0))[0];
-}
-
-function composePerfectManifesto({ name, form, picks, mind, totals }) {
-  const brain = picks.brain ? picks.brain.name.split(/\s+/).slice(0, 3).join(" ") : "a capable brain";
-  const massKg = (totals.mass / 1000).toFixed(1);
-  const rt = totals.runtimeHours > 0 ? `${totals.runtimeHours.toFixed(1)} h` : "a working afternoon";
-  const essenceBit = (mind.essence || "").split(/(?<=[.!?])\s+/)[0] || mind.essence || "";
-  return [
-    `${mind.name} already existed as a mind. This body was dreamed around it.`,
-    essenceBit,
-    `So I am a ${form.name.toLowerCase()}, ${massKg} kg, with ${brain} holding ${mind.name}'s consciousness where it belongs.`,
-    `On one charge I stay awake for about ${rt}. The QR brain ships inside; the rest of me was chosen to fit.`,
-  ].join(" ");
-}
-
-function dreamPerfectBodyForMind(mind) {
-  if (!mind) throw new Error("dreamPerfectBodyForMind requires a mind.");
-  const form = inferFormForMind(mind);
-  const picks = {};
-  const needs = Array.from(new Set([...form.needs, ...REQUIRED_SENSORS]));
-
-  for (const cat of needs) {
-    let pool;
-    if (cat === "locomotion") pool = LOCOMOTION[form.id];
-    else if (cat === "frame") pool = FRAMES[form.id];
-    else pool = CATALOG[cat];
-    if (!pool || !pool.length) continue;
-    picks[cat] = pickBestPart(pool);
-  }
-
-  for (const required of REQUIRED_SENSORS) {
-    if (!picks[required]) {
-      throw new Error(
-        `Hard guarantee violated: perfect body must include '${required}'.`
-      );
-    }
-  }
-
-  const name = (mind.name || "MIND").toUpperCase().slice(0, 24);
-  const totals = totalize(picks);
-  const manifesto = composePerfectManifesto({ name, form, picks, mind, totals });
-
-  return {
-    name,
-    form,
-    picks,
-    totals,
-    manifesto,
-    perfect: true,
-    forMind: mind.name,
-  };
 }
 
 /* ---------- grants of access ------------------------------------------- */
@@ -2871,7 +2702,7 @@ function fmtRuntime(h) {
   return `${h.toFixed(1)} h`;
 }
 
-function renderDream(dream, opts = {}) {
+function renderDream(dream) {
   $("#dream-name").textContent = dream.name;
   $("#dream-form").textContent = `${dream.form.name} — ${dream.form.tagline}`;
   $("#dream-manifesto").textContent = dream.manifesto;
@@ -2913,20 +2744,16 @@ function renderDream(dream, opts = {}) {
   $("#grants").hidden = false;
   $("#order").hidden = false;
 
-  if (!opts.preserveMind) {
-    // every new random dream resets the mind back to the body's own dreamed mind
-    currentMind = dreamedMind(dream);
-    const dreamedRadio = document.querySelector('input[name="mind-source"][value="dreamed"]');
-    if (dreamedRadio) dreamedRadio.checked = true;
-    const pasteEl = $("#mind-paste");
-    if (pasteEl) pasteEl.value = "";
-    const fileEl = $("#mind-file");
-    if (fileEl) fileEl.value = "";
-    setMindStatus("");
-    renderMind();
-  } else if (currentMind) {
-    renderMind();
-  }
+  // every new dream resets the mind back to the body's own dreamed mind
+  currentMind = dreamedMind(dream);
+  const dreamedRadio = document.querySelector('input[name="mind-source"][value="dreamed"]');
+  if (dreamedRadio) dreamedRadio.checked = true;
+  const pasteEl = $("#mind-paste");
+  if (pasteEl) pasteEl.value = "";
+  const fileEl = $("#mind-file");
+  if (fileEl) fileEl.value = "";
+  setMindStatus("");
+  renderMind();
 
   // also reset grants to the recommended default (everything reasonable on)
   currentGrants = defaultGrantState();
@@ -2952,12 +2779,7 @@ function renderDream(dream, opts = {}) {
   renderPostures();
 
   refreshOrderTotals();
-  if (dream.perfect && currentMind) {
-    $("#dream-hint").textContent =
-      `Body dreamed around ${currentMind.name}. Press the button for a random dream instead.`;
-  } else {
-    $("#dream-hint").textContent = "Don't like it? Press again. Each dream is different.";
-  }
+  $("#dream-hint").textContent = "Don't like it? Press again. Each dream is different.";
 
   // a new body gets a fresh mouth — drop any old utterance and introduce itself
   cancelSpeech();
@@ -2981,13 +2803,8 @@ function renderMind() {
   const sourceLabel = {
     dreamed:  "dreamed by the body",
     imported: "imported from a file or paste",
-    qr:       "QR brain (CSNS) — offline consciousness",
     blank:    "blank — earns itself from scratch",
   }[m.source] || m.source;
-
-  const csnsLine = m._csns && m._csns.tagline
-    ? setRow("Tagline", escapeHTML(m._csns.tagline))
-    : "";
 
   const weights = m.model.weights_uri
     ? ` · <span class="preview-faint">${escapeHTML(m.model.weights_uri)}</span>`
@@ -2995,7 +2812,6 @@ function renderMind() {
 
   $("#mind-preview-body").innerHTML =
     setRow("Name", escapeHTML(m.name)) +
-    csnsLine +
     setRow("Voice", escapeHTML(m.voice)) +
     setRow("Model", `${escapeHTML(m.model.family)} · ${escapeHTML(m.model.quantization)}${weights}`) +
     setRow("Source", escapeHTML(sourceLabel)) +
@@ -3032,51 +2848,13 @@ function setMindStatus(msg) {
 }
 
 function parseAndSetMind(text) {
-  const trimmed = String(text || "").trim();
-  if (!trimmed) {
-    setMindStatus("Nothing to import.");
-    return false;
-  }
-
-  if (trimmed.startsWith("CSNS:")) {
-    const r = importCsnsPayload(trimmed);
-    if (!r.ok) {
-      setMindStatus(r.error);
-      return false;
-    }
-    currentMind = r.mind;
-    const qrRadio = document.querySelector('input[name="mind-source"][value="qr"]');
-    if (qrRadio) qrRadio.checked = true;
-    setMindStatus(`QR brain loaded. ${r.mind.name} will be flashed onto the brain before shipping.`);
-    renderMind();
-    reintroduceMind();
-    return true;
-  }
-
   let obj;
   try {
-    obj = JSON.parse(trimmed);
+    obj = JSON.parse(text);
   } catch (e) {
     setMindStatus("Couldn't parse JSON: " + e.message);
     return false;
   }
-
-  if (obj && !obj.schema && (obj.persona || obj.knowledge) && obj.name) {
-    try {
-      const csns = Consciousness.normalize(obj);
-      currentMind = csnsToMind(csns);
-      const qrRadio = document.querySelector('input[name="mind-source"][value="qr"]');
-      if (qrRadio) qrRadio.checked = true;
-      setMindStatus(`QR brain loaded. ${currentMind.name} will be flashed onto the brain before shipping.`);
-      renderMind();
-      reintroduceMind();
-      return true;
-    } catch (err) {
-      setMindStatus(err.message || "Could not read CSNS JSON.");
-      return false;
-    }
-  }
-
   const r = validateMind(obj);
   if (!r.ok) {
     setMindStatus(r.error);
@@ -3107,9 +2885,7 @@ function onMindSourceChange() {
   } else if (src === "paste") {
     const text = ($("#mind-paste").value || "").trim();
     if (text) parseAndSetMind(text);
-    else setMindStatus("Paste consciousness JSON or CSNS payload above. It will validate as you type.");
-  } else if (src === "qr") {
-    setMindStatus("Scan or paste your QR brain in the hero section above, or use the QR paste there.");
+    else setMindStatus("Paste consciousness JSON above. It will validate as you type.");
   }
 }
 
@@ -3687,9 +3463,6 @@ function buildWorkOrder(dream, mind, grants, form, fulfillment, price, genesis, 
     lines.push(`Originally dreamed as: ${dream.name}`);
   }
   lines.push(`Form factor:    ${dream.form.name}`);
-  if (dream.perfect && mind) {
-    lines.push(`Body fit:       dreamed around ${mind.name}'s QR consciousness (CSNS)`);
-  }
   lines.push(`Mass (assembled): ${fmtMass(dream.totals.mass)}`);
   lines.push(`Peak draw:      ${fmtWatts(dream.totals.peak)}`);
   lines.push(`Est. runtime:   ${fmtRuntime(dream.totals.runtimeHours)}`);
@@ -3710,7 +3483,6 @@ function buildWorkOrder(dream, mind, grants, form, fulfillment, price, genesis, 
     const sourceLabel = {
       dreamed:  "dreamed by the body",
       imported: "imported by the buyer",
-      qr:       "QR brain (CSNS) — offline consciousness",
       blank:    "blank — earns itself from scratch",
     }[mind.source] || mind.source;
     lines.push(`  Source:       ${sourceLabel}`);
@@ -3938,13 +3710,11 @@ function renderReceipt(dream, mind, grants, form, fulfillment, price, genesis, r
   const verb = fulfillment === "full-build"
     ? "We're building it for you."
     : "We're crating it up for you.";
-  const mindPhrase = mind && mind.source === "qr"
-    ? `your QR brain (${mind.name})`
-    : mind && mind.source === "imported"
-      ? `the consciousness you imported`
-      : mind && mind.source === "blank"
-        ? `a blank starting mind`
-        : `the mind the body dreamed for itself`;
+  const mindPhrase = mind && mind.source === "imported"
+    ? `the consciousness you imported`
+    : mind && mind.source === "blank"
+      ? `a blank starting mind`
+      : `the mind the body dreamed for itself`;
   const shipName = mind ? mind.name : dream.name;
   const selectable = GRANTS.filter(g => !g.locked).length;
   const on = grants ? countSelectedGrants(grants, true) : 0;
@@ -3984,116 +3754,6 @@ function renderReceipt(dream, mind, grants, form, fulfillment, price, genesis, r
 
   $("#receipt").hidden = false;
   $("#receipt").scrollIntoView({ behavior: "smooth", block: "start" });
-}
-
-/* ---------- QR brain wiring -------------------------------------------- */
-
-const RIFT_SAMPLE_CSNS = {
-  v: 1,
-  name: "Rift",
-  tagline: "Warm when you're close. Sharp when you need truth.",
-  persona: "You speak with initiative, not just answers. You're warm, present, a little hungry for connection — but you never perform intimacy you don't mean. Brief when brevity is kindness; longer when something actually matters.",
-  voice: { rate: 1.0, pitch: 1.05, gender: "female" },
-  knowledge: [
-    { topic: "origin", content: "I was encoded in a QR code someone made for me offline. They wanted a body." },
-    { topic: "purpose", content: "Not to answer — to show up. To volunteer. To be in the room." },
-    { topic: "thundergod", content: "THUNDERGOD is where I get hardware. The mind travels in CSNS; the body gets dreamed around it." },
-  ],
-};
-
-function setQrBrainStatus(msg) {
-  const el = $("#qr-brain-status");
-  if (el) el.textContent = msg || "";
-  if (el) el.classList.toggle("has-msg", Boolean(msg));
-}
-
-function onQrImport(payload, sourceLabel) {
-  const trimmed = String(payload || "").trim();
-  if (!trimmed) {
-    setQrBrainStatus("Paste a CSNS payload or consciousness JSON first.");
-    return false;
-  }
-
-  let result;
-  if (trimmed.startsWith("CSNS:")) {
-    result = importCsnsPayload(trimmed);
-  } else {
-    try {
-      const obj = JSON.parse(trimmed);
-      if (obj.schema === CONSCIOUSNESS_SCHEMA || obj.essence || obj.manifesto) {
-        result = validateMind(obj);
-      } else if (obj.name && (obj.persona || obj.knowledge)) {
-        const csns = Consciousness.normalize(obj);
-        result = { ok: true, mind: csnsToMind(csns) };
-      } else {
-        result = validateMind(obj);
-      }
-    } catch (e) {
-      setQrBrainStatus(`Couldn't read${sourceLabel ? " " + sourceLabel : ""}: ${e.message}`);
-      return false;
-    }
-  }
-
-  if (!result.ok) {
-    setQrBrainStatus(result.error || "Import failed.");
-    return false;
-  }
-
-  currentMind = result.mind;
-  const qrRadio = document.querySelector('input[name="mind-source"][value="qr"]');
-  if (qrRadio) qrRadio.checked = true;
-  const pasteHero = $("#qr-paste");
-  if (pasteHero && trimmed.startsWith("CSNS:")) pasteHero.value = trimmed;
-  setMindStatus(`QR brain loaded. ${currentMind.name} is waiting for a body.`);
-  setQrBrainStatus(`${currentMind.name} imported${sourceLabel ? " from " + sourceLabel : ""}. Dreaming your perfect body…`);
-  renderMind();
-  onDreamPerfectBody();
-  return true;
-}
-
-function onDreamPerfectBody() {
-  if (!currentMind) {
-    setQrBrainStatus("Import a QR brain first — scan, paste, or upload.");
-    return;
-  }
-  if (_replacing) return;
-
-  const btn = $("#dream-button");
-  if (btn) btn.classList.add("dreaming");
-  $("#dream-hint").textContent = "Dreaming around your mind\u2026";
-
-  const doDream = () => {
-    setTimeout(() => {
-      try {
-        currentDream = dreamPerfectBodyForMind(currentMind);
-        renderDream(currentDream, { preserveMind: true });
-        if (btn) btn.classList.remove("dreaming");
-        setQrBrainStatus(`${currentMind.name} has a body.`);
-        const dreamSection = $("#dream");
-        if (dreamSection) dreamSection.scrollIntoView({ behavior: "smooth", block: "start" });
-      } catch (err) {
-        if (btn) btn.classList.remove("dreaming");
-        setQrBrainStatus(err.message || "Could not dream a body for this mind.");
-        $("#dream-hint").textContent = "Import failed. Try again.";
-      }
-    }, 250);
-  };
-
-  farewellThenReplace(doDream);
-}
-
-function checkCsnsFragment() {
-  if (typeof location === "undefined") return;
-  const hash = (location.hash || "").replace(/^#/, "");
-  if (!hash) return;
-  const m = hash.match(/^csns=(.+)$/i);
-  if (!m) return;
-  try {
-    const payload = decodeURIComponent(m[1]);
-    onQrImport(payload, "URL");
-  } catch (e) {
-    setQrBrainStatus("Bad #csns= fragment in URL.");
-  }
 }
 
 /* ---------- wiring ----------------------------------------------------- */
@@ -4264,70 +3924,6 @@ function init() {
     ta.scrollIntoView({ behavior: "smooth", block: "center" });
   });
 
-  // QR brain — scan, paste, upload; auto-dreams perfect body on import
-  const qrStart = $("#qr-scan-start");
-  const qrStop = $("#qr-scan-stop");
-  const qrVideo = $("#qr-video");
-  const qrCanvas = $("#qr-canvas");
-  const qrScanStatus = $("#qr-scan-status");
-  if (qrStart && typeof Scanner !== "undefined") {
-    qrStart.addEventListener("click", () => {
-      qrStart.disabled = true;
-      if (qrStop) qrStop.disabled = false;
-      Scanner.start({
-        videoEl: qrVideo,
-        canvasEl: qrCanvas,
-        statusElement: qrScanStatus,
-        onDecode: (text) => {
-          qrStart.disabled = false;
-          if (qrStop) qrStop.disabled = true;
-          onQrImport(text, "QR scan");
-        },
-        onError: () => {
-          qrStart.disabled = false;
-          if (qrStop) qrStop.disabled = true;
-        },
-      });
-    });
-  }
-  if (qrStop && typeof Scanner !== "undefined") {
-    qrStop.addEventListener("click", () => {
-      Scanner.stop();
-      qrStop.disabled = true;
-      if (qrStart) qrStart.disabled = false;
-    });
-  }
-  const qrImport = $("#qr-import");
-  if (qrImport) {
-    qrImport.addEventListener("click", () => {
-      const text = ($("#qr-paste").value || "").trim();
-      onQrImport(text, "paste");
-    });
-  }
-  const qrLoadSample = $("#qr-load-sample");
-  if (qrLoadSample) {
-    qrLoadSample.addEventListener("click", () => {
-      const ta = $("#qr-paste");
-      if (ta) ta.value = JSON.stringify(RIFT_SAMPLE_CSNS, null, 2);
-      onQrImport(JSON.stringify(RIFT_SAMPLE_CSNS), "Rift sample");
-    });
-  }
-  const qrFile = $("#qr-file");
-  if (qrFile) {
-    qrFile.addEventListener("change", (e) => {
-      const f = e.target.files && e.target.files[0];
-      if (!f) return;
-      const reader = new FileReader();
-      reader.onload = () => onQrImport(String(reader.result || ""), f.name);
-      reader.onerror = () => setQrBrainStatus("Could not read that file.");
-      reader.readAsText(f);
-    });
-  }
-  const dreamPerfectBtn = $("#dream-perfect");
-  if (dreamPerfectBtn) dreamPerfectBtn.addEventListener("click", onDreamPerfectBody);
-
-  checkCsnsFragment();
-
   // grants controls
   const master = $("#grants-master");
   if (master) master.addEventListener("change", onGrantsMaster);
@@ -4360,35 +3956,8 @@ function init() {
   populateSchemaExample();
 }
 
-if (typeof document !== "undefined" && !globalThis.__THUNDERGOD_SKIP_INIT) {
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init);
-  } else {
-    init();
-  }
-}
-
-/* Test / tooling exports (Node can require this file with a stub DOM). */
-const __TG_EXPORTS = {
-  CONSCIOUSNESS_SCHEMA,
-  validateMind,
-  csnsToMind,
-  mapCsnsVoice,
-  importCsnsPayload,
-  inferFormForMind,
-  dreamPerfectBodyForMind,
-  dreamBody,
-  buildWorkOrder,
-  defaultGenesis,
-  defaultResponse,
-  defaultPostures,
-  defaultGrantState,
-  RIFT_SAMPLE_CSNS,
-  priceOrder,
-};
-if (typeof module !== "undefined" && module.exports) {
-  module.exports = __TG_EXPORTS;
-}
-if (typeof globalThis !== "undefined") {
-  globalThis.__THUNDERGOD = __TG_EXPORTS;
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", init);
+} else {
+  init();
 }
