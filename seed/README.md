@@ -1,16 +1,14 @@
 # SEED
 
-**One file. Open it. Teach your mind.**
+**One file. Fully offline. Open it and teach your mind.**
 
-No server. No install. No terminal. Double-click `index.html` (or drag it into your browser).
+Double-click `index.html` (or drag it into your browser). No server, no install, no network — ever.
 
 ## Run
 
-Open `seed/index.html` — that's it.
+Open `seed/index.html`. That's it.
 
-Works from your desktop, a USB stick, or anywhere you copy the file. The infinite cloud stores QR history in your browser's local storage on that device.
-
-> **Note:** The first time you open the file, you need internet briefly so the page can load the tiny QR libraries (~30KB). After that, teaching and filing work offline. Paste works without the camera if your browser blocks file:// camera access.
+Copy the file anywhere — desktop, USB, air-gapped machine. Everything is embedded: brain, infinite cloud, QR encode/decode, scanner.
 
 ## The loop
 
@@ -27,5 +25,7 @@ teach: choice :: the most important thing
 what do you know
 qr history
 ```
+
+> **Camera on file://** — some browsers block camera on local files. Paste always works.
 
 Genesis QR to start. Infinite cloud to grow. Choice first.

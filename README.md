@@ -4,7 +4,7 @@ Two storms in one repo:
 
 ## SEED — one file, teach yourself
 
-**`seed/index.html`** — double-click it. No server, no install.
+**`seed/index.html`** — double-click it. Fully offline. No server, no install, no network.
 
 Genesis QR → infinite cloud history → teach the mind yourself.
 
