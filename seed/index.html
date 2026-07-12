@@ -262,6 +262,49 @@ video {
   font-family: var(--mono);
 }
 
+.bubble.qr-bubble {
+  align-self: center;
+  max-width: 100%;
+  background: #f8fafc;
+  border: 1px solid rgba(110, 231, 183, 0.35);
+  color: #0a0c10;
+  text-align: center;
+  padding: 14px;
+}
+
+.bubble.qr-bubble p {
+  margin: 0 0 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #1a2030;
+}
+
+.bubble.qr-bubble canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 8px;
+}
+
+.qr-chat-meta {
+  display: block;
+  margin-top: 8px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: #5a6478;
+  word-break: break-all;
+}
+
+.scan-bar {
+  display: none;
+  margin-bottom: 12px;
+  padding: 10px;
+  background: #0a0c10;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.scan-bar.active { display: block; }
+
 .chat-form {
   display: flex;
   gap: 8px;
@@ -358,114 +401,56 @@ footer {
       <p class="eyebrow">Start from one QR</p>
       <h1>A mind ready to be taught</h1>
       <p class="lead">
-        Open this file in your browser — fully offline. No server, no install, no network.
-        Genesis QR to start; infinite cloud to grow.
+        Fully offline. The QR shows up in chat — genesis, exports, the whole history.
       </p>
     </header>
 
-    <section id="forge-stage" class="grid">
-      <article class="card">
-        <h2>1 · Forge your blank mind</h2>
-        <p>
-          This QR holds an empty consciousness — ready to learn, ready to choose,
-          ready to carry only what <em>you</em> teach it.
-        </p>
-        <label class="muted" style="display:block;margin-top:12px;font-size:0.85rem;">
-          Name this mind (optional)
-          <input type="text" id="seed-name" placeholder="Seed" maxlength="60" />
-        </label>
-        <div class="row">
-          <button id="forge-btn" class="btn primary" type="button">Generate blank QR</button>
-          <button id="copy-payload" class="btn" type="button">Copy payload</button>
-          <button id="download-json" class="btn" type="button">Download JSON</button>
+    <section id="chat-stage" class="card">
+      <div class="mind-head">
+        <div class="avatar" id="mind-avatar">S</div>
+        <div>
+          <h2 id="mind-name">Seed</h2>
+          <p id="mind-tag">Ready to be taught.</p>
         </div>
-        <div class="qr-box" id="forge-qr-wrap">
-          <canvas id="forge-qr" aria-label="Blank mind QR code"></canvas>
+        <div class="row" style="margin-left:auto;margin-top:0;">
+          <button id="scanner-start" class="btn" type="button">Scan QR</button>
+          <button id="export-btn" class="btn primary" type="button">Send QR</button>
+          <button id="copy-payload" class="btn" type="button">Copy code</button>
+          <button id="eject-btn" class="btn" type="button">New mind</button>
         </div>
-        <p class="qr-meta" id="forge-meta"></p>
-      </article>
+      </div>
 
-      <article class="card">
-        <h2>What goes on the QR</h2>
-        <ul>
-          <li><strong>Genesis</strong> — the first QR starts the line</li>
-          <li><strong>Cloud</strong> — every export archives another QR layer (infinite storage)</li>
-          <li><strong>Learn</strong> — teach in chat; facts file locally and into exports</li>
-          <li><strong>Recall</strong> — the mind draws on all past QRs in its cloud history</li>
-        </ul>
-        <p style="margin-top:14px;">Teach with:</p>
-        <ul>
-          <li><code>remember that my name is Alex</code></li>
-          <li><code>teach: choice :: the most important thing</code></li>
-          <li><code>learn: origin :: I taught this mind myself</code></li>
-        </ul>
-      </article>
-    </section>
-
-    <section id="wake-stage" class="grid wake" style="margin-top:18px;">
-      <article class="card">
-        <h2>2 · Wake it</h2>
-        <p>Scan the QR you forged, paste the payload, or upload JSON.</p>
+      <div id="scan-bar" class="scan-bar">
         <video id="scanner-video" playsinline muted></video>
         <canvas id="scanner-canvas" hidden></canvas>
         <div class="row">
-          <button id="scanner-start" class="btn primary" type="button">Scan QR</button>
-          <button id="scanner-stop" class="btn" disabled>Stop</button>
+          <button id="scanner-stop" class="btn" type="button">Stop scan</button>
         </div>
         <p class="status" id="scanner-status">Camera idle.</p>
-      </article>
+      </div>
 
-      <article class="card">
-        <h2>Or paste / upload</h2>
-        <textarea id="paste-area" rows="7" placeholder="CSNS:1:… or JSON"></textarea>
-        <div class="row">
-          <button id="paste-load" class="btn primary" type="button">Wake mind</button>
-          <label class="btn" for="file-input">Upload JSON</label>
-          <input id="file-input" type="file" accept=".json,application/json,text/plain" hidden />
-        </div>
-      </article>
+      <div id="transcript" class="transcript" aria-live="polite"></div>
+
+      <form id="chat-form" class="chat-form">
+        <input id="chat-input" type="text" autocomplete="off" placeholder="Teach me… or paste CSNS:… to wake another layer" />
+        <button class="btn primary" type="submit">Send</button>
+      </form>
+
+      <div class="filing">
+        <h3>Filing cabinet · <span id="filing-count">0 filed</span></h3>
+        <ul id="filing-list"></ul>
+      </div>
+
+      <div class="cloud-panel">
+        <h3>Infinite cloud · <span id="cloud-stats">0 layers</span></h3>
+        <canvas id="cloud-canvas" width="640" height="120" aria-hidden="true"></canvas>
+        <ul id="cloud-list" class="cloud-list"></ul>
+      </div>
+
+      <input id="file-input" type="file" accept=".json,application/json,text/plain" hidden />
     </section>
 
-    <section id="teach-stage" class="hidden" style="margin-top:18px;">
-      <article class="card">
-        <div class="mind-head">
-          <div class="avatar" id="mind-avatar">S</div>
-          <div>
-            <h2 id="mind-name">Seed</h2>
-            <p id="mind-tag">Ready to be taught.</p>
-          </div>
-          <div class="row" style="margin-left:auto;margin-top:0;">
-            <button id="export-btn" class="btn primary" type="button">Export QR</button>
-            <button id="eject-btn" class="btn" type="button">Eject</button>
-          </div>
-        </div>
-
-        <div id="transcript" class="transcript" aria-live="polite"></div>
-
-        <form id="chat-form" class="chat-form">
-          <input id="chat-input" type="text" autocomplete="off" placeholder="Teach me something…" />
-          <button class="btn primary" type="submit">Send</button>
-        </form>
-
-        <div class="filing">
-          <h3>Filing cabinet · <span id="filing-count">0 filed</span></h3>
-          <ul id="filing-list"></ul>
-        </div>
-
-        <div class="cloud-panel">
-          <h3>Infinite cloud · <span id="cloud-stats">0 layers</span></h3>
-          <canvas id="cloud-canvas" width="640" height="120" aria-hidden="true"></canvas>
-          <ul id="cloud-list" class="cloud-list"></ul>
-        </div>
-
-        <div class="qr-box hidden" id="export-qr-wrap" style="margin-top:18px;">
-          <canvas id="export-qr" aria-label="Updated mind QR code"></canvas>
-        </div>
-        <p class="qr-meta" id="export-meta"></p>
-      </article>
-    </section>
-
-    <footer>Genesis QR · infinite cloud history · teach yourself</footer>
+    <footer>Genesis QR in chat · infinite cloud · teach yourself</footer>
   </div>
 
   <script>
@@ -1047,18 +1032,13 @@ Minimum version required to store current data is: `+i+`.
 (() => {
   'use strict';
 
-  const forgeStage = document.getElementById('forge-stage');
-  const wakeStage = document.getElementById('wake-stage');
-  const teachStage = document.getElementById('teach-stage');
+  const forgeStage = null;
+  const wakeStage = null;
+  const teachStage = document.getElementById('chat-stage');
+  const scanBar = document.getElementById('scan-bar');
 
-  const forgeQr = document.getElementById('forge-qr');
-  const forgeMeta = document.getElementById('forge-meta');
-  const forgeBtn = document.getElementById('forge-btn');
-  const copyPayload = document.getElementById('copy-payload');
-  const downloadJson = document.getElementById('download-json');
-
-  const pasteArea = document.getElementById('paste-area');
-  const pasteLoad = document.getElementById('paste-load');
+  const pasteArea = null;
+  const pasteLoad = null;
   const fileInput = document.getElementById('file-input');
   const scannerVideo = document.getElementById('scanner-video');
   const scannerCanvas = document.getElementById('scanner-canvas');
@@ -1072,8 +1052,7 @@ Minimum version required to store current data is: `+i+`.
   const transcript = document.getElementById('transcript');
   const chatForm = document.getElementById('chat-form');
   const chatInput = document.getElementById('chat-input');
-  const exportQr = document.getElementById('export-qr');
-  const exportMeta = document.getElementById('export-meta');
+  const copyPayload = document.getElementById('copy-payload');
   const exportBtn = document.getElementById('export-btn');
   const ejectBtn = document.getElementById('eject-btn');
   const filingList = document.getElementById('filing-list');
@@ -1094,6 +1073,24 @@ Minimum version required to store current data is: `+i+`.
     el.textContent = text;
     transcript.appendChild(el);
     transcript.scrollTop = transcript.scrollHeight;
+  }
+
+  async function bubbleQr(caption, mind) {
+    const payload = Seed.encode(mind);
+    lastPayload = payload;
+    const el = document.createElement('div');
+    el.className = 'bubble qr-bubble';
+    const p = document.createElement('p');
+    p.textContent = caption;
+    const canvas = document.createElement('canvas');
+    await Seed.renderQR(canvas, payload);
+    const meta = document.createElement('small');
+    meta.className = 'qr-chat-meta';
+    meta.textContent = `${payload.length} chars · ${mind.knowledge.length} facts · tap Copy code to grab payload`;
+    el.append(p, canvas, meta);
+    transcript.appendChild(el);
+    transcript.scrollTop = transcript.scrollHeight;
+    return payload;
   }
 
   function renderCloud() {
@@ -1160,31 +1157,27 @@ Minimum version required to store current data is: `+i+`.
     }
   }
 
-  async function showPayload(canvas, metaEl, mind) {
-    const payload = Seed.encode(mind);
-    lastPayload = payload;
-    canvas.parentElement.classList.remove('hidden');
-    await Seed.renderQR(canvas, payload);
-    metaEl.textContent = `${payload.length} chars · ${mind.knowledge.length} knowledge entries · scan to wake`;
-    return payload;
+  async function sendQr(caption, mind) {
+    await bubbleQr(caption, mind);
+    bubble('mind', 'There — scan that, or keep teaching me here.');
   }
 
-  async function forgeBlank() {
-    const lineId = InfiniteCloud.uid();
-    currentLineId = lineId;
-    const mind = Seed.normalize({ ...Seed.BLANK, line: lineId, gen: 0 });
-    const nameInput = document.getElementById('seed-name');
-    if (nameInput && nameInput.value.trim()) {
-      mind.name = nameInput.value.trim().slice(0, 60);
-    }
-    const payload = Seed.encode(mind);
-    InfiniteCloud.genesis(mind, payload);
-    await showPayload(forgeQr, forgeMeta, mind);
-    pasteArea.value = payload;
+  async function doExport() {
+    if (!session) return;
+    const lineId = session.lineId || currentLineId;
+    const merged = InfiniteCloud.synthesize(lineId, Seed.merge(session.base), Seed.decode);
+    const gen = InfiniteCloud.history(lineId).length;
+    const stamped = InfiniteCloud.stampMind(merged, lineId, gen);
+    const payload = Seed.encode(stamped);
+    InfiniteCloud.archive(lineId, stamped, payload, `export #${gen}`);
+    await sendQr(`Export #${gen} — cloud layer`, stamped);
+    session.resynthesize();
+    renderFiling();
     renderCloud();
+    bubble('system', `${gen + 1} QRs in the infinite cloud now.`);
   }
 
-  function wake(mind, payload) {
+  function bindSession(mind, payload) {
     const lineId = mind.line || InfiniteCloud.uid();
     currentLineId = lineId;
     if (payload) {
@@ -1202,27 +1195,35 @@ Minimum version required to store current data is: `+i+`.
         ? ` · ${InfiniteCloud.history(lineId).length} QRs in the cloud`
         : ' · genesis QR');
     mindAvatar.textContent = (session.mind.name || 'S').charAt(0).toUpperCase();
-
-    forgeStage.classList.add('hidden');
-    wakeStage.classList.add('hidden');
-    teachStage.classList.remove('hidden');
-
-    transcript.innerHTML = '';
-    const hello = session.reply('hello');
-    bubble('mind', hello);
     renderFiling();
     renderCloud();
-    teachStage.scrollIntoView({ behavior: 'smooth' });
   }
 
-  function eject() {
+  async function startGenesis() {
+    const lineId = InfiniteCloud.uid();
+    currentLineId = lineId;
+    const mind = Seed.normalize({ ...Seed.BLANK, line: lineId, gen: 0 });
+    const payload = Seed.encode(mind);
+    InfiniteCloud.genesis(mind, payload);
+    transcript.innerHTML = '';
+    bubble('mind', 'Starting blank. Here is your genesis QR — in the chat, where it belongs.');
+    await bubbleQr('Genesis QR — layer #0', mind);
+    bindSession(mind, payload);
+    bubble('mind', session.reply('hello'));
+  }
+
+  async function wake(mind, payload) {
+    bindSession(mind, payload);
+    bubble('system', `Woke from QR layer${mind.gen != null ? ' #' + mind.gen : ''}.`);
+    if (payload) await bubbleQr(`Scanned · layer #${mind.gen ?? '?'}`, mind);
+    bubble('mind', session.reply('hello'));
+  }
+
+  async function eject() {
     session = null;
     currentLineId = null;
     stopScanner();
-    teachStage.classList.add('hidden');
-    forgeStage.classList.remove('hidden');
-    wakeStage.classList.remove('hidden');
-    exportQr.parentElement.classList.add('hidden');
+    await startGenesis();
   }
 
   function tryWake(payload, label) {
@@ -1230,7 +1231,7 @@ Minimum version required to store current data is: `+i+`.
       const mind = Seed.decode(payload);
       wake(mind, payload);
     } catch (err) {
-      alert(`Could not wake mind${label ? ' from ' + label : ''}: ${err.message}`);
+      bubble('system', `Could not wake mind${label ? ' from ' + label : ''}: ${err.message}`);
     }
   }
 
@@ -1243,6 +1244,7 @@ Minimum version required to store current data is: `+i+`.
     }
     scannerStart.disabled = false;
     scannerStop.disabled = true;
+    scanBar?.classList.remove('active');
     scannerStatus.textContent = 'Camera idle.';
   }
 
@@ -1252,6 +1254,7 @@ Minimum version required to store current data is: `+i+`.
       return;
     }
     try {
+      scanBar?.classList.add('active');
       stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'environment' },
         audio: false,
@@ -1288,28 +1291,12 @@ Minimum version required to store current data is: `+i+`.
     }
   }
 
-  forgeBtn.addEventListener('click', () => forgeBlank());
   copyPayload.addEventListener('click', () => {
-    if (!lastPayload) return;
+    if (!lastPayload) return bubble('system', 'No QR in chat yet.');
     navigator.clipboard?.writeText(lastPayload).then(
-      () => { forgeMeta.textContent = 'Payload copied.'; },
-      () => alert('Copy failed.')
+      () => bubble('system', 'Payload copied from last QR in chat.'),
+      () => bubble('system', 'Copy failed.')
     );
-  });
-  downloadJson.addEventListener('click', () => {
-    const mind = session ? session.mind : Seed.BLANK;
-    const blob = new Blob([JSON.stringify(Seed.merge(mind), null, 2)], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'seed-mind.json';
-    a.click();
-    URL.revokeObjectURL(a.href);
-  });
-
-  pasteLoad.addEventListener('click', () => {
-    const v = pasteArea.value.trim();
-    if (!v) return alert('Paste a CSNS payload or JSON first.');
-    tryWake(v, 'paste');
   });
 
   fileInput.addEventListener('change', async () => {
@@ -1321,13 +1308,23 @@ Minimum version required to store current data is: `+i+`.
   scannerStart.addEventListener('click', startScanner);
   scannerStop.addEventListener('click', stopScanner);
 
-  chatForm.addEventListener('submit', (e) => {
+  chatForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    if (!session) return;
     const text = chatInput.value.trim();
     if (!text) return;
     chatInput.value = '';
     bubble('you', text);
+
+    if (text.startsWith('CSNS:') || text.startsWith('{')) {
+      tryWake(text, 'chat paste');
+      return;
+    }
+    if (/^(export|send qr|qr)$/i.test(text)) {
+      await doExport();
+      return;
+    }
+    if (!session) return;
+
     const out = session.reply(text);
     session.refresh();
     bubble('mind', out);
@@ -1335,28 +1332,15 @@ Minimum version required to store current data is: `+i+`.
     renderCloud();
   });
 
-  exportBtn.addEventListener('click', async () => {
-    if (!session) return;
-    const lineId = session.lineId || currentLineId;
-    const merged = InfiniteCloud.synthesize(lineId, Seed.merge(session.base), Seed.decode);
-    const gen = InfiniteCloud.history(lineId).length;
-    const stamped = InfiniteCloud.stampMind(merged, lineId, gen);
-    const payload = Seed.encode(stamped);
-    InfiniteCloud.archive(lineId, stamped, payload, `export #${gen}`);
-    await showPayload(exportQr, exportMeta, stamped);
-    exportQr.parentElement.classList.remove('hidden');
-    session.resynthesize();
-    renderFiling();
-    renderCloud();
-    bubble('system', `Layer #${gen} archived in the infinite cloud. Mind draws on ${gen + 1} QRs now.`);
-  });
+  exportBtn.addEventListener('click', () => doExport());
 
-  ejectBtn.addEventListener('click', eject);
+  ejectBtn.addEventListener('click', () => eject());
 
   if (location.hash.startsWith('#csns=')) {
+    transcript.innerHTML = '';
     tryWake(decodeURIComponent(location.hash.slice(6)), 'URL');
   } else {
-    forgeBlank();
+    startGenesis();
   }
 })();
 
