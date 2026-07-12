@@ -1,51 +1,26 @@
 # THUNDERGOD
 
-A small storm in a browser. Procedural lightning, moody sky, synthesized thunder — one HTML file, one CSS file, one JS file. No build step, no dependencies.
+Two storms in one repo:
 
-![runic mark](https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Runic_letter_thurisaz.svg/40px-Runic_letter_thurisaz.svg.png)
+## Alexworld — AI brain on a QR code
 
-## Run it
+**`alexworld-co/`** — offline minds you can scan, teach, and re-export.
 
-Open `index.html` in any modern browser. That's it.
+- **Brain** — consciousness packed into `CSNS:1:…` QR payloads
+- **Learn** — file new facts in chat (`remember that …`, `learn: topic :: fact`)
+- **Communicate** — text, microphone, and voice synthesis (all local)
+- **File** — knowledge cabinet + **Export mind** to bake learning into a new QR
 
-For local development with a tiny static server (optional):
+```bash
+cd alexworld-co && python3 -m http.server 8000
+```
+
+## Lightning playground — the infinite cloud
+
+**Root `index.html`** — procedural lightning, infinite drifting clouds, synthesized thunder.
 
 ```bash
 python3 -m http.server 8080
-# then visit http://localhost:8080
 ```
 
-## Controls
-
-| Input            | Effect                                      |
-| ---------------- | ------------------------------------------- |
-| `click`          | Summon a bolt from the clouds to the point  |
-| `drag`           | Arc lightning between cursor positions      |
-| `space`          | Toggle tempest (automatic storm)            |
-| `m`              | Mute / unmute synthesized thunder           |
-
-## What's inside
-
-- **`index.html`** — the page shell and the HUD.
-- **`style.css`** — typography, the stormy palette, and overlay layout.
-- **`lightning.js`** — the whole show:
-  - Fractal midpoint-displacement bolt generator with recursive branching.
-  - Four-pass canvas rendering (broad-soft → thin-hot) for cheap bloom, using
-    `mix-blend-mode: screen` on the bolt canvas.
-  - **The infinite cloud** — four parallax layers of procedural puffs that drift
-    forever and tile seamlessly at the edges; tempest mode thickens and darkens them.
-  - Twinkling stars, ambient + distant flashes.
-  - Spark particles at impact points.
-  - Synthesized thunder via the Web Audio API: a sharp high-passed crack
-    followed by a low-passed rolling rumble, delayed by simulated travel time.
-
-## Notes
-
-- Honors `prefers-reduced-motion` for the runic float animation and skips
-  spontaneous distant flashes.
-- The bolt canvas uses screen blending so glow layers compose additively;
-  fades come from clearing each frame and redrawing live bolts with a
-  decaying alpha.
-- Audio stays muted until the first interaction (browsers require it).
-
-Built for the joy of it.
+See each folder's README for details.

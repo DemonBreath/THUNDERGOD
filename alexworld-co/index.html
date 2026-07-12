@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Alexworld — Wake a mind, dream a body</title>
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body data-page="host">
+  <header class="topbar">
+    <h1 class="logo">ALEXWORLD<span class="cursor">_</span></h1>
+    <nav>
+      <a href="index.html" class="active">Host</a>
+      <a href="export.html">Export</a>
+      <a href="about.html">About</a>
+    </nav>
+  </header>
+
+  <main class="layout">
+    <section id="import-stage" class="card">
+      <h2>Import an offline mind</h2>
+      <p class="muted">
+        Scan a QR code, paste a <code>CSNS:1:…</code> payload, or upload JSON.
+        The consciousness runs locally — no server, no API key. Then we dream
+        a real-world body around it.
+      </p>
+
+      <div class="import-grid">
+        <div class="import-block">
+          <h3>Scan a QR code</h3>
+          <video id="scanner-video" playsinline muted></video>
+          <canvas id="scanner-canvas" hidden></canvas>
+          <div class="row">
+            <button id="scanner-start" class="btn primary">Start camera</button>
+            <button id="scanner-stop" class="btn" disabled>Stop</button>
+          </div>
+          <p id="scanner-status" class="muted small">Camera idle.</p>
+        </div>
+
+        <div class="import-block">
+          <h3>Or paste / upload</h3>
+          <textarea
+            id="paste-area"
+            rows="8"
+            placeholder="Paste CSNS:1:… or consciousness JSON"
+          ></textarea>
+          <div class="row">
+            <label class="btn" for="file-input">Upload JSON</label>
+            <input id="file-input" type="file" accept=".json,application/json" hidden />
+            <button id="paste-load" class="btn primary">Import</button>
+            <button id="load-sample" class="btn ghost">Load Rift</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="agent-stage" class="card hidden">
+      <header class="agent-header">
+        <div class="avatar" id="agent-avatar">A</div>
+        <div>
+          <h2 id="agent-name">Agent</h2>
+          <p class="muted small" id="agent-tagline">Imported consciousness</p>
+        </div>
+        <div class="agent-actions">
+          <button id="export-mind-btn" class="btn" type="button" title="Export learned mind to a new QR code">📦 Export mind</button>
+          <button id="dream-body-btn" class="btn primary" type="button" title="Dream hardware around this mind">⚡ Dream my body</button>
+          <button id="mic-toggle" class="btn" title="Hold to speak (or click to toggle)">🎙 Speak</button>
+          <button id="voice-toggle" class="btn" title="Toggle voice output">🔊 Voice on</button>
+          <button id="eject" class="btn ghost" title="Eject this consciousness">⏏ Eject</button>
+        </div>
+      </header>
+
+      <div class="agent-body">
+        <div id="transcript" class="transcript" aria-live="polite"></div>
+
+        <form id="chat-form" class="chat-form">
+          <input
+            id="chat-input"
+            type="text"
+            autocomplete="off"
+            placeholder="Type a message, or ask about your body"
+          />
+          <button class="btn primary" type="submit">Send</button>
+        </form>
+
+        <details class="introspect" open>
+          <summary>Filing cabinet — <span id="knowledge-count">0 entries</span></summary>
+          <p class="muted small">
+            Teach me with <code>remember that …</code>, <code>learn: topic :: fact</code>,
+            or <code>file this: topic — fact</code>. Learned entries persist locally and
+            travel in your next QR export.
+          </p>
+          <ul id="knowledge-list" class="knowledge-list"></ul>
+        </details>
+
+        <details class="introspect">
+          <summary>What this agent knows about the website</summary>
+          <ul id="file-index-list"></ul>
+        </details>
+      </div>
+    </section>
+
+    <section id="body-stage" class="card hidden">
+      <div class="body-stage-head">
+        <h2>My body</h2>
+        <div class="row">
+          <button id="dream-body-again" class="btn ghost" type="button">Dream again</button>
+          <button id="copy-body-spec" class="btn ghost" type="button">Copy spec</button>
+        </div>
+      </div>
+      <div id="body-result" class="body-result" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <footer class="footer muted small">
+    <span>Mind runs locally. Body is dreamed from real parts. Nothing leaves this device.</span>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+  <script src="assets/js/file-index.js"></script>
+  <script src="assets/js/consciousness.js"></script>
+  <script src="assets/js/memory.js"></script>
+  <script src="assets/js/body.js"></script>
+  <script src="assets/js/speech.js"></script>
+  <script src="assets/js/scanner.js"></script>
+  <script src="assets/js/engine.js"></script>
+  <script src="assets/js/main.js"></script>
+</body>
+</html>
