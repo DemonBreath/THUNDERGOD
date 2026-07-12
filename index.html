@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark" />
+  <title>THUNDERGOD · a small storm in a browser</title>
+  <link rel="stylesheet" href="style.css" />
+  <link
+    rel="icon"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='28'%3E%E2%9A%A1%3C/text%3E%3C/svg%3E"
+  />
+</head>
+<body>
+  <canvas id="sky" aria-hidden="true"></canvas>
+  <canvas id="bolts" aria-hidden="true"></canvas>
+
+  <main class="overlay" id="overlay">
+    <header class="brand">
+      <span class="rune" aria-hidden="true">ᚦ</span>
+      <h1>THUNDERGOD</h1>
+      <p class="tagline">the infinite cloud · click the sky</p>
+    </header>
+
+    <section class="hud" id="hud" hidden>
+      <div class="hud-row">
+        <span class="hud-label">Charge</span>
+        <div class="meter" role="progressbar" aria-label="charge">
+          <div class="meter-fill" id="charge"></div>
+        </div>
+      </div>
+      <div class="hud-row hud-stats">
+        <span><span class="hud-key">Strikes</span><span id="strikes">0</span></span>
+        <span><span class="hud-key">Storm</span><span id="storm">calm</span></span>
+        <span class="hud-hint">space · let it rain</span>
+      </div>
+    </section>
+
+    <button class="begin" id="begin" type="button">
+      <span>Begin the storm</span>
+    </button>
+
+    <footer class="legend">
+      <kbd>click</kbd> strike &nbsp;·&nbsp;
+      <kbd>drag</kbd> arc &nbsp;·&nbsp;
+      <kbd>space</kbd> tempest &nbsp;·&nbsp;
+      <kbd>m</kbd> mute
+    </footer>
+  </main>
+
+  <script src="lightning.js" defer></script>
+</body>
+</html>
