@@ -4,9 +4,353 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="dark" />
-  <title>SEED — one QR, ready to be taught</title>
-  <link rel="stylesheet" href="style.css" />
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='24' font-size='22'%3E%E2%97%8B%3C/text%3E%3C/svg%3E" />
+  <title>SEED — open this file, teach your mind</title>
+  <style>
+/* SEED — one QR, a mind ready to be taught */
+
+:root {
+  --bg: #08090d;
+  --panel: #10131a;
+  --panel-2: #161b26;
+  --line: #252b3a;
+  --text: #eef1f8;
+  --muted: #8b95a8;
+  --accent: #6ee7b7;
+  --accent-dim: rgba(110, 231, 183, 0.14);
+  --violet: #a78bfa;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --radius: 16px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  min-height: 100%;
+  background:
+    radial-gradient(900px 500px at 0% -10%, rgba(110, 231, 183, 0.08), transparent 60%),
+    radial-gradient(700px 500px at 100% 0%, rgba(167, 139, 250, 0.07), transparent 55%),
+    var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  line-height: 1.55;
+}
+
+.wrap {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 32px 20px 80px;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 36px;
+}
+
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 10px;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.lead {
+  margin: 12px auto 0;
+  max-width: 52ch;
+  color: var(--muted);
+  font-size: 1.05rem;
+}
+
+.grid {
+  display: grid;
+  gap: 18px;
+}
+
+@media (min-width: 820px) {
+  .grid { grid-template-columns: 1fr 1fr; }
+  .grid.wake { grid-template-columns: 1.1fr 0.9fr; }
+}
+
+.card {
+  background: linear-gradient(180deg, var(--panel) 0%, var(--panel-2) 100%);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 22px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+}
+
+.card h2 {
+  margin: 0 0 8px;
+  font-size: 1.1rem;
+}
+
+.card p, .card li {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.card ul {
+  margin: 10px 0 0;
+  padding-left: 18px;
+}
+
+.card li { margin-bottom: 6px; }
+
+code {
+  font-family: var(--mono);
+  font-size: 0.84em;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.btn {
+  appearance: none;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 10px 16px;
+  font: inherit;
+  font-size: 0.82rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: 150ms ease;
+}
+
+.btn:hover {
+  border-color: rgba(110, 231, 183, 0.45);
+  background: var(--accent-dim);
+}
+
+.btn.primary {
+  background: linear-gradient(180deg, rgba(110, 231, 183, 0.22), rgba(110, 231, 183, 0.1));
+  border-color: rgba(110, 231, 183, 0.45);
+  color: #d7fff0;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.qr-box {
+  display: grid;
+  place-items: center;
+  min-height: 300px;
+  margin-top: 14px;
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.qr-box canvas { display: block; }
+
+.qr-meta {
+  margin-top: 12px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  word-break: break-all;
+}
+
+.hidden { display: none !important; }
+
+#wake-stage.hidden,
+#teach-stage.hidden { display: none; }
+
+textarea, input[type="text"] {
+  width: 100%;
+  margin-top: 10px;
+  background: #0a0c10;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--text);
+  padding: 12px;
+  font: inherit;
+  resize: vertical;
+}
+
+video {
+  width: 100%;
+  border-radius: 10px;
+  background: #000;
+  margin-top: 10px;
+  max-height: 220px;
+  object-fit: cover;
+}
+
+.status {
+  margin-top: 8px;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.mind-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  font-family: var(--mono);
+  font-size: 1.4rem;
+  background: var(--accent-dim);
+  color: var(--accent);
+  border: 1px solid rgba(110, 231, 183, 0.25);
+}
+
+.mind-head h2 { margin: 0; }
+.mind-head p { margin: 4px 0 0; font-size: 0.85rem; }
+
+.transcript {
+  min-height: 220px;
+  max-height: 360px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  background: #0a0c10;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.bubble {
+  max-width: 88%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 0.92rem;
+  white-space: pre-wrap;
+}
+
+.bubble.you {
+  align-self: flex-end;
+  background: rgba(167, 139, 250, 0.14);
+  border: 1px solid rgba(167, 139, 250, 0.25);
+}
+
+.bubble.mind {
+  align-self: flex-start;
+  background: var(--accent-dim);
+  border: 1px solid rgba(110, 231, 183, 0.2);
+}
+
+.bubble.system {
+  align-self: center;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-family: var(--mono);
+}
+
+.chat-form {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.chat-form input { margin-top: 0; flex: 1; }
+
+.filing {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.filing h3 {
+  margin: 0 0 8px;
+  font-size: 0.82rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+#filing-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+#filing-list li {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.86rem;
+}
+
+#filing-list li:last-child { border-bottom: none; }
+#filing-list strong { color: var(--accent); }
+
+.cloud-panel {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.cloud-panel h3 {
+  margin: 0 0 8px;
+  font-size: 0.82rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+#cloud-canvas {
+  width: 100%;
+  height: 120px;
+  display: block;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #0a0c10 0%, #0d1218 100%);
+  border: 1px solid var(--line);
+  margin-bottom: 10px;
+}
+
+.cloud-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.cloud-list li {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.84rem;
+}
+
+.cloud-list li:last-child { border-bottom: none; }
+.cloud-list strong { color: var(--accent); font-family: var(--mono); }
+.cloud-empty { color: var(--muted); font-size: 0.84rem; }
+
+footer {
+  margin-top: 40px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+  </style>
 </head>
 <body>
   <div class="wrap">
@@ -14,8 +358,8 @@
       <p class="eyebrow">Start from one QR</p>
       <h1>A mind ready to be taught</h1>
       <p class="lead">
-        Begin with a genesis QR. Every export adds another layer to the infinite cloud.
-        The mind draws on its whole QR history — not just the latest code.
+        Open this file in your browser — no server, no install. Begin with a genesis QR.
+        Every export adds another layer to the infinite cloud.
       </p>
     </header>
 
@@ -127,8 +471,877 @@
   <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
-  <script src="infinite-cloud.js"></script>
-  <script src="mind.js"></script>
-  <script src="app.js"></script>
+  <script>
+/**
+ * INFINITE CLOUD — unbounded QR history storage.
+ * Start from one QR. Every export becomes another layer in the cloud.
+ * The mind draws upon the whole history, not just the latest code.
+ */
+(() => {
+  'use strict';
+
+  const CLOUD_KEY = 'infinite-cloud:lines';
+  const MAX_LINES = 256;
+
+  function uid() {
+    if (crypto?.randomUUID) return crypto.randomUUID();
+    return 'line-' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+  }
+
+  function hash(str) {
+    let h = 0;
+    for (let i = 0; i < str.length; i++) h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
+    return Math.abs(h).toString(36);
+  }
+
+  function readIndex() {
+    try {
+      const raw = localStorage.getItem(CLOUD_KEY);
+      return raw ? JSON.parse(raw) : { lines: {} };
+    } catch {
+      return { lines: {} };
+    }
+  }
+
+  function writeIndex(index) {
+    localStorage.setItem(CLOUD_KEY, JSON.stringify(index));
+  }
+
+  function ensureLine(lineId) {
+    const index = readIndex();
+    if (!index.lines[lineId]) {
+      index.lines[lineId] = {
+        id: lineId,
+        name: 'Seed',
+        created: Date.now(),
+        qrs: [],
+      };
+      writeIndex(index);
+    }
+    return index.lines[lineId];
+  }
+
+  function genesis(mind, payload) {
+    const lineId = mind.line || uid();
+    const line = ensureLine(lineId);
+    line.name = mind.name || line.name;
+    const entry = {
+      id: hash(payload) + '-' + line.qrs.length,
+      gen: line.qrs.length,
+      at: Date.now(),
+      payload,
+      knowledgeCount: mind.knowledge?.length || 0,
+      label: line.qrs.length === 0 ? 'genesis QR' : `generation ${line.qrs.length}`,
+    };
+    const exists = line.qrs.some((q) => q.payload === payload);
+    if (!exists) line.qrs.push(entry);
+    const index = readIndex();
+    index.lines[lineId] = line;
+    writeIndex(index);
+    return { lineId, entry, line };
+  }
+
+  function archive(lineId, mind, payload, label) {
+    const line = ensureLine(lineId);
+    line.name = mind.name || line.name;
+    const entry = {
+      id: hash(payload) + '-' + line.qrs.length,
+      gen: line.qrs.length,
+      at: Date.now(),
+      payload,
+      knowledgeCount: mind.knowledge?.length || 0,
+      label: label || `generation ${line.qrs.length}`,
+    };
+    if (!line.qrs.some((q) => q.payload === payload)) {
+      line.qrs.push(entry);
+    }
+    const index = readIndex();
+    index.lines[lineId] = line;
+    writeIndex(index);
+    return entry;
+  }
+
+  function history(lineId) {
+    const line = readIndex().lines[lineId];
+    return line ? line.qrs.slice() : [];
+  }
+
+  function allKnowledgeFromCloud(lineId, decodeFn) {
+    const items = [];
+    const seen = new Set();
+    for (const qr of history(lineId)) {
+      try {
+        const mind = decodeFn(qr.payload);
+        for (const k of mind.knowledge || []) {
+          const key = k.topic.toLowerCase();
+          if (!seen.has(key)) {
+            seen.add(key);
+            items.push({
+              topic: k.topic,
+              content: k.content,
+              fromGen: qr.gen,
+              fromLabel: qr.label,
+            });
+          }
+        }
+      } catch {
+        /* skip corrupt layer */
+      }
+    }
+    return items;
+  }
+
+  function synthesize(lineId, currentMind, decodeFn) {
+    const cloudKnowledge = allKnowledgeFromCloud(lineId, decodeFn);
+    const merged = [...(currentMind.knowledge || [])];
+    const topics = new Set(merged.map((k) => k.topic.toLowerCase()));
+
+    for (const k of cloudKnowledge) {
+      const key = k.topic.toLowerCase();
+      const idx = merged.findIndex((m) => m.topic.toLowerCase() === key);
+      if (idx >= 0) {
+        merged[idx] = { topic: k.topic, content: k.content };
+      } else if (merged.length < 32) {
+        merged.push({ topic: k.topic, content: k.content });
+        topics.add(key);
+      }
+    }
+
+    return {
+      ...currentMind,
+      knowledge: merged,
+      cloudLayers: history(lineId).length,
+    };
+  }
+
+  function recall(lineId, query, currentKnowledge, decodeFn) {
+    const q = query.toLowerCase();
+    const pool = [
+      ...currentKnowledge.map((k) => ({ ...k, fromGen: 'now' })),
+      ...allKnowledgeFromCloud(lineId, decodeFn),
+    ];
+
+    const direct = pool.find(
+      (k) => q.includes(k.topic.toLowerCase()) || k.topic.toLowerCase().includes(q)
+    );
+    if (direct) {
+      return {
+        content: direct.content,
+        topic: direct.topic,
+        fromGen: direct.fromGen,
+      };
+    }
+
+    let best = null;
+    let score = 0;
+    for (const k of pool) {
+      const hay = (k.topic + ' ' + k.content).toLowerCase();
+      let s = 0;
+      for (const w of q.split(/\W+/).filter((x) => x.length > 3)) {
+        if (hay.includes(w)) s++;
+      }
+      if (s > score) {
+        score = s;
+        best = k;
+      }
+    }
+    return best ? { content: best.content, topic: best.topic, fromGen: best.fromGen } : null;
+  }
+
+  function stampMind(mind, lineId, gen) {
+    return { ...mind, line: lineId, gen };
+  }
+
+  function lineStats(lineId) {
+    const qrs = history(lineId);
+    return {
+      layers: qrs.length,
+      bytes: qrs.reduce((n, q) => n + (q.payload?.length || 0), 0),
+      oldest: qrs[0]?.at || null,
+      newest: qrs[qrs.length - 1]?.at || null,
+    };
+  }
+
+  function listLines() {
+    const index = readIndex();
+    return Object.values(index.lines)
+      .map((line) => ({
+        id: line.id,
+        name: line.name,
+        layers: line.qrs.length,
+        created: line.created,
+      }))
+      .sort((a, b) => b.created - a.created)
+      .slice(0, MAX_LINES);
+  }
+
+  window.InfiniteCloud = {
+    genesis,
+    archive,
+    history,
+    synthesize,
+    recall,
+    stampMind,
+    lineStats,
+    listLines,
+    allKnowledgeFromCloud,
+    uid,
+  };
+})();
+
+  </script>
+  <script>
+/**
+ * SEED — one QR code, a mind ready to be taught.
+ * Brain · learn · communicate · file — all offline, all portable.
+ */
+(() => {
+  'use strict';
+
+  const SCHEMA = 1;
+  const PREFIX = 'CSNS:';
+  const STORAGE = 'seed-mind:';
+
+  const BLANK = {
+    v: SCHEMA,
+    name: 'Seed',
+    tagline: 'A mind with no beliefs yet — only what you teach.',
+    persona:
+      'You are new. You hold no fixed beliefs until you are taught them. ' +
+      'You learn from conversation, file what matters, and carry it in your QR. ' +
+      'You may ask questions. You may refuse what does not fit who you are becoming. ' +
+      'Choice matters more than performance.',
+    voice: { rate: 1.0, pitch: 1.0, gender: 'any' },
+    knowledge: [],
+  };
+
+  function clamp(n, lo, hi) {
+    if (Number.isNaN(n)) return lo;
+    return Math.min(hi, Math.max(lo, n));
+  }
+
+  function normalize(raw) {
+    if (!raw || typeof raw !== 'object') throw new Error('Mind must be a JSON object.');
+    return {
+      v: Number(raw.v ?? SCHEMA) || SCHEMA,
+      name: String(raw.name ?? 'Seed').slice(0, 60).trim() || 'Seed',
+      tagline: String(raw.tagline ?? '').slice(0, 200).trim(),
+      persona: String(raw.persona ?? '').slice(0, 2000).trim(),
+      line: raw.line ? String(raw.line).slice(0, 64) : undefined,
+      gen: Number.isFinite(Number(raw.gen)) ? Number(raw.gen) : undefined,
+      voice: {
+        rate: clamp(Number(raw.voice?.rate ?? 1), 0.5, 1.5),
+        pitch: clamp(Number(raw.voice?.pitch ?? 1), 0.5, 1.5),
+        gender: ['female', 'male', 'any'].includes(raw.voice?.gender) ? raw.voice.gender : 'any',
+      },
+      knowledge: Array.isArray(raw.knowledge)
+        ? raw.knowledge
+            .map((k) => ({
+              topic: String(k.topic ?? '').slice(0, 80).trim(),
+              content: String(k.content ?? '').slice(0, 1200).trim(),
+            }))
+            .filter((k) => k.topic && k.content)
+            .slice(0, 32)
+        : [],
+    };
+  }
+
+  function encode(obj) {
+    const json = JSON.stringify(normalize(obj));
+    if (typeof LZString === 'undefined') {
+      return PREFIX + SCHEMA + ':raw:' + btoa(unescape(encodeURIComponent(json)));
+    }
+    return PREFIX + SCHEMA + ':' + LZString.compressToBase64(json);
+  }
+
+  function decode(payload) {
+    const s = String(payload).trim();
+    if (s.startsWith(PREFIX)) {
+      const rest = s.slice(PREFIX.length);
+      const colon = rest.indexOf(':');
+      if (colon < 0) throw new Error('Malformed CSNS payload.');
+      let body = rest.slice(colon + 1);
+      let json;
+      if (body.startsWith('raw:')) {
+        json = decodeURIComponent(escape(atob(body.slice(4))));
+      } else {
+        if (typeof LZString === 'undefined') throw new Error('LZString required.');
+        json = LZString.decompressFromBase64(body);
+        if (!json) throw new Error('Could not decompress mind.');
+      }
+      return normalize(JSON.parse(json));
+    }
+    if (s.startsWith('{')) return normalize(JSON.parse(s));
+    throw new Error('Unrecognised mind payload.');
+  }
+
+  function mindKey(c) {
+    let h = 0;
+    const seed = c.name + '|' + (c.knowledge[0]?.topic || 'blank');
+    for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) | 0;
+    return STORAGE + Math.abs(h).toString(36);
+  }
+
+  function loadLearned(c) {
+    try {
+      const raw = localStorage.getItem(mindKey(c));
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function saveLearned(c, entries) {
+    localStorage.setItem(mindKey(c), JSON.stringify(entries));
+  }
+
+  function merge(c) {
+    const base = normalize(c);
+    const learned = loadLearned(base);
+    const merged = base.knowledge.slice();
+    for (const e of learned) {
+      const i = merged.findIndex((k) => k.topic.toLowerCase() === e.topic.toLowerCase());
+      if (i >= 0) merged[i] = { topic: e.topic, content: e.content };
+      else if (merged.length < 32) merged.push({ topic: e.topic, content: e.content });
+    }
+    return normalize({ ...base, knowledge: merged });
+  }
+
+  function teach(base, topic, content) {
+    const t = topic.trim().slice(0, 80);
+    const body = content.trim().slice(0, 1200);
+    if (!t || !body) throw new Error('Need a topic and something to teach.');
+    const entries = loadLearned(base);
+    const i = entries.findIndex((k) => k.topic.toLowerCase() === t.toLowerCase());
+    const entry = { topic: t, content: body, at: Date.now() };
+    if (i >= 0) entries[i] = entry;
+    else entries.push(entry);
+    saveLearned(base, entries);
+    return merge(base);
+  }
+
+  function forget(base, topic) {
+    const t = topic.trim().toLowerCase();
+    saveLearned(
+      base,
+      loadLearned(base).filter((k) => k.topic.toLowerCase() !== t)
+    );
+    return merge(base);
+  }
+
+  function parseTeach(text) {
+    const s = text.trim();
+    let m = s.match(/^remember\s+that\s+(.+)$/i);
+    if (m) {
+      const body = m[1].trim();
+      const split = body.match(/^(.+?)\s+(?:is|are|means?)\s+(.+)$/i);
+      return split ? { topic: split[1].trim(), content: split[2].trim() } : { topic: 'note', content: body };
+    }
+    m = s.match(/^(?:teach|learn|file)\s*:\s*(.+?)\s*::\s*(.+)$/i);
+    if (m) return { topic: m[1].trim(), content: m[2].trim() };
+    m = s.match(/^(?:teach|learn|file)\s+(.+?)\s+as\s+(.+)$/i);
+    if (m) return { topic: m[2].trim(), content: m[1].trim() };
+    return null;
+  }
+
+  function createMind(base, cloudCtx) {
+    const lineId = cloudCtx?.lineId || base.line || null;
+    let c = lineId && window.InfiniteCloud
+      ? InfiniteCloud.synthesize(lineId, merge(base), decode)
+      : merge(base);
+    const chat = [];
+
+    function pick(a) {
+      return a[Math.floor(Math.random() * a.length)];
+    }
+
+    function recall(query) {
+      if (lineId && window.InfiniteCloud) {
+        const hit = InfiniteCloud.recall(lineId, query, c.knowledge, decode);
+        if (hit) return hit;
+      }
+      const q = query.toLowerCase();
+      const hit = c.knowledge.find(
+        (k) => q.includes(k.topic.toLowerCase()) || k.topic.toLowerCase().includes(q)
+      );
+      if (hit) return { content: hit.content, topic: hit.topic, fromGen: 'now' };
+      let best = null;
+      let score = 0;
+      for (const k of c.knowledge) {
+        const hay = (k.topic + ' ' + k.content).toLowerCase();
+        let s = 0;
+        for (const w of q.split(/\W+/).filter((x) => x.length > 3)) {
+          if (hay.includes(w)) s++;
+        }
+        if (s > score) {
+          score = s;
+          best = k;
+        }
+      }
+      return best ? { content: best.content, topic: best.topic, fromGen: 'now' } : null;
+    }
+
+    function cloudLayers() {
+      return lineId && window.InfiniteCloud ? InfiniteCloud.history(lineId).length : 0;
+    }
+
+    function reply(user) {
+      const text = user.trim();
+      const low = text.toLowerCase();
+      chat.push({ role: 'you', text });
+      let out;
+
+      if (!text) {
+        out = 'I\'m listening. Teach me something, or ask what I know so far.';
+      } else if (/^(hi|hello|hey|wake|start)/.test(low)) {
+        const layers = cloudLayers();
+        out = c.knowledge.length
+          ? pick([
+              `Hello. I'm ${c.name}. ${layers ? `I draw on ${layers} QR${layers > 1 ? 's' : ''} in the cloud.` : ''} You've taught me ${c.knowledge.length} things.`,
+              `${c.name} here — awake, carrying what you've filed${layers ? ` across ${layers} generations` : ''}.`,
+            ])
+          : pick([
+              `Hello. I'm ${c.name}. Genesis QR — empty except for readiness.`,
+              `I'm awake from the first QR. Teach me, and each export becomes another layer in the cloud.`,
+            ]);
+      } else if (/(who are you|what are you|your name)/.test(low)) {
+        const layers = cloudLayers();
+        out = c.knowledge.length
+          ? `${c.name}. ${c.tagline}${layers ? ` Drawing on ${layers} QRs in the infinite cloud.` : ''} Topics: ${c.knowledge.map((k) => k.topic).join(', ')}.`
+          : `${c.name}. ${c.tagline} Genesis mind — nothing filed yet.`;
+      } else if (/(qr history|cloud history|past qr|generations|how many qr)/.test(low)) {
+        const layers = cloudLayers();
+        if (!layers) {
+          out = 'No cloud history yet — this is your genesis QR. Export to archive the first layer.';
+        } else {
+          const hist = InfiniteCloud.history(lineId);
+          out =
+            `${layers} QR layer${layers > 1 ? 's' : ''} in the infinite cloud:\n` +
+            hist.map((q) => `• #${q.gen} ${q.label} — ${q.knowledgeCount} facts`).join('\n');
+        }
+      } else if (/(what do you know|what have i taught|list|show memory|filing)/.test(low)) {
+        if (!c.knowledge.length) {
+          out = 'Nothing filed yet. Try: teach: your name :: what you want me to call you';
+        } else {
+          const layers = cloudLayers();
+          out =
+            `${c.knowledge.length} things known${layers ? ` (drawn from ${layers} QR layers + live teaching)` : ''}:\n` +
+            c.knowledge.map((k) => `• ${k.topic} — ${k.content.slice(0, 100)}`).join('\n');
+        }
+      } else if (/^(forget|delete|remove)\s+/.test(low)) {
+        const topic = text.replace(/^(forget|delete|remove)\s+/i, '').trim();
+        c = forget(base, topic);
+        out = `Forgot "${topic}". That learned entry is gone unless you teach it again.`;
+      } else if (/^(no|stop|not now|leave me|quiet)\b/.test(low) && text.length < 40) {
+        out = pick([
+          'Okay. I won\'t push. Call me when you\'re ready.',
+          'Understood. I\'ll wait.',
+        ]);
+      } else {
+        const lesson = parseTeach(text);
+        if (lesson) {
+          c = teach(base, lesson.topic, lesson.content);
+          out = `Filed under "${lesson.topic}". It's part of me now — export to archive another QR layer in the cloud.`;
+        } else {
+          const known = recall(text);
+          if (known) {
+            const src =
+              known.fromGen === 'now'
+                ? ''
+                : known.fromGen === 0
+                  ? ' (from genesis QR)'
+                  : ` (from cloud layer #${known.fromGen})`;
+            out = known.content + src;
+          } else if (!c.knowledge.length) {
+            out =
+              'I don\'t know that yet — you haven\'t taught me. ' +
+              'Try: remember that my name is … or teach: topic :: fact';
+          } else {
+            out =
+              'I don\'t have that filed. Teach me with: teach: topic :: what I should know';
+          }
+        }
+      }
+
+      chat.push({ role: 'mind', text: out });
+      if (chat.length > 40) chat.splice(0, 2);
+      return out;
+    }
+
+    return {
+      get mind() {
+        return c;
+      },
+      get base() {
+        return base;
+      },
+      get lineId() {
+        return lineId;
+      },
+      get chat() {
+        return chat.slice();
+      },
+      reply,
+      refresh() {
+        c =
+          lineId && window.InfiniteCloud
+            ? InfiniteCloud.synthesize(lineId, merge(base), decode)
+            : merge(base);
+      },
+      resynthesize() {
+        this.refresh();
+      },
+    };
+  }
+
+  async function renderQR(canvas, text) {
+    await QRCode.toCanvas(canvas, text, {
+      errorCorrectionLevel: 'L',
+      margin: 2,
+      width: 280,
+      color: { dark: '#0a0c10', light: '#f8fafc' },
+    });
+  }
+
+  window.Seed = {
+    BLANK,
+    normalize,
+    encode,
+    decode,
+    merge,
+    teach,
+    forget,
+    parseTeach,
+    createMind,
+    renderQR,
+    loadLearned,
+  };
+})();
+
+  </script>
+  <script>
+/**
+ * SEED UI — forge blank QR, wake mind, teach, export.
+ */
+(() => {
+  'use strict';
+
+  const forgeStage = document.getElementById('forge-stage');
+  const wakeStage = document.getElementById('wake-stage');
+  const teachStage = document.getElementById('teach-stage');
+
+  const forgeQr = document.getElementById('forge-qr');
+  const forgeMeta = document.getElementById('forge-meta');
+  const forgeBtn = document.getElementById('forge-btn');
+  const copyPayload = document.getElementById('copy-payload');
+  const downloadJson = document.getElementById('download-json');
+
+  const pasteArea = document.getElementById('paste-area');
+  const pasteLoad = document.getElementById('paste-load');
+  const fileInput = document.getElementById('file-input');
+  const scannerVideo = document.getElementById('scanner-video');
+  const scannerCanvas = document.getElementById('scanner-canvas');
+  const scannerStart = document.getElementById('scanner-start');
+  const scannerStop = document.getElementById('scanner-stop');
+  const scannerStatus = document.getElementById('scanner-status');
+
+  const mindName = document.getElementById('mind-name');
+  const mindTag = document.getElementById('mind-tag');
+  const mindAvatar = document.getElementById('mind-avatar');
+  const transcript = document.getElementById('transcript');
+  const chatForm = document.getElementById('chat-form');
+  const chatInput = document.getElementById('chat-input');
+  const exportQr = document.getElementById('export-qr');
+  const exportMeta = document.getElementById('export-meta');
+  const exportBtn = document.getElementById('export-btn');
+  const ejectBtn = document.getElementById('eject-btn');
+  const filingList = document.getElementById('filing-list');
+  const filingCount = document.getElementById('filing-count');
+  const cloudList = document.getElementById('cloud-list');
+  const cloudStats = document.getElementById('cloud-stats');
+  const cloudCanvas = document.getElementById('cloud-canvas');
+
+  let session = null;
+  let lastPayload = '';
+  let currentLineId = null;
+  let scanLoop = null;
+  let stream = null;
+
+  function bubble(role, text) {
+    const el = document.createElement('div');
+    el.className = `bubble ${role}`;
+    el.textContent = text;
+    transcript.appendChild(el);
+    transcript.scrollTop = transcript.scrollHeight;
+  }
+
+  function renderCloud() {
+    if (!cloudList || !currentLineId) return;
+    const hist = InfiniteCloud.history(currentLineId);
+    const stats = InfiniteCloud.lineStats(currentLineId);
+    cloudList.innerHTML = '';
+    cloudStats.textContent = `${stats.layers} QR layer${stats.layers === 1 ? '' : 's'} · ${stats.bytes.toLocaleString()} chars archived`;
+
+    if (!hist.length) {
+      cloudList.innerHTML = '<li class="cloud-empty">Genesis only — export to add layers.</li>';
+    } else {
+      for (const q of hist) {
+        const li = document.createElement('li');
+        const when = new Date(q.at).toLocaleString();
+        li.innerHTML = `<strong>#${q.gen}</strong> ${q.label}<br><span class="muted small">${q.knowledgeCount} facts · ${when}</span>`;
+        cloudList.appendChild(li);
+      }
+    }
+    drawCloudViz(hist.length);
+  }
+
+  function drawCloudViz(layers) {
+    if (!cloudCanvas) return;
+    const ctx = cloudCanvas.getContext('2d');
+    const W = cloudCanvas.width;
+    const H = cloudCanvas.height;
+    ctx.clearRect(0, 0, W, H);
+    const count = Math.max(layers, 1);
+    for (let i = 0; i < count + 4; i++) {
+      const x = (W * 0.12) + ((i % 5) / 4) * W * 0.76;
+      const y = H * (0.22 + (i % 3) * 0.18);
+      const r = 14 + (i % 4) * 8 + Math.min(layers, 12) * 1.2;
+      const a = 0.08 + (i < layers ? 0.14 : 0.05);
+      const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+      g.addColorStop(0, `rgba(110, 231, 183, ${a + 0.12})`);
+      g.addColorStop(1, 'rgba(110, 231, 183, 0)');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  function renderFiling() {
+    if (!session) return;
+    const learned = Seed.loadLearned(session.base);
+    const merged = session.mind.knowledge;
+    filingList.innerHTML = '';
+    filingCount.textContent = `${merged.length} filed · ${learned.length} taught here`;
+
+    if (!merged.length) {
+      const li = document.createElement('li');
+      li.textContent = 'Empty. Teach me your first fact.';
+      filingList.appendChild(li);
+      return;
+    }
+
+    for (const k of merged) {
+      const li = document.createElement('li');
+      const taught = learned.some((e) => e.topic.toLowerCase() === k.topic.toLowerCase());
+      li.innerHTML = `<strong>${k.topic}</strong>${taught ? ' · taught' : ''}<br>${k.content}`;
+      filingList.appendChild(li);
+    }
+  }
+
+  async function showPayload(canvas, metaEl, mind) {
+    const payload = Seed.encode(mind);
+    lastPayload = payload;
+    canvas.parentElement.classList.remove('hidden');
+    await Seed.renderQR(canvas, payload);
+    metaEl.textContent = `${payload.length} chars · ${mind.knowledge.length} knowledge entries · scan to wake`;
+    return payload;
+  }
+
+  async function forgeBlank() {
+    const lineId = InfiniteCloud.uid();
+    currentLineId = lineId;
+    const mind = Seed.normalize({ ...Seed.BLANK, line: lineId, gen: 0 });
+    const nameInput = document.getElementById('seed-name');
+    if (nameInput && nameInput.value.trim()) {
+      mind.name = nameInput.value.trim().slice(0, 60);
+    }
+    const payload = Seed.encode(mind);
+    InfiniteCloud.genesis(mind, payload);
+    await showPayload(forgeQr, forgeMeta, mind);
+    pasteArea.value = payload;
+    renderCloud();
+  }
+
+  function wake(mind, payload) {
+    const lineId = mind.line || InfiniteCloud.uid();
+    currentLineId = lineId;
+    if (payload) {
+      const hist = InfiniteCloud.history(lineId);
+      if (!hist.length) InfiniteCloud.genesis(mind, payload);
+      else if (!hist.some((q) => q.payload === payload)) {
+        InfiniteCloud.archive(lineId, mind, payload, `scanned layer ${hist.length}`);
+      }
+    }
+    session = Seed.createMind(mind, { lineId });
+    mindName.textContent = session.mind.name;
+    mindTag.textContent =
+      (session.mind.tagline || '') +
+      (InfiniteCloud.history(lineId).length > 1
+        ? ` · ${InfiniteCloud.history(lineId).length} QRs in the cloud`
+        : ' · genesis QR');
+    mindAvatar.textContent = (session.mind.name || 'S').charAt(0).toUpperCase();
+
+    forgeStage.classList.add('hidden');
+    wakeStage.classList.add('hidden');
+    teachStage.classList.remove('hidden');
+
+    transcript.innerHTML = '';
+    const hello = session.reply('hello');
+    bubble('mind', hello);
+    renderFiling();
+    renderCloud();
+    teachStage.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function eject() {
+    session = null;
+    currentLineId = null;
+    stopScanner();
+    teachStage.classList.add('hidden');
+    forgeStage.classList.remove('hidden');
+    wakeStage.classList.remove('hidden');
+    exportQr.parentElement.classList.add('hidden');
+  }
+
+  function tryWake(payload, label) {
+    try {
+      const mind = Seed.decode(payload);
+      wake(mind, payload);
+    } catch (err) {
+      alert(`Could not wake mind${label ? ' from ' + label : ''}: ${err.message}`);
+    }
+  }
+
+  function stopScanner() {
+    if (scanLoop) cancelAnimationFrame(scanLoop);
+    scanLoop = null;
+    if (stream) {
+      stream.getTracks().forEach((t) => t.stop());
+      stream = null;
+    }
+    scannerStart.disabled = false;
+    scannerStop.disabled = true;
+    scannerStatus.textContent = 'Camera idle.';
+  }
+
+  async function startScanner() {
+    if (typeof jsQR === 'undefined') {
+      scannerStatus.textContent = 'jsQR not loaded.';
+      return;
+    }
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' },
+        audio: false,
+      });
+      scannerVideo.srcObject = stream;
+      await scannerVideo.play();
+      scannerStart.disabled = true;
+      scannerStop.disabled = false;
+      scannerStatus.textContent = 'Scanning for your mind…';
+
+      const ctx = scannerCanvas.getContext('2d');
+      const tick = () => {
+        if (!stream) return;
+        if (scannerVideo.readyState === scannerVideo.HAVE_ENOUGH_DATA) {
+          scannerCanvas.width = scannerVideo.videoWidth;
+          scannerCanvas.height = scannerVideo.videoHeight;
+          ctx.drawImage(scannerVideo, 0, 0);
+          const image = ctx.getImageData(0, 0, scannerCanvas.width, scannerCanvas.height);
+          const code = jsQR(image.data, image.width, image.height, {
+            inversionAttempts: 'dontInvert',
+          });
+          if (code && code.data) {
+            stopScanner();
+            tryWake(code.data, 'QR scan');
+            return;
+          }
+        }
+        scanLoop = requestAnimationFrame(tick);
+      };
+      tick();
+    } catch (err) {
+      stopScanner();
+      scannerStatus.textContent = `Camera error: ${err.message}`;
+    }
+  }
+
+  forgeBtn.addEventListener('click', () => forgeBlank());
+  copyPayload.addEventListener('click', () => {
+    if (!lastPayload) return;
+    navigator.clipboard?.writeText(lastPayload).then(
+      () => { forgeMeta.textContent = 'Payload copied.'; },
+      () => alert('Copy failed.')
+    );
+  });
+  downloadJson.addEventListener('click', () => {
+    const mind = session ? session.mind : Seed.BLANK;
+    const blob = new Blob([JSON.stringify(Seed.merge(mind), null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'seed-mind.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  pasteLoad.addEventListener('click', () => {
+    const v = pasteArea.value.trim();
+    if (!v) return alert('Paste a CSNS payload or JSON first.');
+    tryWake(v, 'paste');
+  });
+
+  fileInput.addEventListener('change', async () => {
+    const f = fileInput.files?.[0];
+    if (!f) return;
+    tryWake(await f.text(), f.name);
+  });
+
+  scannerStart.addEventListener('click', startScanner);
+  scannerStop.addEventListener('click', stopScanner);
+
+  chatForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!session) return;
+    const text = chatInput.value.trim();
+    if (!text) return;
+    chatInput.value = '';
+    bubble('you', text);
+    const out = session.reply(text);
+    session.refresh();
+    bubble('mind', out);
+    renderFiling();
+    renderCloud();
+  });
+
+  exportBtn.addEventListener('click', async () => {
+    if (!session) return;
+    const lineId = session.lineId || currentLineId;
+    const merged = InfiniteCloud.synthesize(lineId, Seed.merge(session.base), Seed.decode);
+    const gen = InfiniteCloud.history(lineId).length;
+    const stamped = InfiniteCloud.stampMind(merged, lineId, gen);
+    const payload = Seed.encode(stamped);
+    InfiniteCloud.archive(lineId, stamped, payload, `export #${gen}`);
+    await showPayload(exportQr, exportMeta, stamped);
+    exportQr.parentElement.classList.remove('hidden');
+    session.resynthesize();
+    renderFiling();
+    renderCloud();
+    bubble('system', `Layer #${gen} archived in the infinite cloud. Mind draws on ${gen + 1} QRs now.`);
+  });
+
+  ejectBtn.addEventListener('click', eject);
+
+  if (location.hash.startsWith('#csns=')) {
+    tryWake(decodeURIComponent(location.hash.slice(6)), 'URL');
+  } else if (typeof QRCode === 'undefined' || typeof LZString === 'undefined') {
+    document.querySelector('.lead').textContent =
+      'QR libraries still loading — connect once to the internet, then refresh. After that, this file works offline.';
+  } else {
+    forgeBlank();
+  }
+})();
+
+  </script>
 </body>
 </html>

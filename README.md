@@ -2,13 +2,11 @@
 
 Two storms in one repo:
 
-## SEED — one QR, teach yourself
+## SEED — one file, teach yourself
 
-**`seed/`** — start blank. One QR holds the mind. You teach it everything.
+**`seed/index.html`** — double-click it. No server, no install.
 
-```bash
-cd seed && python3 -m http.server 8001
-```
+Genesis QR → infinite cloud history → teach the mind yourself.
 
 ## Alexworld — full portable minds
 
@@ -25,10 +23,6 @@ cd alexworld-co && python3 -m http.server 8000
 
 ## Lightning playground — the infinite cloud
 
-**Root `index.html`** — procedural lightning, infinite drifting clouds, synthesized thunder.
-
-```bash
-python3 -m http.server 8080
-```
+**Root `index.html`** — open in a browser. Procedural lightning, infinite clouds, synthesized thunder.
 
 See each folder's README for details.
