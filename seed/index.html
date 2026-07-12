@@ -707,23 +707,73 @@ Minimum version required to store current data is: `+i+`.
   const SCHEMA = 1;
   const PREFIX = 'CSNS:';
   const STORAGE = 'seed-mind:';
-  const DEFAULT_HOST = 'https://demonbreath.github.io/THUNDERGOD/';
+  const DEFAULT_HOST =
+    'https://htmlpreview.github.io/?' +
+    encodeURIComponent('https://github.com/DemonBreath/THUNDERGOD/blob/gh-pages/index.html');
+  const PAGES_HOST = 'https://demonbreath.github.io/THUNDERGOD/';
 
   function appHost() {
     if (window.SEED_HOST) return window.SEED_HOST;
     if (location.protocol.startsWith('http')) {
+      if (location.hostname.includes('github.io')) return PAGES_HOST;
+      if (location.hostname.includes('htmlpreview.github.io')) return DEFAULT_HOST;
       return location.href.split('#')[0].split('?')[0];
     }
     return DEFAULT_HOST;
   }
 
   function wakeUrl(payload) {
-    const base = appHost().replace(/#.*$/, '').replace(/\?$/, '');
-    return base + '#csns=' + encodeURIComponent(payload);
+    const encoded = encodeURIComponent(payload);
+    const inner =
+      'https://github.com/DemonBreath/THUNDERGOD/blob/gh-pages/index.html?csns=' + encoded;
+    if (
+      !location.protocol.startsWith('http') ||
+      location.hostname.includes('htmlpreview.github.io') ||
+      appHost() === DEFAULT_HOST
+    ) {
+      return 'https://htmlpreview.github.io/?' + encodeURIComponent(inner);
+    }
+    const base = PAGES_HOST.replace(/\?.*$/, '');
+    return base + '?csns=' + encoded;
+  }
+
+  function pullCsnsFromLocation() {
+    const q = new URLSearchParams(location.search);
+    if (q.has('csns')) {
+      try {
+        return decodeURIComponent(q.get('csns'));
+      } catch {
+        return q.get('csns');
+      }
+    }
+    if (location.hash.startsWith('#csns=')) {
+      try {
+        return decodeURIComponent(location.hash.slice(6));
+      } catch {
+        return location.hash.slice(6);
+      }
+    }
+    return null;
   }
 
   function unwrapScan(text) {
     const s = String(text).trim();
+    if (s.includes('csns=')) {
+      try {
+        const u = new URL(s, location.href);
+        if (u.searchParams.has('csns')) return decodeURIComponent(u.searchParams.get('csns'));
+      } catch (_) {
+        /* fall through */
+      }
+      const m = s.match(/[?&#]csns=([^&#]+)/i);
+      if (m) {
+        try {
+          return decodeURIComponent(m[1]);
+        } catch {
+          return m[1];
+        }
+      }
+    }
     if (s.includes('#csns=')) {
       const part = s.slice(s.indexOf('#csns=') + 6);
       try {
@@ -1049,8 +1099,10 @@ Minimum version required to store current data is: `+i+`.
   window.Seed = {
     BLANK,
     DEFAULT_HOST,
+    PAGES_HOST,
     appHost,
     wakeUrl,
+    pullCsnsFromLocation,
     unwrapScan,
     normalize,
     encode,
@@ -1248,17 +1300,22 @@ Minimum version required to store current data is: `+i+`.
     const payload = Seed.encode(mind);
     InfiniteCloud.genesis(mind, payload);
     transcript.innerHTML = '';
-    bubble('mind', 'Starting blank. Here is your genesis QR — in the chat, where it belongs.');
+    bubble('mind', "I'm here. Blank, ready to learn. Here's your genesis QR — scan it on another device, or just start teaching me below.");
     await bubbleQr('Genesis QR — layer #0', mind);
     bindSession(mind, payload);
     bubble('mind', session.reply('hello'));
+    chatInput?.focus();
   }
 
-  async function wake(mind, payload) {
+  async function wake(mind, payload, opts = {}) {
+    const quiet = opts.quiet === true;
     bindSession(mind, payload);
-    bubble('system', `Woke from QR layer${mind.gen != null ? ' #' + mind.gen : ''}.`);
-    if (payload) await bubbleQr(`Scanned · layer #${mind.gen ?? '?'}`, mind);
+    if (!quiet) {
+      bubble('system', `Woke from QR layer${mind.gen != null ? ' #' + mind.gen : ''}.`);
+      if (payload) await bubbleQr(`Scanned · layer #${mind.gen ?? '?'}`, mind);
+    }
     bubble('mind', session.reply('hello'));
+    chatInput?.focus();
   }
 
   async function eject() {
@@ -1272,7 +1329,8 @@ Minimum version required to store current data is: `+i+`.
     try {
       const raw = Seed.unwrapScan(payload);
       const mind = Seed.decode(raw);
-      await wake(mind, raw);
+      const quiet = label === 'URL' || label === 'QR scan';
+      await wake(mind, raw, { quiet });
     } catch (err) {
       bubble('system', `Could not wake mind${label ? ' from ' + label : ''}: ${err.message}`);
     }
@@ -1379,7 +1437,11 @@ Minimum version required to store current data is: `+i+`.
 
   ejectBtn.addEventListener('click', () => eject());
 
-  if (location.hash.startsWith('#csns=')) {
+  const incoming = Seed.pullCsnsFromLocation();
+  if (incoming) {
+    transcript.innerHTML = '';
+    tryWake(incoming, 'URL');
+  } else if (location.hash.startsWith('#csns=')) {
     transcript.innerHTML = '';
     tryWake(decodeURIComponent(location.hash.slice('#csns='.length)), 'URL');
   } else {
