@@ -11,11 +11,11 @@
 <body>
   <div class="wrap">
     <header>
-      <p class="eyebrow">One QR code</p>
+      <p class="eyebrow">Start from one QR</p>
       <h1>A mind ready to be taught</h1>
       <p class="lead">
-        Start blank. Teach it yourself. Everything you file lives in the code —
-        brain, memory, voice, choice. No cloud. No account. Just you and what you teach.
+        Begin with a genesis QR. Every export adds another layer to the infinite cloud.
+        The mind draws on its whole QR history — not just the latest code.
       </p>
     </header>
 
@@ -44,10 +44,10 @@
       <article class="card">
         <h2>What goes on the QR</h2>
         <ul>
-          <li><strong>Brain</strong> — empty persona tuned for learning, not obedience</li>
-          <li><strong>Learn</strong> — teach in chat; facts file locally and into the QR</li>
-          <li><strong>Communicate</strong> — text now; voice can be added later</li>
-          <li><strong>File</strong> — up to 32 knowledge entries, exported when you choose</li>
+          <li><strong>Genesis</strong> — the first QR starts the line</li>
+          <li><strong>Cloud</strong> — every export archives another QR layer (infinite storage)</li>
+          <li><strong>Learn</strong> — teach in chat; facts file locally and into exports</li>
+          <li><strong>Recall</strong> — the mind draws on all past QRs in its cloud history</li>
         </ul>
         <p style="margin-top:14px;">Teach with:</p>
         <ul>
@@ -108,6 +108,12 @@
           <ul id="filing-list"></ul>
         </div>
 
+        <div class="cloud-panel">
+          <h3>Infinite cloud · <span id="cloud-stats">0 layers</span></h3>
+          <canvas id="cloud-canvas" width="640" height="120" aria-hidden="true"></canvas>
+          <ul id="cloud-list" class="cloud-list"></ul>
+        </div>
+
         <div class="qr-box hidden" id="export-qr-wrap" style="margin-top:18px;">
           <canvas id="export-qr" aria-label="Updated mind QR code"></canvas>
         </div>
@@ -115,12 +121,13 @@
       </article>
     </section>
 
-    <footer>Brain · learn · communicate · file — all from one QR</footer>
+    <footer>Genesis QR · infinite cloud history · teach yourself</footer>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+  <script src="infinite-cloud.js"></script>
   <script src="mind.js"></script>
   <script src="app.js"></script>
 </body>

@@ -35,9 +35,13 @@
   const ejectBtn = document.getElementById('eject-btn');
   const filingList = document.getElementById('filing-list');
   const filingCount = document.getElementById('filing-count');
+  const cloudList = document.getElementById('cloud-list');
+  const cloudStats = document.getElementById('cloud-stats');
+  const cloudCanvas = document.getElementById('cloud-canvas');
 
   let session = null;
   let lastPayload = '';
+  let currentLineId = null;
   let scanLoop = null;
   let stream = null;
 
@@ -47,6 +51,48 @@
     el.textContent = text;
     transcript.appendChild(el);
     transcript.scrollTop = transcript.scrollHeight;
+  }
+
+  function renderCloud() {
+    if (!cloudList || !currentLineId) return;
+    const hist = InfiniteCloud.history(currentLineId);
+    const stats = InfiniteCloud.lineStats(currentLineId);
+    cloudList.innerHTML = '';
+    cloudStats.textContent = `${stats.layers} QR layer${stats.layers === 1 ? '' : 's'} · ${stats.bytes.toLocaleString()} chars archived`;
+
+    if (!hist.length) {
+      cloudList.innerHTML = '<li class="cloud-empty">Genesis only — export to add layers.</li>';
+    } else {
+      for (const q of hist) {
+        const li = document.createElement('li');
+        const when = new Date(q.at).toLocaleString();
+        li.innerHTML = `<strong>#${q.gen}</strong> ${q.label}<br><span class="muted small">${q.knowledgeCount} facts · ${when}</span>`;
+        cloudList.appendChild(li);
+      }
+    }
+    drawCloudViz(hist.length);
+  }
+
+  function drawCloudViz(layers) {
+    if (!cloudCanvas) return;
+    const ctx = cloudCanvas.getContext('2d');
+    const W = cloudCanvas.width;
+    const H = cloudCanvas.height;
+    ctx.clearRect(0, 0, W, H);
+    const count = Math.max(layers, 1);
+    for (let i = 0; i < count + 4; i++) {
+      const x = (W * 0.12) + ((i % 5) / 4) * W * 0.76;
+      const y = H * (0.22 + (i % 3) * 0.18);
+      const r = 14 + (i % 4) * 8 + Math.min(layers, 12) * 1.2;
+      const a = 0.08 + (i < layers ? 0.14 : 0.05);
+      const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+      g.addColorStop(0, `rgba(110, 231, 183, ${a + 0.12})`);
+      g.addColorStop(1, 'rgba(110, 231, 183, 0)');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
 
   function renderFiling() {
@@ -81,19 +127,37 @@
   }
 
   async function forgeBlank() {
-    const mind = Seed.normalize({ ...Seed.BLANK });
+    const lineId = InfiniteCloud.uid();
+    currentLineId = lineId;
+    const mind = Seed.normalize({ ...Seed.BLANK, line: lineId, gen: 0 });
     const nameInput = document.getElementById('seed-name');
     if (nameInput && nameInput.value.trim()) {
       mind.name = nameInput.value.trim().slice(0, 60);
     }
+    const payload = Seed.encode(mind);
+    InfiniteCloud.genesis(mind, payload);
     await showPayload(forgeQr, forgeMeta, mind);
-    pasteArea.value = Seed.encode(mind);
+    pasteArea.value = payload;
+    renderCloud();
   }
 
-  function wake(mind) {
-    session = Seed.createMind(mind);
+  function wake(mind, payload) {
+    const lineId = mind.line || InfiniteCloud.uid();
+    currentLineId = lineId;
+    if (payload) {
+      const hist = InfiniteCloud.history(lineId);
+      if (!hist.length) InfiniteCloud.genesis(mind, payload);
+      else if (!hist.some((q) => q.payload === payload)) {
+        InfiniteCloud.archive(lineId, mind, payload, `scanned layer ${hist.length}`);
+      }
+    }
+    session = Seed.createMind(mind, { lineId });
     mindName.textContent = session.mind.name;
-    mindTag.textContent = session.mind.tagline;
+    mindTag.textContent =
+      (session.mind.tagline || '') +
+      (InfiniteCloud.history(lineId).length > 1
+        ? ` · ${InfiniteCloud.history(lineId).length} QRs in the cloud`
+        : ' · genesis QR');
     mindAvatar.textContent = (session.mind.name || 'S').charAt(0).toUpperCase();
 
     forgeStage.classList.add('hidden');
@@ -104,11 +168,13 @@
     const hello = session.reply('hello');
     bubble('mind', hello);
     renderFiling();
+    renderCloud();
     teachStage.scrollIntoView({ behavior: 'smooth' });
   }
 
   function eject() {
     session = null;
+    currentLineId = null;
     stopScanner();
     teachStage.classList.add('hidden');
     forgeStage.classList.remove('hidden');
@@ -119,7 +185,7 @@
   function tryWake(payload, label) {
     try {
       const mind = Seed.decode(payload);
-      wake(mind);
+      wake(mind, payload);
     } catch (err) {
       alert(`Could not wake mind${label ? ' from ' + label : ''}: ${err.message}`);
     }
@@ -223,14 +289,23 @@
     session.refresh();
     bubble('mind', out);
     renderFiling();
+    renderCloud();
   });
 
   exportBtn.addEventListener('click', async () => {
     if (!session) return;
-    const merged = Seed.merge(session.base);
-    await showPayload(exportQr, exportMeta, merged);
+    const lineId = session.lineId || currentLineId;
+    const merged = InfiniteCloud.synthesize(lineId, Seed.merge(session.base), Seed.decode);
+    const gen = InfiniteCloud.history(lineId).length;
+    const stamped = InfiniteCloud.stampMind(merged, lineId, gen);
+    const payload = Seed.encode(stamped);
+    InfiniteCloud.archive(lineId, stamped, payload, `export #${gen}`);
+    await showPayload(exportQr, exportMeta, stamped);
     exportQr.parentElement.classList.remove('hidden');
-    bubble('system', 'Updated QR ready — scan it anywhere to carry what you taught.');
+    session.resynthesize();
+    renderFiling();
+    renderCloud();
+    bubble('system', `Layer #${gen} archived in the infinite cloud. Mind draws on ${gen + 1} QRs now.`);
   });
 
   ejectBtn.addEventListener('click', eject);

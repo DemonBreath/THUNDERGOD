@@ -291,6 +291,48 @@ video {
 #filing-list li:last-child { border-bottom: none; }
 #filing-list strong { color: var(--accent); }
 
+.cloud-panel {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.cloud-panel h3 {
+  margin: 0 0 8px;
+  font-size: 0.82rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+#cloud-canvas {
+  width: 100%;
+  height: 120px;
+  display: block;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #0a0c10 0%, #0d1218 100%);
+  border: 1px solid var(--line);
+  margin-bottom: 10px;
+}
+
+.cloud-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.cloud-list li {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.84rem;
+}
+
+.cloud-list li:last-child { border-bottom: none; }
+.cloud-list strong { color: var(--accent); font-family: var(--mono); }
+.cloud-empty { color: var(--muted); font-size: 0.84rem; }
+
 footer {
   margin-top: 40px;
   text-align: center;

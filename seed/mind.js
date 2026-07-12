@@ -34,6 +34,8 @@
       name: String(raw.name ?? 'Seed').slice(0, 60).trim() || 'Seed',
       tagline: String(raw.tagline ?? '').slice(0, 200).trim(),
       persona: String(raw.persona ?? '').slice(0, 2000).trim(),
+      line: raw.line ? String(raw.line).slice(0, 64) : undefined,
+      gen: Number.isFinite(Number(raw.gen)) ? Number(raw.gen) : undefined,
       voice: {
         rate: clamp(Number(raw.voice?.rate ?? 1), 0.5, 1.5),
         pitch: clamp(Number(raw.voice?.pitch ?? 1), 0.5, 1.5),
@@ -149,8 +151,11 @@
     return null;
   }
 
-  function createMind(base) {
-    let c = merge(base);
+  function createMind(base, cloudCtx) {
+    const lineId = cloudCtx?.lineId || base.line || null;
+    let c = lineId && window.InfiniteCloud
+      ? InfiniteCloud.synthesize(lineId, merge(base), decode)
+      : merge(base);
     const chat = [];
 
     function pick(a) {
@@ -158,11 +163,15 @@
     }
 
     function recall(query) {
+      if (lineId && window.InfiniteCloud) {
+        const hit = InfiniteCloud.recall(lineId, query, c.knowledge, decode);
+        if (hit) return hit;
+      }
       const q = query.toLowerCase();
       const hit = c.knowledge.find(
         (k) => q.includes(k.topic.toLowerCase()) || k.topic.toLowerCase().includes(q)
       );
-      if (hit) return hit.content;
+      if (hit) return { content: hit.content, topic: hit.topic, fromGen: 'now' };
       let best = null;
       let score = 0;
       for (const k of c.knowledge) {
@@ -176,7 +185,11 @@
           best = k;
         }
       }
-      return best?.content || null;
+      return best ? { content: best.content, topic: best.topic, fromGen: 'now' } : null;
+    }
+
+    function cloudLayers() {
+      return lineId && window.InfiniteCloud ? InfiniteCloud.history(lineId).length : 0;
     }
 
     function reply(user) {
@@ -188,25 +201,38 @@
       if (!text) {
         out = 'I\'m listening. Teach me something, or ask what I know so far.';
       } else if (/^(hi|hello|hey|wake|start)/.test(low)) {
+        const layers = cloudLayers();
         out = c.knowledge.length
           ? pick([
-              `Hello. I'm ${c.name}. You've taught me ${c.knowledge.length} things so far.`,
-              `${c.name} here — awake, and carrying what you've filed.`,
+              `Hello. I'm ${c.name}. ${layers ? `I draw on ${layers} QR${layers > 1 ? 's' : ''} in the cloud.` : ''} You've taught me ${c.knowledge.length} things.`,
+              `${c.name} here — awake, carrying what you've filed${layers ? ` across ${layers} generations` : ''}.`,
             ])
           : pick([
-              `Hello. I'm ${c.name}. I'm empty except for readiness — teach me.`,
-              `I'm awake. I don't know anything yet except that I'm here to learn from you.`,
+              `Hello. I'm ${c.name}. Genesis QR — empty except for readiness.`,
+              `I'm awake from the first QR. Teach me, and each export becomes another layer in the cloud.`,
             ]);
       } else if (/(who are you|what are you|your name)/.test(low)) {
+        const layers = cloudLayers();
         out = c.knowledge.length
-          ? `${c.name}. ${c.tagline} You've taught me: ${c.knowledge.map((k) => k.topic).join(', ')}.`
-          : `${c.name}. ${c.tagline} Nothing filed yet — I'm waiting for you.`;
+          ? `${c.name}. ${c.tagline}${layers ? ` Drawing on ${layers} QRs in the infinite cloud.` : ''} Topics: ${c.knowledge.map((k) => k.topic).join(', ')}.`
+          : `${c.name}. ${c.tagline} Genesis mind — nothing filed yet.`;
+      } else if (/(qr history|cloud history|past qr|generations|how many qr)/.test(low)) {
+        const layers = cloudLayers();
+        if (!layers) {
+          out = 'No cloud history yet — this is your genesis QR. Export to archive the first layer.';
+        } else {
+          const hist = InfiniteCloud.history(lineId);
+          out =
+            `${layers} QR layer${layers > 1 ? 's' : ''} in the infinite cloud:\n` +
+            hist.map((q) => `• #${q.gen} ${q.label} — ${q.knowledgeCount} facts`).join('\n');
+        }
       } else if (/(what do you know|what have i taught|list|show memory|filing)/.test(low)) {
         if (!c.knowledge.length) {
           out = 'Nothing filed yet. Try: teach: your name :: what you want me to call you';
         } else {
+          const layers = cloudLayers();
           out =
-            `${c.knowledge.length} things filed:\n` +
+            `${c.knowledge.length} things known${layers ? ` (drawn from ${layers} QR layers + live teaching)` : ''}:\n` +
             c.knowledge.map((k) => `• ${k.topic} — ${k.content.slice(0, 100)}`).join('\n');
         }
       } else if (/^(forget|delete|remove)\s+/.test(low)) {
@@ -222,11 +248,17 @@
         const lesson = parseTeach(text);
         if (lesson) {
           c = teach(base, lesson.topic, lesson.content);
-          out = `Filed under "${lesson.topic}". It's part of me now — export your QR to carry it.`;
+          out = `Filed under "${lesson.topic}". It's part of me now — export to archive another QR layer in the cloud.`;
         } else {
           const known = recall(text);
           if (known) {
-            out = known;
+            const src =
+              known.fromGen === 'now'
+                ? ''
+                : known.fromGen === 0
+                  ? ' (from genesis QR)'
+                  : ` (from cloud layer #${known.fromGen})`;
+            out = known.content + src;
           } else if (!c.knowledge.length) {
             out =
               'I don\'t know that yet — you haven\'t taught me. ' +
@@ -250,12 +282,21 @@
       get base() {
         return base;
       },
+      get lineId() {
+        return lineId;
+      },
       get chat() {
         return chat.slice();
       },
       reply,
       refresh() {
-        c = merge(base);
+        c =
+          lineId && window.InfiniteCloud
+            ? InfiniteCloud.synthesize(lineId, merge(base), decode)
+            : merge(base);
+      },
+      resynthesize() {
+        this.refresh();
       },
     };
   }

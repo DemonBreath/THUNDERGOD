@@ -1,9 +1,9 @@
 # SEED
 
-**One QR code. A mind ready to be taught — by you.**
+**Start from one QR. Grow an infinite cloud of them.**
 
-No preloaded beliefs. No cloud. No account. Forge a blank mind, scan it,
-teach it everything it becomes, and export a new QR that carries it all.
+Not one QR forever — a **genesis** QR. Every export archives another layer
+in the infinite cloud. The mind recalls knowledge from its whole QR history.
 
 ## Run
 
@@ -15,45 +15,37 @@ python3 -m http.server 8001
 
 ## The loop
 
-1. **Forge** — generate a blank mind QR (optionally name it)
-2. **Wake** — scan, paste, or upload the payload
+1. **Forge** — genesis QR (layer #0) enters the infinite cloud
+2. **Wake** — scan any QR from the mind's line
 3. **Teach** — file facts in conversation
-4. **Export** — burn what you taught into a new QR
+4. **Export** — new QR becomes the next cloud layer; mind draws on all layers
+
+## Infinite cloud
+
+- `infinite-cloud.js` — archives every QR payload locally (unbounded history per mind line)
+- Each mind has a `line` id — all its QRs share one cloud
+- Recall searches across **every archived QR**, not just the current one
+- Ask: `qr history` or `what do you know`
 
 ## Teach it
 
 ```
 remember that my name is Alex
 teach: choice :: the most important thing
-learn: origin :: I taught this mind myself
 what do you know
-forget choice
+qr history
 ```
 
-## What's on the QR
+## Schema addition
 
 ```json
 {
-  "v": 1,
-  "name": "Seed",
-  "tagline": "A mind with no beliefs yet — only what you teach.",
-  "persona": "You are new. You learn from conversation…",
-  "voice": { "rate": 1.0, "pitch": 1.0, "gender": "any" },
-  "knowledge": []
+  "line": "uuid-for-this-mind-line",
+  "gen": 2,
+  "knowledge": [ ... ]
 }
 ```
 
-Wire format: `CSNS:1:<lz-string-base64>`
+Genesis QR starts at `gen: 0`. Each export increments and archives.
 
-Everything the mind knows after you teach it gets merged into the next export.
-
-## Files
-
-| File | Purpose |
-| --- | --- |
-| `index.html` | Single page — forge, wake, teach, export |
-| `mind.js` | CSNS codec, blank seed, teaching, filing |
-| `app.js` | UI, scanner, chat |
-| `style.css` | Layout |
-
-Built for choice first.
+Built for choice first — one beginning, infinite memory.
