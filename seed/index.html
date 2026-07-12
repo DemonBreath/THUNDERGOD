@@ -222,6 +222,23 @@ video {
 .mind-head h2 { margin: 0; }
 .mind-head p { margin: 4px 0 0; font-size: 0.85rem; }
 
+.boot-msg {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  background: #08090d;
+  color: #eef1f8;
+  font-family: var(--sans);
+  padding: 24px;
+  text-align: center;
+}
+
+.boot-msg.hidden { display: none; }
+
+.boot-msg.error { color: #fca5a5; }
+
 .transcript {
   min-height: 220px;
   max-height: 360px;
@@ -396,12 +413,19 @@ footer {
   </style>
 </head>
 <body>
+  <noscript>
+    <div style="padding:24px;font-family:sans-serif;background:#08090d;color:#eef1f8;min-height:100vh">
+      <h1>SEED</h1>
+      <p>JavaScript is required for chat. Open <code>seed/index.html</code> on desktop, or scan a QR that points to the hosted page.</p>
+    </div>
+  </noscript>
+  <div id="boot-msg" class="boot-msg" aria-live="polite">Waking SEED…</div>
   <div class="wrap">
     <header>
       <p class="eyebrow">Start from one QR</p>
       <h1>A mind ready to be taught</h1>
       <p class="lead">
-        Fully offline. The QR hosts itself — scan it and the browser opens with chat ready. No server.
+        Open this file on desktop to teach. Scan the QR on your phone — it opens a live chat in the browser. Your mind travels in the URL.
       </p>
     </header>
 
@@ -708,6 +732,38 @@ Minimum version required to store current data is: `+i+`.
   const PREFIX = 'CSNS:';
   const STORAGE = 'seed-mind:';
   const QR_BYTE_LIMIT = 2900;
+  const WAKE_HOST_PAGES = 'https://demonbreath.github.io/THUNDERGOD/';
+  const WAKE_HOST_PREVIEW =
+    'https://htmlpreview.github.io/?https://raw.githubusercontent.com/DemonBreath/THUNDERGOD/gh-pages/index.html';
+
+  function wakeHost() {
+    const h = location;
+    if (h.protocol === 'https:' || h.protocol === 'http:') {
+      if (h.hostname === 'htmlpreview.github.io') {
+        return h.origin + h.pathname + h.search;
+      }
+      if (h.hostname === 'demonbreath.github.io') {
+        return h.origin + (h.pathname.endsWith('/') ? h.pathname : h.pathname + '/');
+      }
+      if (/\.html?$/i.test(h.pathname)) {
+        return h.origin + h.pathname;
+      }
+      const base = h.pathname.endsWith('/') ? h.pathname : h.pathname.replace(/[^/]+$/, '');
+      return h.origin + base + 'index.html';
+    }
+    return WAKE_HOST_PREVIEW;
+  }
+
+  function wakeUrl(mind) {
+    const payload = encode(mind);
+    const uri = wakeHost() + '#csns=' + encodeURIComponent(payload);
+    if (uri.length > QR_BYTE_LIMIT) {
+      throw new Error(
+        'Mind too large for QR (' + uri.length + ' chars). Teach less, then export again.'
+      );
+    }
+    return uri;
+  }
 
   function compactMind(m) {
     const mind = normalize(m);
@@ -1104,9 +1160,13 @@ document.getElementById('b').onclick=send;i.onkeydown=function(e){if(e.key==='En
   window.Seed = {
     BLANK,
     QR_BYTE_LIMIT,
+    WAKE_HOST_PAGES,
+    WAKE_HOST_PREVIEW,
     compactMind,
     buildMicroHost,
     wakeDataUri,
+    wakeHost,
+    wakeUrl,
     pullCsnsFromLocation,
     unwrapScan,
     normalize,
@@ -1176,7 +1236,7 @@ document.getElementById('b').onclick=send;i.onkeydown=function(e){if(e.key==='En
   async function bubbleQr(caption, mind) {
     let uri;
     try {
-      uri = Seed.wakeDataUri(mind);
+      uri = Seed.wakeUrl(mind);
     } catch (err) {
       bubble('system', err.message);
       return null;
@@ -1185,12 +1245,13 @@ document.getElementById('b').onclick=send;i.onkeydown=function(e){if(e.key==='En
     const el = document.createElement('div');
     el.className = 'bubble qr-bubble';
     const p = document.createElement('p');
-    p.textContent = caption + ' · self-hosted';
+    p.textContent = caption + ' · scan to wake';
     const canvas = document.createElement('canvas');
     await Seed.renderQR(canvas, uri);
     const meta = document.createElement('small');
     meta.className = 'qr-chat-meta';
-    meta.textContent = 'Scan → browser opens with chat ready. No server. The QR is the host.';
+    meta.textContent =
+      'Scan on your phone → browser opens with chat ready. Mind travels in the URL — not a data: link.';
     el.append(p, canvas, meta);
     transcript.appendChild(el);
     transcript.scrollTop = transcript.scrollHeight;
@@ -1304,13 +1365,13 @@ document.getElementById('b').onclick=send;i.onkeydown=function(e){if(e.key==='En
   }
 
   async function startGenesis() {
-    const lineId = InfiniteCloud.uid();
+    const lineId = Math.random().toString(36).slice(2, 10);
     currentLineId = lineId;
     const mind = Seed.normalize({ ...Seed.BLANK, line: lineId, gen: 0 });
     const payload = Seed.encode(mind);
     InfiniteCloud.genesis(mind, payload);
     transcript.innerHTML = '';
-    bubble('mind', "I'm here. Blank, ready to learn. This QR hosts me — scan it and the browser opens with chat ready.");
+    bubble('mind', "I'm here. Blank, ready to learn. Scan the QR — your phone opens chat with this mind awake.");
     await bubbleQr('Genesis QR — layer #0', mind);
     bindSession(mind, payload);
     bubble('mind', session.reply('hello'));
@@ -1447,15 +1508,30 @@ document.getElementById('b').onclick=send;i.onkeydown=function(e){if(e.key==='En
 
   ejectBtn.addEventListener('click', () => eject());
 
+  const bootMsg = document.getElementById('boot-msg');
+
+  function hideBoot() {
+    bootMsg?.classList.add('hidden');
+  }
+
+  function showBootError(msg) {
+    if (!bootMsg) return;
+    bootMsg.classList.remove('hidden');
+    bootMsg.classList.add('error');
+    bootMsg.textContent = msg;
+  }
+
   const incoming = Seed.pullCsnsFromLocation();
   if (incoming) {
     transcript.innerHTML = '';
-    tryWake(incoming, 'URL');
+    tryWake(incoming, 'URL').then(hideBoot).catch((err) => showBootError(err.message));
   } else if (location.hash.startsWith('#csns=')) {
     transcript.innerHTML = '';
-    tryWake(decodeURIComponent(location.hash.slice('#csns='.length)), 'URL');
+    tryWake(decodeURIComponent(location.hash.slice('#csns='.length)), 'URL')
+      .then(hideBoot)
+      .catch((err) => showBootError(err.message));
   } else {
-    startGenesis();
+    startGenesis().then(hideBoot).catch((err) => showBootError(err.message));
   }
 })();
 

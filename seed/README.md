@@ -1,23 +1,28 @@
 # SEED
 
-**The QR hosts itself. Scan → browser → chat ready.**
+**One QR. A mind ready to be taught.**
 
-No server. No website. No install. The QR contains the entire micro-app inline as a `data:text/html` URI.
+Open `seed/index.html` on desktop (double-click — no server). Scan the QR on your phone to wake the same mind in the browser with chat ready.
 
-## Desktop
+## How it works
 
-Open `seed/index.html` for the full experience (infinite cloud, export, filing).
+- **Desktop:** open `seed/index.html` — full chat, infinite cloud, export
+- **Phone:** scan the QR — opens a hosted page with `#csns=…` in the URL
+- **Mind travels in the URL** (CSNS payload in the hash), not inside a `data:` link
+- Mobile browsers block `data:text/html` QRs → white screen. URL QRs work.
 
-## Phone
+## Wake hosts (in order)
 
-Scan the genesis QR from chat. Your camera opens the browser with:
+1. `https://demonbreath.github.io/THUNDERGOD/` — enable GitHub Pages on `gh-pages` branch (Settings → Pages)
+2. `https://htmlpreview.github.io/?https://raw.githubusercontent.com/DemonBreath/THUNDERGOD/gh-pages/index.html` — works until Pages is on
 
-- chat box ready
-- blank mind awake
-- teach with `remember that …` or `teach: topic :: fact`
+## Teach
 
-Everything runs from the QR payload itself.
+- `remember that the sky is blue`
+- `teach: topic :: fact`
+- `what do you know`
+- `export` or **Send QR** — new cloud layer
 
 ## Limits
 
-Self-hosted QRs must stay under ~2.9KB. Genesis is small. After lots of teaching, export may ask you to trim knowledge before re-forging the QR.
+QR URLs must stay under ~2.9KB. Genesis is small. Trim knowledge if export says the mind is too large.
