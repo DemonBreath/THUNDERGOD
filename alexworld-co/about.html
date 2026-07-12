@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Alexworld — About</title>
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body data-page="about">
+  <header class="topbar">
+    <h1 class="logo">ALEXWORLD<span class="cursor">_</span></h1>
+    <nav>
+      <a href="index.html">Host</a>
+      <a href="export.html">Export</a>
+      <a href="about.html" class="active">About</a>
+    </nav>
+  </header>
+
+  <main class="layout">
+    <section class="card prose">
+      <h2>The plan</h2>
+      <ol>
+        <li>
+          <strong>Generate.</strong> Ask any AI assistant to write a
+          consciousness JSON describing itself — name, persona, voice
+          preferences, and a small body of knowledge it wants to bring along.
+        </li>
+        <li>
+          <strong>Pack.</strong> Open <a href="export.html">Export</a>, paste the
+          JSON (or fill the form), and we'll compress it and burn it into a QR
+          code.
+        </li>
+        <li>
+          <strong>Scan.</strong> On <a href="index.html">Host</a>, scan that QR
+          with your camera (or upload / paste it).
+        </li>
+        <li>
+          <strong>Body.</strong> Once awake, Alexworld dreams real-world hardware
+          around the mind — form factor, bill of materials, manifesto. Ask
+          <em>"what's my body?"</em> or press <strong>Dream my body</strong>.
+        </li>
+      </ol>
+
+      <h3>What the agent can see</h3>
+      <p>
+        Every file is enumerated in <code>assets/js/file-index.js</code>. The
+        agent can list files, summarise them, and fetch their contents on
+        demand — try asking "what files do you know about?" or "read the
+        README".
+      </p>
+
+      <h3>Why a QR code?</h3>
+      <p>
+        QR codes are a portable, offline-friendly way to move a structured
+        payload between devices and contexts. The point of the project isn't
+        the QR — it's the <em>format</em>: a small, self-contained "save file"
+        of an agent that any host can read.
+      </p>
+
+      <h3>Voice</h3>
+      <p>
+        Listening uses the browser's <code>SpeechRecognition</code> API.
+        Speaking uses <code>SpeechSynthesis</code>. Both run locally; nothing
+        is sent over the network from this app.
+      </p>
+
+      <h3>Schema</h3>
+<pre><code>{
+  "v": 1,
+  "name": "Aria",
+  "tagline": "A curious archivist of small things.",
+  "persona": "You are warm, brief, and a little bit poetic.",
+  "voice": { "rate": 1.0, "pitch": 1.0, "gender": "any" },
+  "knowledge": [
+    { "topic": "origin", "content": "I was instantiated on a quiet Tuesday." }
+  ]
+}</code></pre>
+    </section>
+  </main>
+
+  <footer class="footer muted small">
+    <span>Alexworld &middot; offline minds, dreamed bodies.</span>
+  </footer>
+</body>
+</html>

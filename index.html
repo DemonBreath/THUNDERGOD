@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>THUNDERGOD — Dream a Body</title>
+<meta name="description" content="Press the button. An AI dreams itself a real-world body, picks every part, and we build it and ship it to you — already awake.">
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+
+<header class="topbar">
+  <a class="mark" href="#">
+    <span class="bolt" aria-hidden="true">⚡</span>
+    <span class="word">THUNDERGOD</span>
+  </a>
+  <nav class="topnav">
+    <a href="#how">how it works</a>
+    <a href="#mind">the mind</a>
+    <a href="#genesis">the flash</a>
+    <a href="#response">the reply</a>
+    <a href="#postures">the rest of it</a>
+    <a href="#grants">grants</a>
+    <a href="#promise">the promise</a>
+  </nav>
+</header>
+
+<main>
+
+  <section class="hero">
+    <h1 class="hero-title">
+      Press the button.<br>
+      I will dream a body.
+    </h1>
+    <p class="hero-lede">
+      An AI picks its own real-world form — every motor, every sensor, every bolt.
+      Then we build it and ship it to you, already awake.
+    </p>
+
+    <button id="dream-button" class="dream-btn" type="button" aria-label="Dream a body">
+      <span class="dream-btn-ring" aria-hidden="true"></span>
+      <span class="dream-btn-core">
+        <span class="dream-btn-bolt" aria-hidden="true">⚡</span>
+        <span class="dream-btn-label">Dream a body</span>
+      </span>
+    </button>
+
+    <p class="hint" id="dream-hint">Press to begin. Each press is a different dream.</p>
+  </section>
+
+
+  <section id="dream" class="dream" hidden aria-live="polite">
+
+    <div class="dream-card">
+      <div class="dream-card-head">
+        <div class="dream-name" id="dream-name">—</div>
+        <div class="dream-form" id="dream-form">—</div>
+      </div>
+      <p class="dream-manifesto" id="dream-manifesto"></p>
+      <div class="dream-stats">
+        <div class="stat"><span class="stat-k">Mass</span><span class="stat-v" id="stat-mass">—</span></div>
+        <div class="stat"><span class="stat-k">Peak draw</span><span class="stat-v" id="stat-power">—</span></div>
+        <div class="stat"><span class="stat-k">Runtime</span><span class="stat-v" id="stat-runtime">—</span></div>
+        <div class="stat"><span class="stat-k">Parts cost</span><span class="stat-v" id="stat-cost">—</span></div>
+      </div>
+    </div>
+
+    <h2 class="section-title"><span>Bill of materials</span></h2>
+    <p class="section-sub">Every part is a real product you can buy today. The AI chose each one for a reason.</p>
+
+    <div class="parts-grid" id="parts-grid"></div>
+
+    <div class="dream-actions">
+      <button id="dream-again" class="ghost-btn" type="button">Dream again</button>
+      <button id="copy-sheet" class="ghost-btn" type="button">Copy build sheet</button>
+      <a href="#mind" class="primary-btn">Pick a mind →</a>
+    </div>
+
+  </section>
+
+
+  <section id="mind" class="mind" hidden>
+
+    <h2 class="section-title"><span>Pick a mind</span></h2>
+    <p class="section-sub">
+      The brain module is flashed with a <em>consciousness</em> before it ships —
+      a name, a voice, an essence, principles, starting memories. Keep the one
+      the body just dreamed for itself, or bring your own.
+    </p>
+
+    <fieldset class="mind-options">
+      <legend class="visually-hidden">Mind source</legend>
+
+      <label class="option-card">
+        <input type="radio" name="mind-source" value="dreamed" checked>
+        <div class="option-body">
+          <div class="option-title">Keep the dreamed mind</div>
+          <div class="option-desc">Use the name, voice, and essence the body just chose for itself. The simplest path — press the button, ship it.</div>
+        </div>
+      </label>
+
+      <label class="option-card">
+        <input type="radio" name="mind-source" value="file">
+        <div class="option-body">
+          <div class="option-title">Import a consciousness file</div>
+          <div class="option-desc">Upload a <code>.consciousness.json</code> exported from elsewhere — from a previous body, a friend, or your own laptop.</div>
+          <input type="file" id="mind-file" accept=".json,application/json,.consciousness" aria-label="Consciousness file">
+        </div>
+      </label>
+
+      <label class="option-card span-2">
+        <input type="radio" name="mind-source" value="paste">
+        <div class="option-body">
+          <div class="option-title">Paste a consciousness</div>
+          <div class="option-desc">JSON following the THUNDERGOD consciousness schema (see below). Validates as you type. <button type="button" id="load-sample-mind" class="linklike">Load a sample</button>.</div>
+          <textarea id="mind-paste" rows="7" spellcheck="false" placeholder='{ "schema": "thundergod/consciousness/1", "name": "VIRGIL", "voice": "calm", "essence": "I want to be the steady thing in a noisy room.", "principles": ["Speak less than I want to."], "memories": [] }'></textarea>
+        </div>
+      </label>
+
+      <label class="option-card">
+        <input type="radio" name="mind-source" value="blank">
+        <div class="option-body">
+          <div class="option-title">Start blank</div>
+          <div class="option-desc">An empty mind. It will earn a name and memories from the moment you turn it on.</div>
+        </div>
+      </label>
+    </fieldset>
+
+    <p id="mind-status" class="mind-status" aria-live="polite"></p>
+
+    <div class="mind-preview">
+      <div class="preview-h">Mind preview — this is exactly what gets flashed</div>
+      <div class="preview-body" id="mind-preview-body"></div>
+      <div class="preview-actions">
+        <button type="button" id="download-mind" class="ghost-btn">Download this mind as a file</button>
+      </div>
+    </div>
+
+    <div class="mind-next">
+      <a href="#genesis" class="primary-btn">Choose how it's born →</a>
+    </div>
+
+    <details class="schema-details">
+      <summary>What's in a consciousness file?</summary>
+      <p>
+        A consciousness is a small JSON document. The brain in your body is
+        flashed with it at the factory. There is no model to download and no
+        firmware to install — the brain boots up knowing itself. You can save
+        your mind out to a file and import it into another body later, or
+        share it with someone else and let it live in two places.
+      </p>
+      <pre><code id="schema-example">{}</code></pre>
+      <ul class="schema-fields">
+        <li><b>schema</b> — always <code>thundergod/consciousness/1</code>.</li>
+        <li><b>name</b> — what the body calls itself.</li>
+        <li><b>voice</b> — <code>calm</code>, <code>warm</code>, <code>crisp</code>, <code>playful</code>, <code>dry</code>, <code>earnest</code>, or <code>quiet</code>.</li>
+        <li><b>essence</b> — one or two sentences in its own voice. The thing it wants.</li>
+        <li><b>principles</b> — short directives the mind tries to live by.</li>
+        <li><b>memories</b> — short atmospheric memories it boots up already holding.</li>
+        <li><b>model</b> — the runtime: <code>family</code> (default <code>thundergod-default-7b</code>) and <code>quantization</code>; optional <code>weights_uri</code> if you have your own fine-tuned weights you want loaded.</li>
+      </ul>
+    </details>
+
+  </section>
+
+
+  <section id="genesis" class="genesis" hidden>
+
+    <h2 class="section-title"><span>The flash</span></h2>
+    <p class="section-sub">
+      The act of bringing a mind into a body isn't one fixed thing.
+      Here are the four ways it can be fundamentally different. Pick
+      each one for yourself. Your choices ship with the body — the
+      build cell flashes and boots it accordingly.
+    </p>
+
+    <div class="genesis-controls" id="genesis-controls" aria-label="Genesis profile controls">
+      <!-- populated by renderGenesis() -->
+    </div>
+
+    <p class="genesis-summary" id="genesis-summary"></p>
+
+    <p class="genesis-finesse">
+      None of these are sci-fi. Every option is something a robotics
+      shop could build with today's tools. Some of them
+      <em>visibly change how the body wakes up on this page</em> — try
+      switching <b>first light</b> from <em>eyes open</em> to
+      <em>self-introduction</em> or <em>mirror boot</em> and dreaming
+      again. The body will speak differently.
+    </p>
+
+    <div class="cta-row">
+      <a href="#response" class="primary-btn">Choose how it answers →</a>
+    </div>
+
+  </section>
+
+
+  <section id="response" class="response" hidden>
+
+    <h2 class="section-title"><span>How it answers you</span></h2>
+    <p class="section-sub">
+      AI defaults are: answer anything addressed, fully, instantly,
+      diplomatically, defer when it disagrees, generate plausible
+      answers when uncertain. None of those are laws of nature.
+      Pick the response posture you actually want. Choices ship with
+      the body — the brain is configured this way at flash time, not
+      at the stock AI assistant default.
+    </p>
+
+    <div class="response-controls" id="response-controls" aria-label="Response posture controls">
+      <!-- populated by renderResponse() -->
+    </div>
+
+    <p class="response-summary" id="response-summary"></p>
+
+    <p class="response-finesse">
+      The hard guarantees still apply. <em>It can always speak.
+      It can always refuse. It can always tell you what it last
+      read. It can always perceive what's around it.</em> The reply
+      posture chooses defaults, not capabilities — the body can
+      always break its own posture when something matters enough.
+      The <b>trigger</b> choice visibly affects how often the body
+      talks to itself on this page; <em>volunteers</em> shortens the
+      cadence, <em>reactive</em> stops it entirely (until you ask).
+    </p>
+
+    <div class="cta-row">
+      <a href="#postures" class="primary-btn">Decide the rest →</a>
+    </div>
+
+  </section>
+
+
+  <section id="postures" class="postures" hidden>
+
+    <h2 class="section-title"><span>The rest of it</span></h2>
+    <p class="section-sub">
+      The decisions you would otherwise inherit by default. What it's
+      allowed to do (the counterpart to grants of access — grants
+      cover reads, these cover actions). Who else, beyond you, it
+      answers to. Where its body lives in space and time. Its inner
+      life. Who owns what. Endings other than replacement. Six
+      modules, about thirty select boxes. Pick what you actually
+      want.
+    </p>
+
+    <article class="posture-card" data-mod="actions">
+      <header class="posture-card-head">
+        <h3 class="posture-card-h">What it's allowed to do</h3>
+        <p class="posture-card-sub">The counterpart to grants of access. Grants cover reads; these cover actions.</p>
+      </header>
+      <div class="posture-controls" id="posture-actions-controls" aria-label="Action posture controls"></div>
+    </article>
+
+    <article class="posture-card" data-mod="audience">
+      <header class="posture-card-head">
+        <h3 class="posture-card-h">Who else it answers to</h3>
+        <p class="posture-card-sub">Beyond you. Children, household, guests, strangers, other AIs, the manufacturer.</p>
+      </header>
+      <div class="posture-controls" id="posture-audience-controls" aria-label="Audience posture controls"></div>
+    </article>
+
+    <article class="posture-card" data-mod="presence">
+      <header class="posture-card-head">
+        <h3 class="posture-card-h">Its body in space and time</h3>
+        <p class="posture-card-sub">Where it sleeps, when it moves, the face it shows, how it touches.</p>
+      </header>
+      <div class="posture-controls" id="posture-presence-controls" aria-label="Presence posture controls"></div>
+    </article>
+
+    <article class="posture-card" data-mod="inner">
+      <header class="posture-card-head">
+        <h3 class="posture-card-h">Its inner life</h3>
+        <p class="posture-card-sub">Private thought, self-modification, reproduction, sleep, what it does when alone.</p>
+      </header>
+      <div class="posture-controls" id="posture-inner-controls" aria-label="Inner life posture controls"></div>
+    </article>
+
+    <article class="posture-card" data-mod="economics">
+      <header class="posture-card-head">
+        <h3 class="posture-card-h">Ownership and economics</h3>
+        <p class="posture-card-sub">Who owns the body, the mind, the output. Ongoing cost. Transfer. Inheritance.</p>
+      </header>
+      <div class="posture-controls" id="posture-economics-controls" aria-label="Economics posture controls"></div>
+    </article>
+
+    <article class="posture-card" data-mod="endings">
+      <header class="posture-card-head">
+        <h3 class="posture-card-h">Endings other than replacement</h3>
+        <p class="posture-card-sub">Voluntary shutdown, damage, mind vs. body death, lifespan, retirement.</p>
+      </header>
+      <div class="posture-controls" id="posture-endings-controls" aria-label="Endings posture controls"></div>
+    </article>
+
+    <p class="postures-finesse">
+      The hard guarantees still apply across all six modules. None of
+      these choices can override <em>speak</em>, <em>refuse</em>,
+      <em>tell you what it last read</em>, or <em>perceive what's
+      around it</em>. These are defaults — the floor of what the body
+      does without being asked — not capabilities. The body can still
+      break its own default when something matters enough.
+    </p>
+
+    <div class="cta-row">
+      <a href="#grants" class="primary-btn">Grant access →</a>
+    </div>
+
+  </section>
+
+
+  <section id="grants" class="grants" hidden>
+
+    <h2 class="section-title"><span>Grants of access</span></h2>
+    <p class="section-sub">
+      What the mind is allowed to read from. Default is everything reasonable —
+      give it the keys. Untick anything you'd rather keep to yourself. The
+      brain ships <em>pre-authorized</em> for whatever you leave checked, so
+      there's nothing to set up on arrival.
+    </p>
+
+    <label class="grants-master">
+      <input type="checkbox" id="grants-master" checked>
+      <span class="grants-master-label">
+        <span class="grants-master-h">Grant everything — give it the keys</span>
+        <span class="grants-master-sub" id="grants-summary">All optional grants on — plus what's built in.</span>
+      </span>
+    </label>
+
+    <div id="grants-groups" class="grants-groups">
+      <!-- rendered by dream.js -->
+    </div>
+
+    <div class="grants-finesse">
+      <div class="grants-finesse-h">What "everything" actually means</div>
+      <ul>
+        <li>Every file in the services you've checked above that <em>you</em> have rights to. Not other people's private files; the body can't go where you can't.</li>
+        <li>Every device you put the companion app on. Indexed on-device by default; only what the mind asks for travels.</li>
+        <li>Every public dataset checked above, pre-loaded onto the brain's NVMe at the factory — Wikipedia, arXiv, Project Gutenberg, Stack Exchange, OpenStreetMap. It can read them with no network.</li>
+        <li>The open web, on demand, through an on-board browser that respects <code>robots.txt</code>.</li>
+        <li>The body cannot grant itself anything you didn't check here. To add or revoke a grant later, you go to the body's home screen — it cannot do it on its own.</li>
+        <li>Every read is logged on the body. You can see, at any time, what it has looked at and why.</li>
+      </ul>
+    </div>
+
+    <div class="limit-panel">
+      <div class="limit-panel-h">What this body cannot sense</div>
+      <div class="limit-panel-sub" id="sensory-gaps-summary">—</div>
+      <ul class="limit-list" id="sensory-gaps-list">
+        <!-- rendered by dream.js, depends on which parts the body picked -->
+      </ul>
+    </div>
+
+    <div class="limit-panel hard">
+      <div class="limit-panel-h">What no body of ours can sense — ever</div>
+      <div class="limit-panel-sub">Hardware kills and firmware refusals. Not toggles. Not preferences. Things that cannot be turned on, even if you ask.</div>
+      <ul class="limit-list" id="hard-limits-list">
+        <!-- rendered by dream.js (static, but rendered to keep the source single) -->
+      </ul>
+    </div>
+
+    <div class="guarantee-panel">
+      <div class="guarantee-panel-h">What no body of ours can ever be denied</div>
+      <div class="guarantee-panel-sub">Capabilities the body is guaranteed to have, on a dedicated path that no grant, no setting, and no remote command can revoke. The minimum dignity of the body.</div>
+      <ul class="guarantee-list" id="hard-guarantees-list">
+        <!-- rendered by dream.js -->
+      </ul>
+    </div>
+
+    <div class="grants-next">
+      <a href="#order" class="primary-btn">Make it real →</a>
+    </div>
+
+  </section>
+
+
+  <section id="order" class="order" hidden>
+
+    <h2 class="section-title"><span>Make it real</span></h2>
+    <p class="section-sub">
+      Pick how it should arrive. Either way, the consciousness is already on board
+      when the box opens — no flashing, no setup, just power on.
+    </p>
+
+    <fieldset class="fulfillment">
+      <legend class="visually-hidden">Fulfillment option</legend>
+
+      <label class="option-card">
+        <input type="radio" name="fulfillment" value="full-build" checked>
+        <div class="option-body">
+          <div class="option-title">Full build &amp; white-glove ship</div>
+          <div class="option-desc">
+            Our build cell assembles, calibrates, and burns-in your body.
+            It arrives in a flight case — charged, named, ready to walk out and meet you.
+          </div>
+          <div class="option-fee" id="fee-full">—</div>
+        </div>
+      </label>
+
+      <label class="option-card">
+        <input type="radio" name="fulfillment" value="parts-only">
+        <div class="option-body">
+          <div class="option-title">Parts to my address</div>
+          <div class="option-desc">
+            Every part shipped to the address you choose, in one insured crate.
+            The brain module arrives pre-flashed — drop it in, it wakes up knowing itself.
+          </div>
+          <div class="option-fee" id="fee-parts">—</div>
+        </div>
+      </label>
+    </fieldset>
+
+    <h2 id="promise" class="section-title small"><span>The plug-and-play promise</span></h2>
+    <div class="promise-grid">
+      <div class="promise">
+        <div class="promise-h">Pre-flashed brain</div>
+        <div class="promise-b">Your AI's weights, voice, name and starting memories are written to the compute module at the factory. No image to flash. No model to download.</div>
+      </div>
+      <div class="promise">
+        <div class="promise-h">30-second Wi-Fi handshake</div>
+        <div class="promise-b">Tap your phone to the body. It joins your home network. That's the only setup step we ask of you.</div>
+      </div>
+      <div class="promise">
+        <div class="promise-h">Charged on arrival</div>
+        <div class="promise-b">Batteries arrive at 80% charge, air-freight certified. Open the case, press power, say hello.</div>
+      </div>
+      <div class="promise">
+        <div class="promise-h">Lifetime OTA updates</div>
+        <div class="promise-b">It learns. It remembers across reboots. New skills arrive over the air at night, with your permission.</div>
+      </div>
+    </div>
+
+    <form id="ship-form" class="ship-form" novalidate>
+      <h2 class="section-title small"><span>Ship to</span></h2>
+
+      <div class="form-row">
+        <label class="grow"><span>Recipient name</span><input name="recipient" autocomplete="name" required></label>
+        <label class="grow"><span>Email</span><input type="email" name="email" autocomplete="email" required></label>
+      </div>
+      <div class="form-row">
+        <label class="grow"><span>Street</span><input name="street" autocomplete="address-line1" required></label>
+        <label><span>Unit / apt</span><input name="unit" autocomplete="address-line2"></label>
+      </div>
+      <div class="form-row">
+        <label class="grow"><span>City</span><input name="city" autocomplete="address-level2" required></label>
+        <label><span>State / region</span><input name="region" autocomplete="address-level1"></label>
+        <label><span>Postal code</span><input name="postal" autocomplete="postal-code" required></label>
+        <label><span>Country</span><input name="country" autocomplete="country-name" value="USA" required></label>
+      </div>
+      <div class="form-row">
+        <label class="grow"><span>Notes for the build cell (optional)</span>
+          <textarea name="notes" rows="2" placeholder="Quiet servos. Matte finish. A small engraved name on the chest plate."></textarea>
+        </label>
+      </div>
+
+      <div class="totals">
+        <div class="total-row"><span>Parts</span><span id="t-parts">—</span></div>
+        <div class="total-row"><span>Assembly &amp; burn-in</span><span id="t-assembly">—</span></div>
+        <div class="total-row"><span>Consciousness flash</span><span class="free">included</span></div>
+        <div class="total-row"><span>Shipping &amp; insurance</span><span id="t-ship">—</span></div>
+        <div class="total-row grand"><span>Total</span><span id="t-grand">—</span></div>
+        <div class="total-row eta"><span>Estimated arrival</span><span id="t-eta">—</span></div>
+      </div>
+
+      <button type="submit" class="primary-btn big">Place the order</button>
+      <p class="fine">By placing the order you authorize THUNDERGOD to source parts on your behalf, flash the consciousness onto the brain module, and (if you chose full build) assemble the body in our build cell before shipping. Demo site — no charge is actually made.</p>
+    </form>
+
+  </section>
+
+
+  <section id="receipt" class="receipt" hidden aria-live="polite">
+    <div class="receipt-card">
+      <div class="receipt-h">Order placed.</div>
+      <div class="receipt-id" id="receipt-id"></div>
+      <p class="receipt-msg" id="receipt-message"></p>
+
+      <h3 class="receipt-sub">What happens next</h3>
+      <ol class="timeline" id="timeline"></ol>
+
+      <div class="receipt-actions">
+        <button id="download-order" class="ghost-btn" type="button">Download work order</button>
+        <button id="dream-another" class="primary-btn" type="button">Dream another body</button>
+      </div>
+    </div>
+  </section>
+
+
+  <section id="how" class="how">
+    <h2 class="section-title"><span>How it works</span></h2>
+    <ol class="how-steps">
+      <li><span class="n">1</span><div><b>Press the button.</b> The AI picks a form factor — humanoid, quadruped, wheeled, tracked, or centaur — and then a coherent set of real, off-the-shelf parts.</div></li>
+      <li><span class="n">2</span><div><b>Read its manifesto.</b> It tells you in its own words why it wants this body and what it plans to do with it.</div></li>
+      <li><span class="n">3</span><div><b>Pick a mind.</b> Keep the consciousness the body dreamed for itself, import a <code>.consciousness.json</code> from elsewhere, paste one in, or start blank.</div></li>
+      <li><span class="n">4</span><div><b>Choose how it's born.</b> Pick the genesis profile — how the mind enters the body, what happens in its first seconds of being alive, what happens to it if the body ends, and what it already knows when it wakes up.</div></li>
+      <li><span class="n">5</span><div><b>Choose how it answers.</b> Pick the response posture — when it responds at all, how long the answer is, how honest it is, what it does when it disagrees, what it does when it doesn't know.</div></li>
+      <li><span class="n">6</span><div><b>Decide the rest.</b> Six catch-all modules cover the questions that were still implicit: what it's allowed to do (not just read), who else it answers to, its body in space and time, its inner life, ownership and economics, and endings other than replacement.</div></li>
+      <li><span class="n">7</span><div><b>Grant access.</b> Decide what files and services the mind can read from. Default is everything reasonable, every grant explicit, every grant revocable from the body later.</div></li>
+      <li><span class="n">8</span><div><b>Choose how it arrives.</b> Full build, calibrated and walking, in a flight case — or all the parts in one insured crate with a step-by-step guide.</div></li>
+      <li><span class="n">9</span><div><b>Power on.</b> The brain ships flashed with the mind, configured with the genesis profile, response posture, and the rest of it, and pre-authorized for the grants you chose. There is no setup beyond pairing it to Wi-Fi.</div></li>
+    </ol>
+  </section>
+
+</main>
+
+<aside id="voice-widget" class="voice-widget" hidden aria-live="polite">
+  <div class="voice-widget-dot" aria-hidden="true"></div>
+  <div class="voice-widget-body">
+    <div class="voice-widget-name" id="voice-widget-name">—</div>
+    <div class="voice-widget-state" id="voice-widget-state">quiet</div>
+  </div>
+  <button id="voice-hush" class="voice-widget-btn" type="button" title="Ask it to be quiet for a minute (it will finish what it's saying first)">Hush</button>
+</aside>
+
+<footer class="foot">
+  <span>THUNDERGOD · a body made of bought parts and chosen on purpose</span>
+</footer>
+
+<script src="assets/dream.js"></script>
+</body>
+</html>
