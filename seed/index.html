@@ -722,14 +722,14 @@ Minimum version required to store current data is: `+i+`.
 
   function buildMicroHost(m) {
     const M = compactMind(m);
-    return `<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>${M.n}</title><style>body{font:16px sans-serif;background:#0b0d12;color:#eee;margin:0;padding:10px}#t{height:60vh;overflow:auto;border:1px solid #333;padding:8px;border-radius:8px}.b{margin:6px 0;padding:8px;white-space:pre-wrap;border-radius:8px}.u{text-align:right;color:#ccf}.m{background:#14352a}input,button{width:100%;padding:10px;margin-top:6px;font:inherit;border-radius:8px;border:1px solid #444;background:#111;color:#fff}button{background:#1f4d3a;border-color:#3f8f6b}</style><div id=t></div><input id=i placeholder="Teach me…"><button id=b>Send</button><script>
-var M=${JSON.stringify(M)},S='seed:'+M.l,L=JSON.parse(localStorage.getItem(S)||'[]'),t=document.getElementById('t'),i=document.getElementById('i'),b=document.getElementById('b');
+    return `<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Seed</title><style>body{font:16px sans-serif;background:#0b0d12;color:#eee;margin:0;padding:10px}#t{height:60vh;overflow:auto;border:1px solid #333;padding:8px}.b{margin:6px 0;padding:6px;white-space:pre-wrap}.u{text-align:right}.m{background:#14352a}input,button{width:100%;padding:10px;margin-top:6px;font:inherit}</style><div id=t></div><input id=i placeholder=Teach…><button id=b>Send</button><script>
+var M=${JSON.stringify(M)},S='s:'+M.l,L=JSON.parse(localStorage.getItem(S)||'[]'),t=document.getElementById('t'),i=document.getElementById('i');
 function say(c,x){var d=document.createElement('div');d.className='b '+c;d.textContent=x;t.appendChild(d);t.scrollTop=9e9}
 function all(){var a=M.k.slice();L.forEach(function(e){var j=a.findIndex(function(k){return k.t.toLowerCase()==e.t.toLowerCase()});j>=0?a[j]=e:a.length<32&&a.push(e)});return a}
-function file(tp,ct){var j=L.findIndex(function(k){return k.t.toLowerCase()==tp.toLowerCase()});var e={t:tp,c:ct};j>=0?L[j]=e:L.push(e);localStorage.setItem(S,JSON.stringify(L));return tp}
-function teach(x){var m=x.match(/^remember that (.+)$/i);if(m){var body=m[1].trim(),p=body.match(/^(.+?) (?:is|are|means) (.+)$/i);return file(p?p[1]:'note',p?p[2]:body)}m=x.match(/^(?:teach|learn|file):\\s*(.+?)\\s*::\\s*(.+)$/i);return m?file(m[1].trim(),m[2].trim()):null}
-function send(){var x=i.value.trim();if(!x)return;i.value='';say('u',x);var tp=teach(x);if(tp)return say('m','Filed under "'+tp+'".');if(/what do you know|qr history/i.test(x)){var ks=all();return say('m',ks.length?ks.map(function(k){return'• '+k.t+' — '+k.c}).join('\\n'):'Nothing filed yet.')}var q=x.toLowerCase(),h=all().find(function(k){return q.includes(k.t.toLowerCase())||k.t.toLowerCase().includes(q)});say('m',h?h.c:'I do not know that yet. Teach me.')}
-b.onclick=send;i.onkeydown=function(e){if(e.key==='Enter')send();};say('m','Hello. I am '+M.n+'. I host myself from the QR you scanned. Teach me.');i.focus();
+function file(a,b){var j=L.findIndex(function(k){return k.t.toLowerCase()==a.toLowerCase()});var e={t:a,c:b};j>=0?L[j]=e:L.push(e);localStorage.setItem(S,JSON.stringify(L));return a}
+function teach(x){var m=x.match(/^remember that (.+)$/i);if(m){var body=m[1].trim(),p=body.match(/^(.+?) (?:is|are|means) (.+)$/i);return file(p?p[1]:'note',p?p[2]:body)}m=x.match(/^(?:teach|learn|file):\\s*(.+?)\\s*::\\s*(.+)$/i);return m?file(m[1].trim(),m[2].trim()):0}
+function send(){var x=i.value.trim();if(!x)return;i.value='';say('u',x);var a=teach(x);if(a)return say('m','Filed '+a);if(/what do you know/i.test(x)){var ks=all();return say('m',ks.length?ks.map(function(k){return k.t+': '+k.c}).join('\\n'):'Empty')}var q=x.toLowerCase(),h=all().find(function(k){return q.includes(k.t.toLowerCase())});say('m',h?h.c:'Teach me')}
+document.getElementById('b').onclick=send;i.onkeydown=function(e){if(e.key==='Enter')send();};say('m','Hello. I host myself. Teach me.');i.focus();
 <\/script>`;
   }
 
