@@ -4,9 +4,11 @@ Two storms in one repo:
 
 ## SEED — one file, teach yourself
 
-**`seed/index.html`** — double-click it. Fully offline. No server, no install, no network.
+**`seed/index.html`** — double-click it. Fully offline on desktop. No server, no install.
 
-Genesis QR → infinite cloud history → teach the mind yourself.
+Genesis QR → scan on phone → chat wakes in browser. Mind travels in the URL (`#csns=…`), not a `data:` link (mobile blocks those → white screen).
+
+**Phone host:** `htmlpreview` serves `gh-pages/index.html` until you enable GitHub Pages (Settings → Pages → branch `gh-pages`).
 
 ## Alexworld — full portable minds
 
