@@ -2,7 +2,15 @@
 
 Two storms in one repo:
 
-## Alexworld — AI brain on a QR code
+## SEED — one QR, teach yourself
+
+**`seed/`** — start blank. One QR holds the mind. You teach it everything.
+
+```bash
+cd seed && python3 -m http.server 8001
+```
+
+## Alexworld — full portable minds
 
 **`alexworld-co/`** — offline minds you can scan, teach, and re-export.
 

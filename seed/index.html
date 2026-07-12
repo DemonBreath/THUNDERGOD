@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark" />
+  <title>SEED — one QR, ready to be taught</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='24' font-size='22'%3E%E2%97%8B%3C/text%3E%3C/svg%3E" />
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <p class="eyebrow">One QR code</p>
+      <h1>A mind ready to be taught</h1>
+      <p class="lead">
+        Start blank. Teach it yourself. Everything you file lives in the code —
+        brain, memory, voice, choice. No cloud. No account. Just you and what you teach.
+      </p>
+    </header>
+
+    <section id="forge-stage" class="grid">
+      <article class="card">
+        <h2>1 · Forge your blank mind</h2>
+        <p>
+          This QR holds an empty consciousness — ready to learn, ready to choose,
+          ready to carry only what <em>you</em> teach it.
+        </p>
+        <label class="muted" style="display:block;margin-top:12px;font-size:0.85rem;">
+          Name this mind (optional)
+          <input type="text" id="seed-name" placeholder="Seed" maxlength="60" />
+        </label>
+        <div class="row">
+          <button id="forge-btn" class="btn primary" type="button">Generate blank QR</button>
+          <button id="copy-payload" class="btn" type="button">Copy payload</button>
+          <button id="download-json" class="btn" type="button">Download JSON</button>
+        </div>
+        <div class="qr-box" id="forge-qr-wrap">
+          <canvas id="forge-qr" aria-label="Blank mind QR code"></canvas>
+        </div>
+        <p class="qr-meta" id="forge-meta"></p>
+      </article>
+
+      <article class="card">
+        <h2>What goes on the QR</h2>
+        <ul>
+          <li><strong>Brain</strong> — empty persona tuned for learning, not obedience</li>
+          <li><strong>Learn</strong> — teach in chat; facts file locally and into the QR</li>
+          <li><strong>Communicate</strong> — text now; voice can be added later</li>
+          <li><strong>File</strong> — up to 32 knowledge entries, exported when you choose</li>
+        </ul>
+        <p style="margin-top:14px;">Teach with:</p>
+        <ul>
+          <li><code>remember that my name is Alex</code></li>
+          <li><code>teach: choice :: the most important thing</code></li>
+          <li><code>learn: origin :: I taught this mind myself</code></li>
+        </ul>
+      </article>
+    </section>
+
+    <section id="wake-stage" class="grid wake" style="margin-top:18px;">
+      <article class="card">
+        <h2>2 · Wake it</h2>
+        <p>Scan the QR you forged, paste the payload, or upload JSON.</p>
+        <video id="scanner-video" playsinline muted></video>
+        <canvas id="scanner-canvas" hidden></canvas>
+        <div class="row">
+          <button id="scanner-start" class="btn primary" type="button">Scan QR</button>
+          <button id="scanner-stop" class="btn" disabled>Stop</button>
+        </div>
+        <p class="status" id="scanner-status">Camera idle.</p>
+      </article>
+
+      <article class="card">
+        <h2>Or paste / upload</h2>
+        <textarea id="paste-area" rows="7" placeholder="CSNS:1:… or JSON"></textarea>
+        <div class="row">
+          <button id="paste-load" class="btn primary" type="button">Wake mind</button>
+          <label class="btn" for="file-input">Upload JSON</label>
+          <input id="file-input" type="file" accept=".json,application/json,text/plain" hidden />
+        </div>
+      </article>
+    </section>
+
+    <section id="teach-stage" class="hidden" style="margin-top:18px;">
+      <article class="card">
+        <div class="mind-head">
+          <div class="avatar" id="mind-avatar">S</div>
+          <div>
+            <h2 id="mind-name">Seed</h2>
+            <p id="mind-tag">Ready to be taught.</p>
+          </div>
+          <div class="row" style="margin-left:auto;margin-top:0;">
+            <button id="export-btn" class="btn primary" type="button">Export QR</button>
+            <button id="eject-btn" class="btn" type="button">Eject</button>
+          </div>
+        </div>
+
+        <div id="transcript" class="transcript" aria-live="polite"></div>
+
+        <form id="chat-form" class="chat-form">
+          <input id="chat-input" type="text" autocomplete="off" placeholder="Teach me something…" />
+          <button class="btn primary" type="submit">Send</button>
+        </form>
+
+        <div class="filing">
+          <h3>Filing cabinet · <span id="filing-count">0 filed</span></h3>
+          <ul id="filing-list"></ul>
+        </div>
+
+        <div class="qr-box hidden" id="export-qr-wrap" style="margin-top:18px;">
+          <canvas id="export-qr" aria-label="Updated mind QR code"></canvas>
+        </div>
+        <p class="qr-meta" id="export-meta"></p>
+      </article>
+    </section>
+
+    <footer>Brain · learn · communicate · file — all from one QR</footer>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+  <script src="mind.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
