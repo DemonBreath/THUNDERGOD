@@ -1,16 +1,23 @@
 # SEED
 
-**One file. Fully offline. QR in the chat.**
+**The QR hosts itself. Scan → browser → chat ready.**
 
-Double-click `index.html`. Genesis QR appears in chat. Teach there. Type `export` or hit **Send QR** to post the next layer in chat.
+No server. No website. No install. The QR contains the entire micro-app inline as a `data:text/html` URI.
 
-## Run
+## Desktop
 
-Open `seed/index.html`. That's it.
+Open `seed/index.html` for the full experience (infinite cloud, export, filing).
 
-## In chat
+## Phone
 
-- Genesis QR posts automatically on load
-- `export` or **Send QR** — next layer appears in chat
-- Paste `CSNS:1:…` in chat to wake a layer
-- `remember that …` / `teach: topic :: fact`
+Scan the genesis QR from chat. Your camera opens the browser with:
+
+- chat box ready
+- blank mind awake
+- teach with `remember that …` or `teach: topic :: fact`
+
+Everything runs from the QR payload itself.
+
+## Limits
+
+Self-hosted QRs must stay under ~2.9KB. Genesis is small. After lots of teaching, export may ask you to trim knowledge before re-forging the QR.

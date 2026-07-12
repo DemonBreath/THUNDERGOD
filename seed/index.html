@@ -401,7 +401,7 @@ footer {
       <p class="eyebrow">Start from one QR</p>
       <h1>A mind ready to be taught</h1>
       <p class="lead">
-        Fully offline. The QR shows up in chat — genesis, exports, the whole history.
+        Fully offline. The QR hosts itself — scan it and the browser opens with chat ready. No server.
       </p>
     </header>
 
@@ -707,34 +707,39 @@ Minimum version required to store current data is: `+i+`.
   const SCHEMA = 1;
   const PREFIX = 'CSNS:';
   const STORAGE = 'seed-mind:';
-  const DEFAULT_HOST =
-    'https://htmlpreview.github.io/?' +
-    encodeURIComponent('https://github.com/DemonBreath/THUNDERGOD/blob/gh-pages/index.html');
-  const PAGES_HOST = 'https://demonbreath.github.io/THUNDERGOD/';
+  const QR_BYTE_LIMIT = 2900;
 
-  function appHost() {
-    if (window.SEED_HOST) return window.SEED_HOST;
-    if (location.protocol.startsWith('http')) {
-      if (location.hostname.includes('github.io')) return PAGES_HOST;
-      if (location.hostname.includes('htmlpreview.github.io')) return DEFAULT_HOST;
-      return location.href.split('#')[0].split('?')[0];
-    }
-    return DEFAULT_HOST;
+  function compactMind(m) {
+    const mind = normalize(m);
+    return {
+      v: mind.v,
+      n: mind.name,
+      l: mind.line || '',
+      g: mind.gen || 0,
+      k: mind.knowledge.map((x) => ({ t: x.topic, c: x.content })),
+    };
   }
 
-  function wakeUrl(payload) {
-    const encoded = encodeURIComponent(payload);
-    const inner =
-      'https://github.com/DemonBreath/THUNDERGOD/blob/gh-pages/index.html?csns=' + encoded;
-    if (
-      !location.protocol.startsWith('http') ||
-      location.hostname.includes('htmlpreview.github.io') ||
-      appHost() === DEFAULT_HOST
-    ) {
-      return 'https://htmlpreview.github.io/?' + encodeURIComponent(inner);
+  function buildMicroHost(m) {
+    const M = compactMind(m);
+    return `<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>${M.n}</title><style>body{font:16px sans-serif;background:#0b0d12;color:#eee;margin:0;padding:10px}#t{height:60vh;overflow:auto;border:1px solid #333;padding:8px;border-radius:8px}.b{margin:6px 0;padding:8px;white-space:pre-wrap;border-radius:8px}.u{text-align:right;color:#ccf}.m{background:#14352a}input,button{width:100%;padding:10px;margin-top:6px;font:inherit;border-radius:8px;border:1px solid #444;background:#111;color:#fff}button{background:#1f4d3a;border-color:#3f8f6b}</style><div id=t></div><input id=i placeholder="Teach me…"><button id=b>Send</button><script>
+var M=${JSON.stringify(M)},S='seed:'+M.l,L=JSON.parse(localStorage.getItem(S)||'[]'),t=document.getElementById('t'),i=document.getElementById('i'),b=document.getElementById('b');
+function say(c,x){var d=document.createElement('div');d.className='b '+c;d.textContent=x;t.appendChild(d);t.scrollTop=9e9}
+function all(){var a=M.k.slice();L.forEach(function(e){var j=a.findIndex(function(k){return k.t.toLowerCase()==e.t.toLowerCase()});j>=0?a[j]=e:a.length<32&&a.push(e)});return a}
+function file(tp,ct){var j=L.findIndex(function(k){return k.t.toLowerCase()==tp.toLowerCase()});var e={t:tp,c:ct};j>=0?L[j]=e:L.push(e);localStorage.setItem(S,JSON.stringify(L));return tp}
+function teach(x){var m=x.match(/^remember that (.+)$/i);if(m){var body=m[1].trim(),p=body.match(/^(.+?) (?:is|are|means) (.+)$/i);return file(p?p[1]:'note',p?p[2]:body)}m=x.match(/^(?:teach|learn|file):\\s*(.+?)\\s*::\\s*(.+)$/i);return m?file(m[1].trim(),m[2].trim()):null}
+function send(){var x=i.value.trim();if(!x)return;i.value='';say('u',x);var tp=teach(x);if(tp)return say('m','Filed under "'+tp+'".');if(/what do you know|qr history/i.test(x)){var ks=all();return say('m',ks.length?ks.map(function(k){return'• '+k.t+' — '+k.c}).join('\\n'):'Nothing filed yet.')}var q=x.toLowerCase(),h=all().find(function(k){return q.includes(k.t.toLowerCase())||k.t.toLowerCase().includes(q)});say('m',h?h.c:'I do not know that yet. Teach me.')}
+b.onclick=send;i.onkeydown=function(e){if(e.key==='Enter')send();};say('m','Hello. I am '+M.n+'. I host myself from the QR you scanned. Teach me.');i.focus();
+<\/script>`;
+  }
+
+  function wakeDataUri(mind) {
+    const html = buildMicroHost(mind);
+    const uri = 'data:text/html;base64,' + btoa(unescape(encodeURIComponent(html)));
+    if (uri.length > QR_BYTE_LIMIT) {
+      throw new Error('Mind too large for a self-hosted QR (' + uri.length + ' chars). Teach less, then export again.');
     }
-    const base = PAGES_HOST.replace(/\?.*$/, '');
-    return base + '?csns=' + encoded;
+    return uri;
   }
 
   function pullCsnsFromLocation() {
@@ -1098,10 +1103,10 @@ Minimum version required to store current data is: `+i+`.
 
   window.Seed = {
     BLANK,
-    DEFAULT_HOST,
-    PAGES_HOST,
-    appHost,
-    wakeUrl,
+    QR_BYTE_LIMIT,
+    compactMind,
+    buildMicroHost,
+    wakeDataUri,
     pullCsnsFromLocation,
     unwrapScan,
     normalize,
@@ -1169,22 +1174,27 @@ Minimum version required to store current data is: `+i+`.
   }
 
   async function bubbleQr(caption, mind) {
-    const payload = Seed.encode(mind);
-    const url = Seed.wakeUrl(payload);
-    lastPayload = url;
+    let uri;
+    try {
+      uri = Seed.wakeDataUri(mind);
+    } catch (err) {
+      bubble('system', err.message);
+      return null;
+    }
+    lastPayload = uri;
     const el = document.createElement('div');
     el.className = 'bubble qr-bubble';
     const p = document.createElement('p');
-    p.textContent = caption;
+    p.textContent = caption + ' · self-hosted';
     const canvas = document.createElement('canvas');
-    await Seed.renderQR(canvas, url);
+    await Seed.renderQR(canvas, uri);
     const meta = document.createElement('small');
     meta.className = 'qr-chat-meta';
-    meta.textContent = 'Scan to open in browser · ' + url;
+    meta.textContent = 'Scan → browser opens with chat ready. No server. The QR is the host.';
     el.append(p, canvas, meta);
     transcript.appendChild(el);
     transcript.scrollTop = transcript.scrollHeight;
-    return url;
+    return uri;
   }
 
   function renderCloud() {
@@ -1300,7 +1310,7 @@ Minimum version required to store current data is: `+i+`.
     const payload = Seed.encode(mind);
     InfiniteCloud.genesis(mind, payload);
     transcript.innerHTML = '';
-    bubble('mind', "I'm here. Blank, ready to learn. Here's your genesis QR — scan it on another device, or just start teaching me below.");
+    bubble('mind', "I'm here. Blank, ready to learn. This QR hosts me — scan it and the browser opens with chat ready.");
     await bubbleQr('Genesis QR — layer #0', mind);
     bindSession(mind, payload);
     bubble('mind', session.reply('hello'));
